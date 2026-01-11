@@ -567,9 +567,8 @@ export default function TournamentsPage() {
 
       <Main>
         <Hero>
-          <HeroTitle>Into the Void</HeroTitle>
           <HeroSubtitle>
-            Step out of the everyday. Enter focused competition.
+            Step out of the everyday. Enter the competition.
           </HeroSubtitle>
         </Hero>
 

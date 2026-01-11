@@ -408,9 +408,6 @@ const DashboardPage: React.FC = () => {
             </WelcomeText>
           </UserSection>
           <HeaderRight>
-            <BrandMark>
-              <BrandName>Competitive Rituals</BrandName>
-            </BrandMark>
             {user.role === 'admin' && (
               <SettingsButton href="/admin/users" title="Settings">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
