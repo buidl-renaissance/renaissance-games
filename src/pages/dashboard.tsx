@@ -296,6 +296,17 @@ const GameLabel = styled.span`
   letter-spacing: 0.05em;
 `;
 
+const GameType = styled.span`
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.accent};
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.4rem;
+  background: ${({ theme }) => theme.accentMuted};
+  border-radius: 3px;
+`;
+
 const TournamentTitle = styled.h3`
   font-size: 0.95rem;
   font-weight: 500;
@@ -761,8 +772,10 @@ const DashboardPage: React.FC = () => {
                       <FeaturedTitle>{featuredTournament.name}</FeaturedTitle>
                       <FeaturedMeta>
                         <MetaItem>
-                          {GAME_ICONS[getGame(featuredTournament.gameId)?.type || ''] || '🎮'}{' '}
-                          {GAME_NAMES[getGame(featuredTournament.gameId)?.type || ''] || getGame(featuredTournament.gameId)?.name || 'Tournament'}
+                          <GameType>
+                            {GAME_ICONS[getGame(featuredTournament.gameId)?.type || ''] || '🎮'}{' '}
+                            {getGame(featuredTournament.gameId)?.name || 'Tournament'}
+                          </GameType>
                         </MetaItem>
                         {featuredTournament.location && (
                           <MetaItem>📍 {featuredTournament.location}</MetaItem>
@@ -791,8 +804,10 @@ const DashboardPage: React.FC = () => {
                           >
                             <TournamentMain>
                               <GameLabel>
-                                {GAME_ICONS[game?.type || ''] || '🎮'}{' '}
-                                {GAME_NAMES[game?.type || ''] || game?.name || 'Tournament'}
+                                <GameType>
+                                  {GAME_ICONS[game?.type || ''] || '🎮'}{' '}
+                                  {game?.name || 'Tournament'}
+                                </GameType>
                               </GameLabel>
                               <TournamentTitle>{tournament.name}</TournamentTitle>
                               <TournamentMeta>

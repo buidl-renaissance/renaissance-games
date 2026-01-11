@@ -262,6 +262,18 @@ const GameLabel = styled.span`
   letter-spacing: 0.05em;
 `;
 
+const GameType = styled.span`
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.accent};
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+  background: ${({ theme }) => theme.accentMuted};
+  border-radius: 3px;
+  margin-right: 0.5rem;
+`;
+
 const TournamentStats = styled.div`
   display: flex;
   gap: 2rem;
@@ -635,8 +647,10 @@ export default function TournamentsPage() {
                 <FeaturedTitle>{featuredTournament.name}</FeaturedTitle>
                 <FeaturedMeta>
                   <MetaItem>
-                    {GAME_ICONS[getGame(featuredTournament.gameId)?.type || ''] || '🎮'}{' '}
-                    {GAME_NAMES[getGame(featuredTournament.gameId)?.type || ''] || getGame(featuredTournament.gameId)?.name || 'Tournament'}
+                    <GameType>
+                      {GAME_ICONS[getGame(featuredTournament.gameId)?.type || ''] || '🎮'}{' '}
+                      {getGame(featuredTournament.gameId)?.name || 'Tournament'}
+                    </GameType>
                   </MetaItem>
                   {featuredTournament.location && (
                     <MetaItem>📍 {featuredTournament.location}</MetaItem>
@@ -666,8 +680,10 @@ export default function TournamentsPage() {
                     >
                       <TournamentMain>
                         <GameLabel>
-                          {GAME_ICONS[game?.type || ''] || '🎮'}{' '}
-                          {GAME_NAMES[game?.type || ''] || game?.name || 'Tournament'}
+                          <GameType>
+                            {GAME_ICONS[game?.type || ''] || '🎮'}{' '}
+                            {game?.name || 'Tournament'}
+                          </GameType>
                         </GameLabel>
                         <TournamentTitle>{tournament.name}</TournamentTitle>
                         <TournamentMeta>
