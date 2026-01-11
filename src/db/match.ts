@@ -371,7 +371,6 @@ export async function generateAndSaveBracket(
   eliminationType: 'single' | 'double'
 ): Promise<Match[]> {
   const { generateBracket } = await import('@/lib/bracket');
-  const { TournamentParticipant } = await import('@/db/tournament');
 
   // Convert to TournamentParticipant format
   const participantData = participants.map(p => ({

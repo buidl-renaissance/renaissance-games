@@ -11,6 +11,9 @@ import {
   ParticipantStatus,
 } from './schema';
 import { User } from './user';
+
+// Re-export types for external use
+export type { TournamentStatus, EliminationType, ParticipantStatus };
 import { GameConfig, determineEliminationType } from './game';
 
 // ============================================
