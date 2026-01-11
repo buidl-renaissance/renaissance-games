@@ -27,9 +27,14 @@ export default class MyDocument extends Document {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://your-app.builddetroit.xyz';
     
     return (
-      <Html lang="en">
+      <Html lang="en" style={{ colorScheme: 'dark' }}>
         <Head>
-          {/* Into the Void Typography */}
+          {/* Into the Void - Dark Theme */}
+          <meta name="theme-color" content="#0B0B0D" />
+          <meta name="color-scheme" content="dark" />
+          <meta name="msapplication-TileColor" content="#0B0B0D" />
+          
+          {/* Typography */}
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link

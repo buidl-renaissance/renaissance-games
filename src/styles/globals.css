@@ -1,9 +1,11 @@
-/* Minimal global styles - most styling handled via styled-components */
+/* Into the Void - Dark theme globals */
 
 html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  background-color: #0B0B0D; /* Void Black - prevents flash */
+  color: #F5F7FA; /* Signal White */
 }
 
 * {
@@ -15,4 +17,9 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Prevent white flash on page load */
+html {
+  color-scheme: dark;
 }
