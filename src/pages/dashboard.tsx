@@ -43,7 +43,11 @@ const Main = styled.main`
 `;
 
 const DashboardHeader = styled.div`
-  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
   padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
@@ -83,11 +87,11 @@ const ProfileImage = styled.img`
 const DefaultAvatar = styled.div`
   width: 100%;
   height: 100%;
-  background: ${({ theme }) => theme.steelGray};
+  background: ${({ theme }) => theme.border};
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${({ theme }) => theme.signalWhite};
+  color: ${({ theme }) => theme.text};
   font-size: 1rem;
   font-weight: 600;
   font-family: 'Space Grotesk', sans-serif;
@@ -132,10 +136,10 @@ const BrandName = styled.span`
   color: ${({ theme }) => theme.textMuted};
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  
-  @media (max-width: 480px) {
-    display: none;
-  }
+`;
+
+const HeaderSpacer = styled.div`
+  height: 64px; /* Match header height */
 `;
 
 const ContentSection = styled.section`
@@ -216,7 +220,7 @@ const ActionButton = styled(Link)`
   font-weight: 600;
   padding: 0.75rem 1.25rem;
   background: ${({ theme }) => theme.accent};
-  color: ${({ theme }) => theme.signalWhite};
+  color: white;
   border-radius: 4px;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -229,7 +233,7 @@ const ActionButton = styled(Link)`
     background: ${({ theme }) => theme.accentHover};
     transform: translateY(-1px);
     box-shadow: 0 4px 16px ${({ theme }) => theme.accentGlow};
-    color: ${({ theme }) => theme.signalWhite};
+    color: white;
   }
 `;
 
@@ -248,7 +252,7 @@ const SecondaryAction = styled(Link)`
   
   &:hover {
     background: ${({ theme }) => theme.backgroundAlt};
-    border-color: ${({ theme }) => theme.steelGray};
+    border-color: ${({ theme }) => theme.textMuted};
     color: ${({ theme }) => theme.text};
   }
 `;
@@ -348,7 +352,7 @@ const DashboardPage: React.FC = () => {
   return (
     <Container>
       <Head>
-        <title>Dashboard | {APP_NAME}</title>
+        <title>{APP_NAME}</title>
         <meta name="description" content="Enter the void. Compete in tournaments." />
         <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -374,10 +378,11 @@ const DashboardPage: React.FC = () => {
             </WelcomeText>
           </UserSection>
           <BrandMark>
-            <BrandName>Into the Void</BrandName>
+            <BrandName>Competitive Rituals</BrandName>
           </BrandMark>
         </DashboardHeader>
 
+        <HeaderSpacer />
         <ContentSection>
           <VoidSymbol />
           <PlaceholderTitle>Competitive Rituals</PlaceholderTitle>

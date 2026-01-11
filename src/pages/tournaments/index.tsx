@@ -436,7 +436,7 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: 'Void',
 };
 
-type StatusFilter = 'all' | 'active' | 'registration' | 'in_progress' | 'completed';
+type StatusFilter = 'active' | 'registration' | 'in_progress' | 'completed' | 'draft';
 
 export default function TournamentsPage() {
   const { user } = useUser();
@@ -578,12 +578,14 @@ export default function TournamentsPage() {
             >
               Live
             </FilterButton>
-            <FilterButton 
-              $active={statusFilter === 'all'} 
-              onClick={() => setStatusFilter('all')}
-            >
-              All
-            </FilterButton>
+            {user && (user.role === 'admin' || user.role === 'organizer') && (
+              <FilterButton 
+                $active={statusFilter === 'draft'} 
+                onClick={() => setStatusFilter('draft')}
+              >
+                Drafts
+              </FilterButton>
+            )}
           </FilterGroup>
 
           <FilterGroup>
