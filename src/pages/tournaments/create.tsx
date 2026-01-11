@@ -306,7 +306,7 @@ const getGameIcon = (gameType: string): string => {
 
 export default function CreateTournamentPage() {
   const router = useRouter();
-  const { user, isLoading: isUserLoading } = useUser();
+  const { user } = useUser();
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -406,7 +406,8 @@ export default function CreateTournamentPage() {
     }
   };
 
-  if (isUserLoading || isLoading) {
+  // Only show loading for games data
+  if (isLoading) {
     return <Loading text="Loading..." />;
   }
 

@@ -321,12 +321,18 @@ const DashboardPage: React.FC = () => {
     callReady();
   }, []);
 
-  // Show loading while checking auth
-  if (isUserLoading) {
+  // Only show loading if we're checking and have NO cached user
+  // If we have a cached user, show dashboard immediately
+  if (isUserLoading && !user) {
     return <Loading text="Entering..." />;
   }
 
-  // Don't render anything while redirecting
+  // Redirect if no user after loading complete
+  if (!isUserLoading && !user) {
+    return null;
+  }
+
+  // If user is null but still loading, don't render
   if (!user) {
     return null;
   }

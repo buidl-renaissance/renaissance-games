@@ -403,7 +403,7 @@ const getGameIcon = (gameType?: string): string => {
 export default function EditTournamentPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { user, isLoading: isUserLoading } = useUser();
+  const { user } = useUser();
 
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [game, setGame] = useState<Game | null>(null);
@@ -530,7 +530,8 @@ export default function EditTournamentPage() {
     }
   };
 
-  if (isLoading || isUserLoading) {
+  // Only show loading for data fetch
+  if (isLoading) {
     return <Loading text="Loading..." />;
   }
 

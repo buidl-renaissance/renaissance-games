@@ -373,7 +373,8 @@ export default function AdminUsersPage() {
     }
   };
 
-  if (isLoading) {
+  // Only show loading if we're loading AND have no cached user
+  if (isLoading && !user) {
     return <Loading text="Loading..." />;
   }
 

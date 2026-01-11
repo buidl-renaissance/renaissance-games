@@ -154,11 +154,11 @@ const ProfileImage = styled.img`
 const DefaultAvatar = styled.div`
   width: 100%;
   height: 100%;
-  background: ${({ theme }) => theme.steelGray};
+  background: ${({ theme }) => theme.border};
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${({ theme }) => theme.signalWhite};
+  color: ${({ theme }) => theme.text};
   font-size: 2rem;
   font-weight: 600;
   font-family: 'Space Grotesk', sans-serif;
@@ -217,7 +217,7 @@ const CreateAccountButton = styled.button`
   letter-spacing: 0.05em;
   padding: 1rem 2rem;
   background: ${({ theme }) => theme.accent};
-  color: ${({ theme }) => theme.signalWhite};
+  color: white;
   border: none;
   border-radius: 2px;
   cursor: pointer;
@@ -275,7 +275,7 @@ const ProgressBar = styled.div<{ duration: number }>`
 const Splash: React.FC<SplashProps> = ({ 
   user, 
   isLoading = false, 
-  redirectDelay = 2000,
+  redirectDelay = 1200,  // Faster redirect
   appName = 'Into the Void',
   onCreateAccount
 }) => {

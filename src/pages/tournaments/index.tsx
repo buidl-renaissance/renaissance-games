@@ -439,7 +439,7 @@ const STATUS_LABELS: Record<string, string> = {
 type StatusFilter = 'all' | 'active' | 'registration' | 'in_progress' | 'completed';
 
 export default function TournamentsPage() {
-  const { user, isLoading: isUserLoading } = useUser();
+  const { user } = useUser();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -528,8 +528,9 @@ export default function TournamentsPage() {
     ? sortedTournaments.filter(t => t.id !== featuredTournament.id)
     : sortedTournaments;
 
-  if (isUserLoading) {
-    return <Loading text="Loading..." />;
+  // Show loading only during initial data fetch
+  if (isLoading && tournaments.length === 0) {
+    return <Loading text="Loading tournaments..." />;
   }
 
   return (

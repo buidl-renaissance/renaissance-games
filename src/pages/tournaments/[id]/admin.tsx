@@ -553,7 +553,7 @@ type TabType = 'overview' | 'participants' | 'actions';
 export default function TournamentAdminPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { user, isLoading: isUserLoading } = useUser();
+  const { user } = useUser();
 
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [tournament, setTournament] = useState<Tournament | null>(null);
@@ -690,7 +690,8 @@ export default function TournamentAdminPage() {
     return `$${(cents / 100).toFixed(0)}`;
   };
 
-  if (isLoading || isUserLoading) return <Loading text="Loading..." />;
+  // Only show loading for data fetch
+  if (isLoading) return <Loading text="Loading..." />;
 
   if (!tournament) {
     return (
