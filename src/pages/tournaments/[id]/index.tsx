@@ -75,7 +75,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  padding: 1.25rem 2rem;
+  padding: 0.75rem 1rem;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
@@ -102,16 +102,16 @@ const BackLink = styled(Link)`
 `;
 
 const Main = styled.main`
-  max-width: 900px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
 `;
 
 // Hero Section
 const HeroSection = styled.div<{ $isLive?: boolean }>`
-  padding: 2.5rem;
-  margin-bottom: 2rem;
-  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  border-radius: 4px;
   background: ${({ theme }) => theme.surface};
   border: 1px solid ${({ theme, $isLive }) => $isLive ? theme.live : theme.border};
   animation: ${fadeIn} 0.4s ease-out;

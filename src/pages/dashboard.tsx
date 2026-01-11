@@ -44,7 +44,7 @@ const Main = styled.main`
 
 const DashboardHeader = styled.div`
   width: 100%;
-  padding: 1.25rem 1.5rem;
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -52,10 +52,6 @@ const DashboardHeader = styled.div`
   flex-wrap: wrap;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
-  
-  @media (max-width: 768px) {
-    padding: 1rem;
-  }
 `;
 
 const UserSection = styled.div`
@@ -66,8 +62,8 @@ const UserSection = styled.div`
 `;
 
 const ProfileImageContainer = styled.div`
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid ${({ theme }) => theme.accent};
@@ -148,26 +144,26 @@ const ContentSection = styled.section`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
+  padding: 2rem 1rem;
   text-align: center;
   animation: ${fadeIn} 0.6s ease-out 0.3s both;
 `;
 
 const VoidSymbol = styled.div`
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: 2px solid ${({ theme }) => theme.accent};
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
   animation: ${pulseGlow} 3s ease-in-out infinite;
   
   &::before {
     content: '';
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: ${({ theme }) => theme.accent};
     opacity: 0.3;
@@ -176,25 +172,25 @@ const VoidSymbol = styled.div`
 
 const PlaceholderTitle = styled.h2`
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
   letter-spacing: -0.02em;
   
   @media (max-width: 768px) {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 `;
 
 const Subtitle = styled.span`
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 1rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: ${({ theme }) => theme.accent};
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   display: block;
 `;
 
@@ -208,17 +204,17 @@ const PlaceholderText = styled.p`
 
 const QuickActions = styled.div`
   display: flex;
-  gap: 1rem;
-  margin-top: 3rem;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
   flex-wrap: wrap;
   justify-content: center;
 `;
 
 const ActionButton = styled(Link)`
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.25rem;
   background: ${({ theme }) => theme.accent};
   color: ${({ theme }) => theme.signalWhite};
   border-radius: 4px;
@@ -231,17 +227,17 @@ const ActionButton = styled(Link)`
   
   &:hover {
     background: ${({ theme }) => theme.accentHover};
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px ${({ theme }) => theme.accentGlow};
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px ${({ theme }) => theme.accentGlow};
     color: ${({ theme }) => theme.signalWhite};
   }
 `;
 
 const SecondaryAction = styled(Link)`
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  padding: 1rem 2rem;
+  padding: 0.75rem 1.25rem;
   background: transparent;
   color: ${({ theme }) => theme.text};
   border: 1px solid ${({ theme }) => theme.border};
@@ -258,16 +254,16 @@ const SecondaryAction = styled(Link)`
 `;
 
 const Divider = styled.div`
-  width: 40px;
+  width: 32px;
   height: 1px;
   background: ${({ theme }) => theme.border};
-  margin: 1.5rem 0;
+  margin: 1rem 0;
 `;
 
 const GameIcons = styled.div`
   display: flex;
-  gap: 2rem;
-  margin-top: 4rem;
+  gap: 1.5rem;
+  margin-top: 2rem;
   opacity: 0.4;
 `;
 
@@ -284,8 +280,8 @@ const GameIcon = styled.div`
 `;
 
 const IconCircle = styled.div`
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 1px solid ${({ theme }) => theme.border};
   display: flex;

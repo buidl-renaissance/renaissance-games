@@ -16,7 +16,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
@@ -49,13 +49,13 @@ const BackLink = styled(Link)`
 `;
 
 const Main = styled.main`
-  max-width: 640px;
+  max-width: 560px;
   margin: 0 auto;
-  padding: 2rem 1.5rem;
+  padding: 1rem;
 `;
 
 const PageHeader = styled.div`
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   animation: ${fadeIn} 0.5s ease-out;
 `;
 
@@ -78,7 +78,7 @@ const Section = styled.section`
   background: ${({ theme }) => theme.surface};
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 4px;
-  padding: 1.5rem;
+  padding: 1rem;
   animation: ${fadeIn} 0.5s ease-out 0.1s both;
 `;
 

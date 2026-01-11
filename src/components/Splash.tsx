@@ -14,7 +14,7 @@ interface SplashProps {
 const fadeIn = keyframes`
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -25,7 +25,7 @@ const fadeIn = keyframes`
 const scaleIn = keyframes`
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
@@ -47,7 +47,7 @@ const pulse = keyframes`
     opacity: 1;
   }
   50% {
-    opacity: 0.6;
+    opacity: 0.5;
   }
 `;
 
@@ -60,21 +60,14 @@ const progressAnimation = keyframes`
   }
 `;
 
-const spin = keyframes`
-  to {
-    transform: rotate(360deg);
-  }
+const rotate = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 `;
 
-const floatIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 0.6;
-    transform: translateY(0);
-  }
+const pulseGlow = keyframes`
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
 `;
 
 const SplashContainer = styled.div`
@@ -87,84 +80,48 @@ const SplashContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(
-    165deg,
-    ${({ theme }) => theme.background} 0%,
-    ${({ theme }) => theme.backgroundAlt} 40%,
-    ${({ theme }) => theme.background} 100%
-  );
+  background: ${({ theme }) => theme.background};
   z-index: 9999;
   gap: 2.5rem;
   overflow: hidden;
-
-  /* Renaissance-inspired decorative corner flourishes */
-  &::before,
-  &::after {
-    content: '❧';
-    position: absolute;
-    font-size: 3rem;
-    color: ${({ theme }) => theme.accent};
-    opacity: 0.15;
-    animation: ${floatIn} 1s ease-out 0.5s both;
-  }
-
-  &::before {
-    top: 2rem;
-    left: 2rem;
-  }
-
-  &::after {
-    bottom: 2rem;
-    right: 2rem;
-    transform: rotate(180deg);
-  }
 `;
 
 const LogoContainer = styled.div`
-  animation: ${scaleIn} 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: ${scaleIn} 0.6s ease-out;
   text-align: center;
 `;
 
 const Logo = styled.h1`
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
-  font-size: 3.5rem;
+  font-size: 2rem;
   margin: 0;
   text-align: center;
   color: ${({ theme }) => theme.text};
-  letter-spacing: 0.02em;
+  letter-spacing: -0.02em;
   
   @media (max-width: 768px) {
-    font-size: 2.5rem;
+    font-size: 1.75rem;
   }
 `;
 
 const LogoAccent = styled.span`
   display: block;
-  font-size: 1.1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
   font-weight: 500;
-  letter-spacing: 0.35em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: ${({ theme }) => theme.accent};
+  color: ${({ theme }) => theme.textMuted};
   margin-top: 0.5rem;
-  
-  @media (max-width: 768px) {
-    font-size: 0.9rem;
-    letter-spacing: 0.25em;
-  }
 `;
 
-const GoldBar = styled.div`
-  width: 80px;
+const AccentBar = styled.div`
+  width: 40px;
   height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    ${({ theme }) => theme.accentGold},
-    transparent
-  );
+  background: ${({ theme }) => theme.accent};
   margin: 1rem auto 0;
-  animation: ${fadeIn} 0.6s ease-out 0.4s both;
+  animation: ${fadeIn} 0.6s ease-out 0.3s both;
 `;
 
 const ProfileSection = styled.div`
@@ -172,31 +129,20 @@ const ProfileSection = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 1.25rem;
-  animation: ${fadeIn} 0.6s ease-out 0.3s both;
+  animation: ${fadeIn} 0.6s ease-out 0.2s both;
 `;
 
 const ProfileImageContainer = styled.div`
-  width: 110px;
-  height: 110px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid ${({ theme }) => theme.accentGold};
+  border: 2px solid ${({ theme }) => theme.accent};
   background: ${({ theme }) => theme.surface};
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 
-    0 8px 32px ${({ theme }) => theme.shadow},
-    inset 0 0 0 1px ${({ theme }) => theme.accent}22;
   position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border-radius: 50%;
-    border: 1px solid ${({ theme }) => theme.accentGold}40;
-  }
 `;
 
 const ProfileImage = styled.img`
@@ -208,87 +154,80 @@ const ProfileImage = styled.img`
 const DefaultAvatar = styled.div`
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    ${({ theme }) => theme.accent} 0%,
-    ${({ theme }) => theme.accentGold} 100%
-  );
+  background: ${({ theme }) => theme.steelGray};
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 2.5rem;
+  color: ${({ theme }) => theme.signalWhite};
+  font-size: 2rem;
   font-weight: 600;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'Space Grotesk', sans-serif;
 `;
 
-const LoadingSpinner = styled.div`
-  width: 110px;
-  height: 110px;
-  border: 3px solid ${({ theme }) => theme.border};
-  border-top-color: ${({ theme }) => theme.accentGold};
+const VoidSymbol = styled.div`
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
-  animation: ${spin} 1.2s linear infinite;
+  border: 2px solid ${({ theme }) => theme.accent};
+  display: flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
-
-  &::after {
+  animation: ${rotate} 8s linear infinite;
+  
+  &::before {
     content: '';
     position: absolute;
     inset: 8px;
-    border: 2px solid transparent;
-    border-top-color: ${({ theme }) => theme.accent};
     border-radius: 50%;
-    animation: ${spin} 0.8s linear infinite reverse;
+    border: 1px dashed ${({ theme }) => theme.border};
+    animation: ${rotate} 4s linear infinite reverse;
   }
 `;
 
+const VoidCore = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.accent};
+  animation: ${pulseGlow} 2s ease-in-out infinite;
+`;
+
 const WelcomeText = styled.h2`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.75rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
   font-weight: 600;
   color: ${({ theme }) => theme.text};
   margin: 0;
   text-align: center;
-  
-  @media (max-width: 768px) {
-    font-size: 1.4rem;
-  }
 `;
 
 const SubText = styled.p<{ $animate?: boolean }>`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 1.1rem;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textMuted};
   margin: 0;
-  animation: ${({ $animate }) => $animate ? pulse : 'none'} 2.5s ease-in-out infinite;
-  font-style: italic;
+  animation: ${({ $animate }) => $animate ? pulse : 'none'} 2s ease-in-out infinite;
 `;
 
 const CreateAccountButton = styled.button`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.15rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
   font-weight: 600;
-  padding: 1rem 2.5rem;
-  background: linear-gradient(
-    135deg,
-    ${({ theme }) => theme.accent} 0%,
-    ${({ theme }) => theme.accentGold} 100%
-  );
-  color: white;
+  letter-spacing: 0.05em;
+  padding: 1rem 2rem;
+  background: ${({ theme }) => theme.accent};
+  color: ${({ theme }) => theme.signalWhite};
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius};
+  border-radius: 2px;
   cursor: pointer;
-  box-shadow: 
-    0 4px 16px ${({ theme }) => theme.shadow},
-    0 0 0 1px ${({ theme }) => theme.accentGold}40;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   animation: ${fadeIn} 0.6s ease-out;
   
   &:hover {
+    background: ${({ theme }) => theme.accentHover};
     transform: translateY(-2px);
-    box-shadow: 
-      0 8px 24px ${({ theme }) => theme.shadow},
-      0 0 0 1px ${({ theme }) => theme.accentGold}60;
+    box-shadow: 0 8px 24px ${({ theme }) => theme.accentGlow};
   }
   
   &:active {
@@ -307,42 +246,37 @@ const NoAccountSection = styled.div`
 `;
 
 const NoAccountText = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 1.05rem;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textMuted};
   line-height: 1.6;
   margin: 0;
 `;
 
 const ProgressContainer = styled.div`
-  width: 180px;
-  height: 3px;
+  width: 160px;
+  height: 2px;
   background: ${({ theme }) => theme.border};
-  border-radius: 2px;
+  border-radius: 1px;
   overflow: hidden;
-  animation: ${fadeIn} 0.6s ease-out 0.6s both;
+  animation: ${fadeIn} 0.6s ease-out 0.5s both;
 `;
 
 const ProgressBar = styled.div<{ duration: number }>`
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    ${({ theme }) => theme.accent},
-    ${({ theme }) => theme.accentGold},
-    ${({ theme }) => theme.accent}
-  );
-  background-size: 200% 100%;
-  border-radius: 2px;
+  background: ${({ theme }) => theme.accent};
+  border-radius: 1px;
   animation: 
     ${progressAnimation} ${({ duration }) => duration}ms linear forwards,
     ${shimmer} 2s linear infinite;
+  background-size: 200% 100%;
 `;
 
 const Splash: React.FC<SplashProps> = ({ 
   user, 
   isLoading = false, 
-  redirectDelay = 2500,
-  appName = 'Renaissance City',
+  redirectDelay = 2000,
+  appName = 'Into the Void',
   onCreateAccount
 }) => {
   const router = useRouter();
@@ -386,9 +320,9 @@ const Splash: React.FC<SplashProps> = ({
   return (
     <SplashContainer>
       <LogoContainer>
-        <Logo>Renaissance City</Logo>
-        <LogoAccent>Detroit&apos;s Digital Renaissance</LogoAccent>
-        <GoldBar />
+        <Logo>{appName}</Logo>
+        <LogoAccent>Competitive Rituals</LogoAccent>
+        <AccentBar />
       </LogoContainer>
       
       <ProfileSection>
@@ -406,23 +340,25 @@ const Splash: React.FC<SplashProps> = ({
               )}
             </ProfileImageContainer>
             <WelcomeText>Welcome, {displayName}</WelcomeText>
-            <SubText $animate>Let&apos;s build...</SubText>
+            <SubText $animate>Entering the void...</SubText>
           </>
         ) : showCreateAccount ? (
           <NoAccountSection>
-            <WelcomeText>Join the Renaissance</WelcomeText>
+            <WelcomeText>Enter the Void</WelcomeText>
             <NoAccountText>
-              Create your Renaissance account to claim your block and start building.
+              Create your account to join tournaments and compete.
             </NoAccountText>
             <CreateAccountButton onClick={handleCreateAccount}>
-              Create Renaissance Account
+              Create Account
             </CreateAccountButton>
           </NoAccountSection>
         ) : (
           <>
-            <LoadingSpinner />
-            <WelcomeText>Welcome to {appName}</WelcomeText>
-            <SubText $animate>Verifying your identity...</SubText>
+            <VoidSymbol>
+              <VoidCore />
+            </VoidSymbol>
+            <WelcomeText>Welcome</WelcomeText>
+            <SubText $animate>Verifying identity...</SubText>
           </>
         )}
       </ProfileSection>

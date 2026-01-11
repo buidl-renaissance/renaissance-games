@@ -55,7 +55,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  padding: 1.25rem 2rem;
+  padding: 0.75rem 1rem;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
@@ -104,23 +104,23 @@ const CreateButton = styled(Link)`
 `;
 
 const Main = styled.main`
-  max-width: 1000px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 3rem 2rem;
+  padding: 1.5rem 1rem;
 `;
 
 // Hero
 const Hero = styled.div`
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
   animation: ${fadeIn} 0.4s ease-out;
 `;
 
 const HeroTitle = styled.h1`
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   font-weight: 600;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   letter-spacing: -0.03em;
 `;
 
@@ -136,9 +136,9 @@ const FilterBar = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
   animation: ${fadeIn} 0.4s ease-out 0.1s both;
   flex-wrap: wrap;

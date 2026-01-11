@@ -62,7 +62,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  padding: 1.25rem 2rem;
+  padding: 0.75rem 1rem;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
@@ -89,14 +89,14 @@ const BackLink = styled(Link)`
 `;
 
 const Main = styled.main`
-  max-width: 900px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
 `;
 
 // Page Header
 const PageHeader = styled.div`
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   animation: ${fadeIn} 0.4s ease-out;
 `;
 
