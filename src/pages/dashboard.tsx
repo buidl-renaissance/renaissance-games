@@ -43,6 +43,11 @@ const subtleGlow = keyframes`
   50% { box-shadow: 0 0 30px rgba(123, 92, 255, 0.25); }
 `;
 
+const spin = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
 // Layout
 const Container = styled.div`
   min-height: 100vh;
@@ -469,6 +474,30 @@ const EmptyText = styled.p`
   margin-bottom: 1.5rem;
 `;
 
+// Inline Loading
+const LoadingArea = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+`;
+
+const LoadingSpinner = styled.div`
+  width: 32px;
+  height: 32px;
+  border: 2px solid ${({ theme }) => theme.border};
+  border-top-color: ${({ theme }) => theme.accent};
+  border-radius: 50%;
+  animation: ${spin} 0.8s linear infinite;
+`;
+
+const LoadingText = styled.p`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
 // Game naming
 const GAME_NAMES: Record<string, string> = {
   euchre: 'Deal Into the Void',
@@ -644,6 +673,13 @@ const DashboardPage: React.FC = () => {
             <UserName>{displayName}</UserName>
           </UserSection>
           <HeaderRight>
+            {canCreateTournament && (
+              <CreateButton href="/tournaments/create" title="Create Tournament">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </CreateButton>
+            )}
             {user.role === 'admin' && (
               <IconButton href="/admin/users" title="Settings">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -651,13 +687,6 @@ const DashboardPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                 </svg>
               </IconButton>
-            )}
-            {canCreateTournament && (
-              <CreateButton href="/tournaments/create" title="Create Tournament">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-              </CreateButton>
             )}
           </HeaderRight>
         </DashboardHeader>
@@ -699,10 +728,13 @@ const DashboardPage: React.FC = () => {
             </ResultCount>
           </FilterBar>
 
-          {isInitialLoad ? (
-            <Loading text="Loading tournaments..." />
+          {isInitialLoad || isFiltering ? (
+            <LoadingArea>
+              <LoadingSpinner />
+              <LoadingText>{isInitialLoad ? 'Loading tournaments...' : 'Loading...'}</LoadingText>
+            </LoadingArea>
           ) : (
-            <TournamentContent $loading={isFiltering}>
+            <TournamentContent $loading={false}>
               {sortedTournaments.length === 0 ? (
                 <EmptyState>
                   <EmptyTitle>No tournaments found</EmptyTitle>
