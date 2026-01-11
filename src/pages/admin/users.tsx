@@ -6,7 +6,7 @@ import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
 
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
@@ -16,7 +16,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
@@ -25,16 +25,23 @@ const Header = styled.header`
 `;
 
 const Logo = styled(Link)`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.text};
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textMuted};
   text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  
+  &:hover {
+    color: ${({ theme }) => theme.text};
+  }
 `;
 
 const BackLink = styled(Link)`
-  font-family: 'Crimson Pro', Georgia, serif;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
   
   &:hover {
     color: ${({ theme }) => theme.text};
@@ -42,41 +49,60 @@ const BackLink = styled(Link)`
 `;
 
 const Main = styled.main`
-  max-width: 700px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 1.5rem;
 `;
 
-const PageTitle = styled.h1`
-  font-size: 2rem;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 0.5rem;
+const PageHeader = styled.div`
+  margin-bottom: 2rem;
   animation: ${fadeIn} 0.5s ease-out;
 `;
 
+const PageTitle = styled.h1`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 0.35rem;
+  letter-spacing: -0.02em;
+`;
+
 const PageSubtitle = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 1.1rem;
-  color: ${({ theme }) => theme.textSecondary};
-  font-style: italic;
-  margin-bottom: 2rem;
-  animation: ${fadeIn} 0.5s ease-out 0.1s both;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textMuted};
 `;
 
 const Section = styled.section`
   background: ${({ theme }) => theme.surface};
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
+  border-radius: 4px;
   padding: 1.5rem;
-  animation: ${fadeIn} 0.5s ease-out 0.2s both;
+  animation: ${fadeIn} 0.5s ease-out 0.1s both;
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+`;
+
+const SectionIcon = styled.span`
+  font-size: 1rem;
+  opacity: 0.6;
 `;
 
 const SectionTitle = styled.h2`
-  font-size: 1.1rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid ${({ theme }) => theme.border};
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 `;
 
 const Form = styled.form`
@@ -102,9 +128,9 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
   display: block;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: ${({ theme }) => theme.text};
   margin-bottom: 0.5rem;
 `;
@@ -112,24 +138,27 @@ const Label = styled.label`
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem 1rem;
-  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
+  border-radius: 4px;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.accent};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.accentMuted};
   }
 `;
 
 const Select = styled.select`
   width: 100%;
   padding: 0.75rem 1rem;
-  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
+  border-radius: 4px;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   cursor: pointer;
@@ -137,26 +166,29 @@ const Select = styled.select`
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.accent};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.accentMuted};
   }
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
   font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  letter-spacing: 0.05em;
   
   ${({ theme, $variant }) => $variant === 'primary' ? `
-    background: linear-gradient(135deg, ${theme.accent}, ${theme.accentGold});
-    color: white;
+    background: ${theme.accent};
+    color: ${theme.signalWhite};
     border: none;
     
     &:hover:not(:disabled) {
+      background: ${theme.accentHover};
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px ${theme.shadow};
+      box-shadow: 0 8px 24px ${theme.accentGlow};
     }
   ` : `
     background: transparent;
@@ -169,25 +201,26 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   `}
   
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
 
 const ResultBox = styled.div<{ $type: 'success' | 'error' | 'info' }>`
-  padding: 1rem;
-  border-radius: 8px;
-  font-family: 'Crimson Pro', Georgia, serif;
+  padding: 0.875rem 1rem;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
   margin-top: 1rem;
   
-  ${({ $type }) => {
+  ${({ $type, theme }) => {
     switch ($type) {
       case 'success':
-        return `background: #22c55e15; color: #22c55e;`;
+        return `background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);`;
       case 'error':
-        return `background: #ef444415; color: #ef4444;`;
+        return `background: rgba(225, 75, 75, 0.1); color: ${theme.infraRed}; border: 1px solid rgba(225, 75, 75, 0.2);`;
       default:
-        return `background: #3b82f615; color: #3b82f6;`;
+        return `background: ${theme.accentMuted}; color: ${theme.accent}; border: 1px solid rgba(123, 92, 255, 0.2);`;
     }
   }}
 `;
@@ -195,7 +228,8 @@ const ResultBox = styled.div<{ $type: 'success' | 'error' | 'info' }>`
 const UserCard = styled.div`
   padding: 1rem;
   background: ${({ theme }) => theme.backgroundAlt};
-  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 4px;
   margin-top: 1rem;
 `;
 
@@ -206,28 +240,56 @@ const UserInfo = styled.div`
 `;
 
 const UserName = styled.span`
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
+  font-size: 0.95rem;
   color: ${({ theme }) => theme.text};
 `;
 
+const UserHandle = styled.p`
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.textMuted};
+  margin-top: 0.2rem;
+`;
+
 const RoleBadge = styled.span<{ $role: string }>`
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
   border-radius: 4px;
   text-transform: uppercase;
-  font-weight: 600;
+  letter-spacing: 0.05em;
   
   ${({ $role, theme }) => {
     switch ($role) {
       case 'admin':
-        return `background: ${theme.accent}20; color: ${theme.accent};`;
+        return `background: ${theme.accentMuted}; color: ${theme.accent};`;
       case 'organizer':
-        return `background: ${theme.accentGold}20; color: ${theme.accentGold};`;
+        return `background: rgba(34, 197, 94, 0.1); color: #22c55e;`;
       default:
-        return `background: ${theme.textSecondary}20; color: ${theme.textSecondary};`;
+        return `background: ${theme.steelGray}; color: ${theme.textMuted};`;
     }
   }}
+`;
+
+const PermissionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const PermissionItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const PermissionText = styled.span`
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.text};
 `;
 
 const AccessDenied = styled.div`
@@ -236,14 +298,15 @@ const AccessDenied = styled.div`
 `;
 
 const AccessTitle = styled.h2`
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 1.5rem;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 `;
 
 const AccessText = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  color: ${({ theme }) => theme.textMuted};
 `;
 
 export default function AdminUsersPage() {
@@ -320,15 +383,15 @@ export default function AdminUsersPage() {
     return (
       <Container>
         <Head>
-          <title>Admin - User Management | Renaissance City Games</title>
+          <title>User Management | Into the Void</title>
         </Head>
         <Header>
-          <Logo href="/dashboard">Renaissance City</Logo>
+          <Logo href="/dashboard">Into the Void</Logo>
           <BackLink href="/dashboard">← Dashboard</BackLink>
         </Header>
         <Main>
           <AccessDenied>
-            <AccessTitle>Access Denied</AccessTitle>
+            <AccessTitle>Access Restricted</AccessTitle>
             <AccessText>Only administrators can access this page.</AccessText>
           </AccessDenied>
         </Main>
@@ -339,20 +402,25 @@ export default function AdminUsersPage() {
   return (
     <Container>
       <Head>
-        <title>Admin - User Management | Renaissance City Games</title>
+        <title>User Management | Into the Void</title>
       </Head>
 
       <Header>
-        <Logo href="/dashboard">Renaissance City</Logo>
+        <Logo href="/dashboard">Into the Void</Logo>
         <BackLink href="/dashboard">← Dashboard</BackLink>
       </Header>
 
       <Main>
-        <PageTitle>User Management</PageTitle>
-        <PageSubtitle>Manage organizers and administrators</PageSubtitle>
+        <PageHeader>
+          <PageTitle>User Management</PageTitle>
+          <PageSubtitle>Manage organizers and administrators</PageSubtitle>
+        </PageHeader>
 
         <Section>
-          <SectionTitle>Add or Update User Role</SectionTitle>
+          <SectionHeader>
+            <SectionIcon>○</SectionIcon>
+            <SectionTitle>Update User Role</SectionTitle>
+          </SectionHeader>
           
           <Form onSubmit={handleLookup}>
             <FormRow>
@@ -378,9 +446,7 @@ export default function AdminUsersPage() {
                 <div>
                   <UserName>{foundUser.displayName || foundUser.username || foundUser.id}</UserName>
                   {foundUser.username && (
-                    <p style={{ fontSize: '0.85rem', color: 'inherit', opacity: 0.7 }}>
-                      @{foundUser.username}
-                    </p>
+                    <UserHandle>@{foundUser.username}</UserHandle>
                   )}
                 </div>
                 <RoleBadge $role={foundUser.role}>{foundUser.role}</RoleBadge>
@@ -395,7 +461,7 @@ export default function AdminUsersPage() {
                     onChange={(e) => setRole(e.target.value)}
                   >
                     <option value="user">User (basic access)</option>
-                    <option value="organizer">Organizer (can create tournaments)</option>
+                    <option value="organizer">Organizer (create tournaments)</option>
                     <option value="admin">Admin (full access)</option>
                   </Select>
                 </FormGroup>
@@ -419,21 +485,24 @@ export default function AdminUsersPage() {
         </Section>
 
         <Section style={{ marginTop: '1.5rem' }}>
-          <SectionTitle>Role Permissions</SectionTitle>
-          <div style={{ fontFamily: 'Crimson Pro, Georgia, serif' }}>
-            <p style={{ marginBottom: '0.75rem' }}>
-              <RoleBadge $role="user" style={{ marginRight: '0.5rem' }}>User</RoleBadge>
-              Can join tournaments and submit match results
-            </p>
-            <p style={{ marginBottom: '0.75rem' }}>
-              <RoleBadge $role="organizer" style={{ marginRight: '0.5rem' }}>Organizer</RoleBadge>
-              Can create and manage tournaments, pair teams, override results
-            </p>
-            <p>
-              <RoleBadge $role="admin" style={{ marginRight: '0.5rem' }}>Admin</RoleBadge>
-              Full access including user role management
-            </p>
-          </div>
+          <SectionHeader>
+            <SectionIcon>◇</SectionIcon>
+            <SectionTitle>Role Permissions</SectionTitle>
+          </SectionHeader>
+          <PermissionList>
+            <PermissionItem>
+              <RoleBadge $role="user">User</RoleBadge>
+              <PermissionText>Join tournaments and submit match results</PermissionText>
+            </PermissionItem>
+            <PermissionItem>
+              <RoleBadge $role="organizer">Organizer</RoleBadge>
+              <PermissionText>Create tournaments, pair teams, manage matches</PermissionText>
+            </PermissionItem>
+            <PermissionItem>
+              <RoleBadge $role="admin">Admin</RoleBadge>
+              <PermissionText>Full access including user management</PermissionText>
+            </PermissionItem>
+          </PermissionList>
         </Section>
       </Main>
     </Container>

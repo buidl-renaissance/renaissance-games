@@ -2,48 +2,128 @@ import { DefaultTheme } from 'styled-components';
 
 declare module 'styled-components' {
   export interface DefaultTheme {
+    // Core
     background: string;
     backgroundAlt: string;
+    surface: string;
+    surfaceHover: string;
+    
+    // Text
     text: string;
     textSecondary: string;
+    textMuted: string;
+    
+    // Borders
     border: string;
+    borderSubtle: string;
     borderRadius: string;
-    surface: string;
+    
+    // Accents
     accent: string;
+    accentHover: string;
+    accentMuted: string;
+    accentGlow: string;
     accentGold: string;
+    
+    // Status
+    live: string;
+    liveGlow: string;
+    success: string;
+    warning: string;
+    danger: string;
+    
+    // Effects
     shadow: string;
+    shadowStrong: string;
     overlay: string;
+    glow: string;
+    
+    // Named Colors (Into the Void palette)
+    signalWhite: string;
+    steelGray: string;
+    infraRed: string;
   }
 }
 
-// Renaissance City - Light Theme
-// Inspired by Florentine architecture and classical art
-export const lightTheme: DefaultTheme = {
-  background: '#FAF7F2',      // Warm parchment
-  backgroundAlt: '#F0EBE3',   // Aged paper
-  text: '#2C1810',            // Rich sepia brown
-  textSecondary: '#6B5344',   // Muted terracotta
-  border: '#D4C8BB',          // Sandstone
-  borderRadius: '12px',
-  surface: '#FFFFFF',
-  accent: '#9E3B1D',          // Burnt sienna (Renaissance red)
-  accentGold: '#B8860B',      // Classical gold
-  shadow: 'rgba(44, 24, 16, 0.12)',
-  overlay: 'rgba(44, 24, 16, 0.6)',
+// Into the Void - Dark Theme
+// Underground tournament energy, ritualistic, competitive
+export const darkTheme: DefaultTheme = {
+  // Core backgrounds
+  background: '#0B0B0D',           // Void Black
+  backgroundAlt: '#16181C',        // Obsidian Charcoal
+  surface: '#16181C',              // Obsidian Charcoal
+  surfaceHover: '#1E2127',         // Slightly lighter for hover
+  
+  // Text
+  text: '#F5F7FA',                 // Signal White
+  textSecondary: '#9CA3AF',        // Muted gray
+  textMuted: '#6B7280',            // Even more muted
+  
+  // Borders
+  border: '#2A2E35',               // Steel Gray
+  borderSubtle: '#1E2127',         // Subtle border
+  borderRadius: '8px',
+  
+  // Accents - Electric Violet (use sparingly)
+  accent: '#7B5CFF',               // Electric Violet
+  accentHover: '#8F73FF',          // Lighter violet
+  accentMuted: 'rgba(123, 92, 255, 0.15)',
+  accentGlow: 'rgba(123, 92, 255, 0.4)',
+  accentGold: '#8F73FF',           // Legacy support - maps to lighter violet
+  
+  // Status
+  live: '#E14B4B',                 // Infra Red (live/finals only)
+  liveGlow: 'rgba(225, 75, 75, 0.3)',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  
+  // Effects
+  shadow: 'rgba(0, 0, 0, 0.5)',
+  shadowStrong: 'rgba(0, 0, 0, 0.8)',
+  overlay: 'rgba(11, 11, 13, 0.9)',
+  glow: '0 0 20px rgba(123, 92, 255, 0.3)',
+  
+  // Named Colors (Into the Void palette)
+  signalWhite: '#F5F7FA',
+  steelGray: '#2A2E35',
+  infraRed: '#E14B4B',
 };
 
-// Renaissance City - Dark Theme
-// Inspired by candlelit chambers and rich tapestries
-export const darkTheme: DefaultTheme = {
-  background: '#1A1512',      // Deep espresso
-  backgroundAlt: '#2A2320',   // Dark walnut
-  text: '#F5F0E8',            // Warm ivory
-  textSecondary: '#B8A99A',   // Dusty rose
-  border: '#3D342D',          // Dark bronze
-  borderRadius: '12px',
-  surface: '#252019',         // Rich mahogany
-  accent: '#C9593A',          // Terracotta flame
-  accentGold: '#DAA520',      // Golden rod
-  shadow: 'rgba(0, 0, 0, 0.4)',
-  overlay: 'rgba(0, 0, 0, 0.75)',
+// Light theme (kept for compatibility, but app should default to dark)
+export const lightTheme: DefaultTheme = {
+  background: '#F5F7FA',
+  backgroundAlt: '#E5E7EB',
+  surface: '#FFFFFF',
+  surfaceHover: '#F9FAFB',
+  
+  text: '#0B0B0D',
+  textSecondary: '#4B5563',
+  textMuted: '#9CA3AF',
+  
+  border: '#D1D5DB',
+  borderSubtle: '#E5E7EB',
+  borderRadius: '8px',
+  
+  accent: '#7B5CFF',
+  accentHover: '#6B4CE6',
+  accentMuted: 'rgba(123, 92, 255, 0.1)',
+  accentGlow: 'rgba(123, 92, 255, 0.2)',
+  accentGold: '#6B4CE6',
+  
+  live: '#E14B4B',
+  liveGlow: 'rgba(225, 75, 75, 0.2)',
+  success: '#22C55E',
+  warning: '#F59E0B',
+  danger: '#EF4444',
+  
+  shadow: 'rgba(0, 0, 0, 0.1)',
+  shadowStrong: 'rgba(0, 0, 0, 0.2)',
+  overlay: 'rgba(255, 255, 255, 0.9)',
+  glow: '0 0 20px rgba(123, 92, 255, 0.15)',
+  
+  // Named Colors
+  signalWhite: '#F5F7FA',
+  steelGray: '#D1D5DB',
+  infraRed: '#E14B4B',
 };

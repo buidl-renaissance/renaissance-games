@@ -50,8 +50,13 @@ interface Team {
 }
 
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+`;
+
+const pulseGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 12px ${({ theme }) => theme.accentGlow}; }
+  50% { box-shadow: 0 0 24px ${({ theme }) => theme.accentGlow}; }
 `;
 
 const Container = styled.div`
@@ -60,7 +65,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
@@ -69,16 +74,23 @@ const Header = styled.header`
 `;
 
 const Logo = styled(Link)`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.text};
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textMuted};
   text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  
+  &:hover {
+    color: ${({ theme }) => theme.text};
+  }
 `;
 
 const BackLink = styled(Link)`
-  font-family: 'Crimson Pro', Georgia, serif;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -91,12 +103,28 @@ const BackLink = styled(Link)`
 const Main = styled.main`
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 1.5rem;
 `;
 
 const PageHeader = styled.div`
   margin-bottom: 2rem;
   animation: ${fadeIn} 0.5s ease-out;
+`;
+
+const BreadcrumbNav = styled.nav`
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.textMuted};
+  margin-bottom: 1rem;
+  letter-spacing: 0.02em;
+  
+  a {
+    color: ${({ theme }) => theme.textMuted};
+    
+    &:hover {
+      color: ${({ theme }) => theme.text};
+    }
+  }
 `;
 
 const TitleRow = styled.div`
@@ -107,53 +135,82 @@ const TitleRow = styled.div`
   gap: 1rem;
 `;
 
+const TitleSection = styled.div``;
+
 const PageTitle = styled.h1`
-  font-size: 2rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
   color: ${({ theme }) => theme.text};
   margin: 0;
+  letter-spacing: -0.02em;
+`;
+
+const Subtitle = styled.span`
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+  display: block;
+  margin-top: 0.35rem;
 `;
 
 const StatusBadge = styled.span<{ $status: string }>`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.85rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border-radius: 4px;
   
   ${({ $status, theme }) => {
     switch ($status) {
       case 'in_progress':
-        return `background: #22c55e20; color: #22c55e;`;
+        return `
+          background: ${theme.accentMuted}; 
+          color: ${theme.accent};
+          animation: ${pulseGlow} 2s ease-in-out infinite;
+        `;
       case 'completed':
-        return `background: ${theme.textSecondary}20; color: ${theme.textSecondary};`;
+        return `background: ${theme.steelGray}; color: ${theme.textMuted};`;
       default:
-        return `background: ${theme.accentGold}20; color: ${theme.accentGold};`;
+        return `background: rgba(34, 197, 94, 0.1); color: #22c55e;`;
     }
   }}
-`;
-
-const BreadcrumbNav = styled.nav`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.textSecondary};
-  margin-bottom: 1rem;
-  
-  a {
-    color: ${({ theme }) => theme.textSecondary};
-    
-    &:hover {
-      color: ${({ theme }) => theme.text};
-    }
-  }
 `;
 
 const BracketContainer = styled.div`
   background: ${({ theme }) => theme.surface};
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
+  border-radius: 4px;
   animation: ${fadeIn} 0.5s ease-out 0.1s both;
+  overflow: hidden;
+`;
+
+const BracketHeader = styled.div`
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const BracketTitle = styled.h2`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+`;
+
+const EliminationBadge = styled.span`
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+  background: ${({ theme }) => theme.backgroundAlt};
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
 `;
 
 const MatchModal = styled.div`
@@ -172,7 +229,8 @@ const MatchModal = styled.div`
 
 const ModalContent = styled.div`
   background: ${({ theme }) => theme.surface};
-  border-radius: 12px;
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 4px;
   max-width: 400px;
   width: 100%;
   padding: 1.5rem;
@@ -180,23 +238,35 @@ const ModalContent = styled.div`
 `;
 
 const ModalTitle = styled.h2`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.25rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 `;
 
 const ModalSection = styled.div`
   margin-bottom: 1.5rem;
 `;
 
+const ModalLabel = styled.div`
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.textMuted};
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+`;
+
 const ParticipantOption = styled.button<{ $selected?: boolean }>`
   width: 100%;
   padding: 1rem;
   margin-bottom: 0.5rem;
-  background: ${({ theme, $selected }) => $selected ? `${theme.accent}20` : theme.backgroundAlt};
-  border: 2px solid ${({ theme, $selected }) => $selected ? theme.accent : theme.border};
-  border-radius: 8px;
+  background: ${({ theme, $selected }) => $selected ? theme.accentMuted : theme.backgroundAlt};
+  border: 1px solid ${({ theme, $selected }) => $selected ? theme.accent : theme.border};
+  border-radius: 4px;
   text-align: left;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -204,42 +274,53 @@ const ParticipantOption = styled.button<{ $selected?: boolean }>`
   &:hover {
     border-color: ${({ theme }) => theme.accent};
   }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 const ParticipantOptionName = styled.div`
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
+  font-size: 0.9rem;
   color: ${({ theme }) => theme.text};
 `;
 
-const ScoreInput = styled.div`
+const ScoreInputRow = styled.div`
   display: flex;
-  gap: 1rem;
   align-items: center;
-  margin-top: 1rem;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+  
+  &:last-child {
+    border-bottom: none;
+  }
 `;
 
-const ScoreLabel = styled.label`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.textSecondary};
-  flex: 1;
+const ScorePlayerName = styled.span`
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.text};
 `;
 
 const ScoreField = styled.input`
   width: 60px;
   padding: 0.5rem;
   text-align: center;
-  font-size: 1.1rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
   font-weight: 600;
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 6px;
+  border-radius: 4px;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.accent};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.accentMuted};
   }
 `;
 
@@ -252,19 +333,23 @@ const ModalButtons = styled.div`
 const ModalButton = styled.button<{ $primary?: boolean }>`
   flex: 1;
   padding: 0.75rem 1rem;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  letter-spacing: 0.05em;
   
   ${({ theme, $primary }) => $primary ? `
-    background: linear-gradient(135deg, ${theme.accent}, ${theme.accentGold});
-    color: white;
+    background: ${theme.accent};
+    color: ${theme.signalWhite};
     border: none;
     
     &:hover:not(:disabled) {
+      background: ${theme.accentHover};
       transform: translateY(-2px);
+      box-shadow: 0 8px 24px ${theme.accentGlow};
     }
   ` : `
     background: transparent;
@@ -277,16 +362,19 @@ const ModalButton = styled.button<{ $primary?: boolean }>`
   `}
   
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
 
 const ErrorMessage = styled.p`
-  color: #ef4444;
-  font-family: 'Crimson Pro', Georgia, serif;
+  color: ${({ theme }) => theme.infraRed};
+  font-family: 'Inter', sans-serif;
   font-size: 0.85rem;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(225, 75, 75, 0.1);
+  border-radius: 4px;
 `;
 
 const EmptyState = styled.div`
@@ -294,31 +382,45 @@ const EmptyState = styled.div`
   padding: 4rem 2rem;
 `;
 
-const EmptyTitle = styled.h2`
+const EmptyIcon = styled.div`
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid ${({ theme }) => theme.border};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
   font-size: 1.5rem;
+  opacity: 0.5;
+`;
+
+const EmptyTitle = styled.h2`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 `;
 
 const EmptyText = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textMuted};
 `;
 
 const STATUS_LABELS: Record<string, string> = {
-  ready: 'Ready to Start',
-  in_progress: 'In Progress',
+  ready: 'Ready',
+  in_progress: 'Live',
   completed: 'Completed',
 };
 
 export default function BracketPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { user, isLoading: isUserLoading } = useUser();
+  useUser();
 
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [bracket, setBracket] = useState<BracketVisualization | null>(null);
-  const [matches, setMatches] = useState<Match[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -352,7 +454,6 @@ export default function BracketPage() {
       if (bracketRes.ok) {
         const data = await bracketRes.json();
         setBracket(data.bracket);
-        setMatches(data.matches || []);
       }
     } catch (err) {
       setError('Failed to load bracket');
@@ -434,7 +535,7 @@ export default function BracketPage() {
     return participantMap.get(participantId)?.name || 'Unknown';
   };
 
-  if (isLoading || isUserLoading) {
+  if (isLoading) {
     return <Loading text="Loading bracket..." />;
   }
 
@@ -442,11 +543,12 @@ export default function BracketPage() {
     return (
       <Container>
         <Header>
-          <Logo href="/dashboard">Renaissance City</Logo>
+          <Logo href="/dashboard">Into the Void</Logo>
           <BackLink href="/tournaments">← Tournaments</BackLink>
         </Header>
         <Main>
           <EmptyState>
+            <EmptyIcon>×</EmptyIcon>
             <EmptyTitle>Tournament Not Found</EmptyTitle>
             <EmptyText>The tournament you&apos;re looking for doesn&apos;t exist.</EmptyText>
           </EmptyState>
@@ -458,21 +560,28 @@ export default function BracketPage() {
   return (
     <Container>
       <Head>
-        <title>Bracket - {tournament.name} | Renaissance City Games</title>
+        <title>Bracket — {tournament.name} | Into the Void</title>
       </Head>
 
       <Header>
-        <Logo href="/dashboard">Renaissance City</Logo>
+        <Logo href="/dashboard">Into the Void</Logo>
         <BackLink href={`/tournaments/${id}`}>← Back to Tournament</BackLink>
       </Header>
 
       <Main>
         <PageHeader>
           <BreadcrumbNav>
-            <Link href="/tournaments">Tournaments</Link> / <Link href={`/tournaments/${id}`}>{tournament.name}</Link> / Bracket
+            <Link href="/tournaments">Tournaments</Link>
+            {' / '}
+            <Link href={`/tournaments/${id}`}>{tournament.name}</Link>
+            {' / '}
+            Bracket
           </BreadcrumbNav>
           <TitleRow>
-            <PageTitle>{tournament.name} - Bracket</PageTitle>
+            <TitleSection>
+              <PageTitle>Tournament Bracket</PageTitle>
+              <Subtitle>{tournament.name}</Subtitle>
+            </TitleSection>
             <StatusBadge $status={tournament.status}>
               {STATUS_LABELS[tournament.status] || tournament.status}
             </StatusBadge>
@@ -481,16 +590,24 @@ export default function BracketPage() {
 
         {error ? (
           <EmptyState>
+            <EmptyIcon>!</EmptyIcon>
             <EmptyTitle>Error</EmptyTitle>
             <EmptyText>{error}</EmptyText>
           </EmptyState>
         ) : !bracket ? (
           <EmptyState>
+            <EmptyIcon>○</EmptyIcon>
             <EmptyTitle>Bracket Not Generated</EmptyTitle>
-            <EmptyText>The bracket hasn&apos;t been generated yet. Check back when the tournament starts.</EmptyText>
+            <EmptyText>The bracket hasn&apos;t been generated yet. Check back when the tournament begins.</EmptyText>
           </EmptyState>
         ) : (
           <BracketContainer>
+            <BracketHeader>
+              <BracketTitle>Bracket View</BracketTitle>
+              <EliminationBadge>
+                {tournament.eliminationType === 'double' ? 'Double Elimination' : 'Single Elimination'}
+              </EliminationBadge>
+            </BracketHeader>
             <BracketView
               bracket={bracket}
               participants={participantMap}
@@ -508,7 +625,7 @@ export default function BracketPage() {
             <ModalTitle>Submit Match Result</ModalTitle>
             
             <ModalSection>
-              <ScoreLabel>Select Winner:</ScoreLabel>
+              <ModalLabel>Select Winner</ModalLabel>
               {selectedMatch.participant1Id && (
                 <ParticipantOption
                   $selected={selectedWinner === selectedMatch.participant1Id}
@@ -532,25 +649,25 @@ export default function BracketPage() {
             </ModalSection>
 
             <ModalSection>
-              <ScoreLabel>Scores:</ScoreLabel>
-              <ScoreInput>
-                <span>{getParticipantName(selectedMatch.participant1Id)}</span>
+              <ModalLabel>Final Score</ModalLabel>
+              <ScoreInputRow>
+                <ScorePlayerName>{getParticipantName(selectedMatch.participant1Id)}</ScorePlayerName>
                 <ScoreField
                   type="number"
                   min="0"
                   value={p1Score}
                   onChange={e => setP1Score(e.target.value)}
                 />
-              </ScoreInput>
-              <ScoreInput>
-                <span>{getParticipantName(selectedMatch.participant2Id)}</span>
+              </ScoreInputRow>
+              <ScoreInputRow>
+                <ScorePlayerName>{getParticipantName(selectedMatch.participant2Id)}</ScorePlayerName>
                 <ScoreField
                   type="number"
                   min="0"
                   value={p2Score}
                   onChange={e => setP2Score(e.target.value)}
                 />
-              </ScoreInput>
+              </ScoreInputRow>
             </ModalSection>
 
             {submitError && <ErrorMessage>{submitError}</ErrorMessage>}

@@ -18,7 +18,7 @@ interface Game {
 }
 
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
@@ -28,7 +28,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.header`
-  padding: 1.5rem 2rem;
+  padding: 1rem 1.5rem;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
@@ -37,16 +37,23 @@ const Header = styled.header`
 `;
 
 const Logo = styled(Link)`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: ${({ theme }) => theme.text};
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textMuted};
   text-decoration: none;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  
+  &:hover {
+    color: ${({ theme }) => theme.text};
+  }
 `;
 
 const BackLink = styled(Link)`
-  font-family: 'Crimson Pro', Georgia, serif;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -57,47 +64,66 @@ const BackLink = styled(Link)`
 `;
 
 const Main = styled.main`
-  max-width: 700px;
+  max-width: 640px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 1.5rem;
 `;
 
-const PageTitle = styled.h1`
-  font-size: 2rem;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 0.5rem;
+const PageHeader = styled.div`
+  margin-bottom: 2rem;
   animation: ${fadeIn} 0.5s ease-out;
 `;
 
+const PageTitle = styled.h1`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+`;
+
 const PageSubtitle = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 1.1rem;
-  color: ${({ theme }) => theme.textSecondary};
-  font-style: italic;
-  margin-bottom: 2rem;
-  animation: ${fadeIn} 0.5s ease-out 0.1s both;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textMuted};
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  animation: ${fadeIn} 0.5s ease-out 0.2s both;
+  animation: ${fadeIn} 0.5s ease-out 0.1s both;
 `;
 
 const FormSection = styled.div`
   background: ${({ theme }) => theme.surface};
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
+  border-radius: 4px;
   padding: 1.5rem;
 `;
 
-const SectionTitle = styled.h2`
-  font-size: 1.1rem;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 1rem;
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
+`;
+
+const SectionIcon = styled.span`
+  font-size: 1.1rem;
+  opacity: 0.6;
+`;
+
+const SectionTitle = styled.h2`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 `;
 
 const FormGroup = styled.div`
@@ -110,9 +136,9 @@ const FormGroup = styled.div`
 
 const Label = styled.label`
   display: block;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: ${({ theme }) => theme.text};
   margin-bottom: 0.5rem;
 `;
@@ -120,9 +146,10 @@ const Label = styled.label`
 const Input = styled.input`
   width: 100%;
   padding: 0.75rem 1rem;
-  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
+  border-radius: 4px;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   transition: border-color 0.2s ease;
@@ -130,19 +157,21 @@ const Input = styled.input`
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.accent};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.accentMuted};
   }
   
   &::placeholder {
-    color: ${({ theme }) => theme.textSecondary};
+    color: ${({ theme }) => theme.textMuted};
   }
 `;
 
 const TextArea = styled.textarea`
   width: 100%;
   padding: 0.75rem 1rem;
-  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
+  border-radius: 4px;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   resize: vertical;
@@ -152,15 +181,17 @@ const TextArea = styled.textarea`
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.accent};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.accentMuted};
   }
 `;
 
 const Select = styled.select`
   width: 100%;
   padding: 0.75rem 1rem;
-  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
+  border-radius: 4px;
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   cursor: pointer;
@@ -168,6 +199,7 @@ const Select = styled.select`
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.accent};
+    box-shadow: 0 0 0 2px ${({ theme }) => theme.accentMuted};
   }
 `;
 
@@ -182,64 +214,68 @@ const InputRow = styled.div`
 `;
 
 const HelpText = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.textSecondary};
-  margin-top: 0.35rem;
-  font-style: italic;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.textMuted};
+  margin-top: 0.5rem;
 `;
 
 const GameInfo = styled.div`
   background: ${({ theme }) => theme.backgroundAlt};
-  border-radius: 8px;
+  border-radius: 4px;
   padding: 1rem;
   margin-top: 0.75rem;
+  border: 1px solid ${({ theme }) => theme.border};
 `;
 
 const GameInfoTitle = styled.p`
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 600;
+  font-size: 0.9rem;
   color: ${({ theme }) => theme.text};
   margin-bottom: 0.5rem;
 `;
 
 const GameInfoText = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
   margin-bottom: 0.25rem;
 `;
 
 const SubmitButton = styled.button`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.1rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
   font-weight: 600;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, ${({ theme }) => theme.accent}, ${({ theme }) => theme.accentGold});
-  color: white;
+  background: ${({ theme }) => theme.accent};
+  color: ${({ theme }) => theme.signalWhite};
   border: none;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
+  letter-spacing: 0.05em;
   
   &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.accentHover};
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px ${({ theme }) => theme.shadow};
+    box-shadow: 0 8px 24px ${({ theme }) => theme.accentGlow};
   }
   
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
 
 const ErrorMessage = styled.p`
-  color: #ef4444;
-  font-family: 'Crimson Pro', Georgia, serif;
+  color: ${({ theme }) => theme.infraRed};
+  font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   padding: 0.75rem 1rem;
-  background: #ef444420;
-  border-radius: 8px;
+  background: rgba(225, 75, 75, 0.1);
+  border: 1px solid rgba(225, 75, 75, 0.2);
+  border-radius: 4px;
 `;
 
 const AccessDenied = styled.div`
@@ -248,15 +284,25 @@ const AccessDenied = styled.div`
 `;
 
 const AccessTitle = styled.h2`
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 1.5rem;
   color: ${({ theme }) => theme.text};
   margin-bottom: 1rem;
 `;
 
 const AccessText = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  color: ${({ theme }) => theme.textMuted};
 `;
+
+const getGameIcon = (gameType: string): string => {
+  switch (gameType) {
+    case 'pool': return '🎱';
+    case 'chess': return '♟';
+    case 'euchre': return '🃏';
+    default: return '🎮';
+  }
+};
 
 export default function CreateTournamentPage() {
   const router = useRouter();
@@ -370,15 +416,15 @@ export default function CreateTournamentPage() {
     return (
       <Container>
         <Head>
-          <title>Create Tournament | Renaissance City Games</title>
+          <title>Create Tournament | Into the Void</title>
         </Head>
         <Header>
-          <Logo href="/dashboard">Renaissance City</Logo>
+          <Logo href="/dashboard">Into the Void</Logo>
           <BackLink href="/tournaments">← Back to Tournaments</BackLink>
         </Header>
         <Main>
           <AccessDenied>
-            <AccessTitle>Access Denied</AccessTitle>
+            <AccessTitle>Access Restricted</AccessTitle>
             <AccessText>
               Only organizers and administrators can create tournaments.
             </AccessText>
@@ -391,23 +437,28 @@ export default function CreateTournamentPage() {
   return (
     <Container>
       <Head>
-        <title>Create Tournament | Renaissance City Games</title>
+        <title>Create Tournament | Into the Void</title>
       </Head>
 
       <Header>
-        <Logo href="/dashboard">Renaissance City</Logo>
+        <Logo href="/dashboard">Into the Void</Logo>
         <BackLink href="/tournaments">← Back to Tournaments</BackLink>
       </Header>
 
       <Main>
-        <PageTitle>Create Tournament</PageTitle>
-        <PageSubtitle>Set up a new competition for players to join</PageSubtitle>
+        <PageHeader>
+          <PageTitle>Create Tournament</PageTitle>
+          <PageSubtitle>Set up a new competitive ritual</PageSubtitle>
+        </PageHeader>
 
         {error && <ErrorMessage>{error}</ErrorMessage>}
 
         <Form onSubmit={handleSubmit}>
           <FormSection>
-            <SectionTitle>Basic Information</SectionTitle>
+            <SectionHeader>
+              <SectionIcon>○</SectionIcon>
+              <SectionTitle>Game Selection</SectionTitle>
+            </SectionHeader>
             
             <FormGroup>
               <Label htmlFor="gameId">Game Type *</Label>
@@ -421,14 +472,14 @@ export default function CreateTournamentPage() {
                 <option value="">Select a game...</option>
                 {games.map(game => (
                   <option key={game.id} value={game.id}>
-                    {game.name} {game.isTeamGame ? '(Teams)' : '(Solo)'}
+                    {getGameIcon(game.type)} {game.name} {game.isTeamGame ? '(Teams)' : '(Solo)'}
                   </option>
                 ))}
               </Select>
               
               {selectedGame && (
                 <GameInfo>
-                  <GameInfoTitle>{selectedGame.name}</GameInfoTitle>
+                  <GameInfoTitle>{getGameIcon(selectedGame.type)} {selectedGame.name}</GameInfoTitle>
                   <GameInfoText>{selectedGame.description}</GameInfoText>
                   <GameInfoText>
                     Players: {selectedGame.minPlayers} - {selectedGame.maxPlayers}
@@ -446,7 +497,7 @@ export default function CreateTournamentPage() {
                 type="text"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="e.g., Friday Night Euchre Championship"
+                placeholder="e.g., Friday Night Championship"
                 required
               />
             </FormGroup>
@@ -458,17 +509,20 @@ export default function CreateTournamentPage() {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Describe your tournament, rules, and what to expect..."
+                placeholder="Describe the tournament, rules, and what to expect..."
               />
             </FormGroup>
           </FormSection>
 
           <FormSection>
-            <SectionTitle>Participant Limits</SectionTitle>
+            <SectionHeader>
+              <SectionIcon>⬡</SectionIcon>
+              <SectionTitle>Participants</SectionTitle>
+            </SectionHeader>
             
             <InputRow>
               <FormGroup>
-                <Label htmlFor="minParticipants">Minimum Participants *</Label>
+                <Label htmlFor="minParticipants">Minimum *</Label>
                 <Input
                   id="minParticipants"
                   name="minParticipants"
@@ -481,7 +535,7 @@ export default function CreateTournamentPage() {
               </FormGroup>
 
               <FormGroup>
-                <Label htmlFor="maxParticipants">Maximum Participants *</Label>
+                <Label htmlFor="maxParticipants">Maximum *</Label>
                 <Input
                   id="maxParticipants"
                   name="maxParticipants"
@@ -495,12 +549,15 @@ export default function CreateTournamentPage() {
             </InputRow>
             
             <HelpText>
-              Elimination type will be determined automatically based on participant count.
+              Elimination type determined automatically based on participant count.
             </HelpText>
           </FormSection>
 
           <FormSection>
-            <SectionTitle>Match Settings</SectionTitle>
+            <SectionHeader>
+              <SectionIcon>◇</SectionIcon>
+              <SectionTitle>Match Format</SectionTitle>
+            </SectionHeader>
             
             <FormGroup>
               <Label htmlFor="bestOf">Best Of</Label>
@@ -522,7 +579,10 @@ export default function CreateTournamentPage() {
           </FormSection>
 
           <FormSection>
-            <SectionTitle>Entry & Prizes (Optional)</SectionTitle>
+            <SectionHeader>
+              <SectionIcon>◎</SectionIcon>
+              <SectionTitle>Entry & Prizes</SectionTitle>
+            </SectionHeader>
             
             <InputRow>
               <FormGroup>
@@ -558,7 +618,10 @@ export default function CreateTournamentPage() {
           </FormSection>
 
           <FormSection>
-            <SectionTitle>Location & Schedule (Optional)</SectionTitle>
+            <SectionHeader>
+              <SectionIcon>◈</SectionIcon>
+              <SectionTitle>Location & Schedule</SectionTitle>
+            </SectionHeader>
             
             <FormGroup>
               <Label htmlFor="location">Location</Label>

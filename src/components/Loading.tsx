@@ -3,15 +3,42 @@ import styled, { keyframes } from "styled-components";
 export const Loading = ({ text }: { text?: string }) => {
   return (
     <LoadingOverlay>
-      <Spinner />
-      <LoadingText>{text || "Loading..."}</LoadingText>
+      <VoidSymbol>
+        <InnerCircle />
+      </VoidSymbol>
+      <LoadingText>{text || "Entering..."}</LoadingText>
     </LoadingOverlay>
   );
 };
 
-const spin = keyframes`
+const pulse = keyframes`
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+`;
+
+const rotate = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
   to {
     transform: rotate(360deg);
+  }
+`;
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 `;
 
@@ -29,34 +56,52 @@ const LoadingOverlay = styled.div`
   z-index: 1000;
 `;
 
-const Spinner = styled.div`
-  width: 56px;
-  height: 56px;
-  border: 3px solid ${({ theme }) => theme.border};
-  border-top-color: ${({ theme }) => theme.accentGold};
+const VoidSymbol = styled.div`
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  animation: ${spin} 1s linear infinite;
-  margin-bottom: 1rem;
+  border: 2px solid ${({ theme }) => theme.accent};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  animation: ${rotate} 8s linear infinite;
   position: relative;
-
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 1px solid ${({ theme }) => theme.border};
+  }
+  
   &::after {
     content: '';
     position: absolute;
-    inset: 5px;
-    border: 2px solid transparent;
-    border-top-color: ${({ theme }) => theme.accent};
+    inset: 4px;
     border-radius: 50%;
-    animation: ${spin} 0.7s linear infinite reverse;
+    border: 1px dashed ${({ theme }) => theme.border};
+    animation: ${rotate} 4s linear infinite reverse;
   }
 `;
 
-const LoadingText = styled.h3`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 500;
-  font-size: 1.2rem;
-  color: ${({ theme }) => theme.text};
-  margin-top: 0.5rem;
-  font-style: italic;
+const InnerCircle = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.accent};
+  animation: ${pulse} 2s ease-in-out infinite;
 `;
 
-export { LoadingOverlay, Spinner, LoadingText };
+const LoadingText = styled.p`
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textMuted};
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  animation: ${fadeIn} 0.5s ease-out 0.2s both;
+`;
+
+export { LoadingOverlay, VoidSymbol as Spinner, LoadingText };

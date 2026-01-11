@@ -42,6 +42,7 @@ interface Participant {
   teamId: string | null;
   status: string;
   seed: number | null;
+  user?: { username: string | null; displayName: string | null };
 }
 
 interface Team {
@@ -51,18 +52,30 @@ interface Team {
   isComplete: boolean;
 }
 
+// Animations
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
+const subtleGlow = keyframes`
+  0%, 100% { box-shadow: 0 0 30px rgba(123, 92, 255, 0.2); }
+  50% { box-shadow: 0 0 50px rgba(123, 92, 255, 0.35); }
+`;
+
+const livePulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+`;
+
+// Layout
 const Container = styled.div`
   min-height: 100vh;
   background: ${({ theme }) => theme.background};
 `;
 
 const Header = styled.header`
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 2rem;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
@@ -71,19 +84,17 @@ const Header = styled.header`
 `;
 
 const Logo = styled(Link)`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
   color: ${({ theme }) => theme.text};
-  text-decoration: none;
+  letter-spacing: -0.02em;
 `;
 
 const BackLink = styled(Link)`
-  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 0.9rem;
   color: ${({ theme }) => theme.textSecondary};
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  transition: color 0.15s ease;
   
   &:hover {
     color: ${({ theme }) => theme.text};
@@ -91,221 +102,376 @@ const BackLink = styled(Link)`
 `;
 
 const Main = styled.main`
-  max-width: 1000px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
 `;
 
-const TournamentHeader = styled.div`
+// Hero Section
+const HeroSection = styled.div<{ $isLive?: boolean }>`
+  padding: 2.5rem;
   margin-bottom: 2rem;
-  animation: ${fadeIn} 0.5s ease-out;
+  border-radius: 8px;
+  background: ${({ theme }) => theme.surface};
+  border: 1px solid ${({ theme, $isLive }) => $isLive ? theme.live : theme.border};
+  animation: ${fadeIn} 0.4s ease-out;
+  
+  ${({ $isLive }) => $isLive && `
+    animation: ${subtleGlow} 3s ease-in-out infinite;
+  `}
+`;
+
+const Breadcrumb = styled.div`
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.textMuted};
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  
+  a {
+    color: ${({ theme }) => theme.textMuted};
+    
+    &:hover {
+      color: ${({ theme }) => theme.textSecondary};
+    }
+  }
+`;
+
+const GameLabel = styled.div`
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.accent};
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.75rem;
 `;
 
 const TitleRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 1.5rem;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
 `;
 
-const PageTitle = styled.h1`
-  font-size: 2.25rem;
+const Title = styled.h1`
+  font-size: 2rem;
+  font-weight: 600;
   color: ${({ theme }) => theme.text};
   margin: 0;
+  letter-spacing: -0.02em;
 `;
 
 const StatusBadge = styled.span<{ $status: string }>`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.4rem 0.85rem;
+  border-radius: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  letter-spacing: 0.03em;
   
   ${({ $status, theme }) => {
     switch ($status) {
       case 'registration':
-        return `background: ${theme.accent}20; color: ${theme.accent};`;
+        return `
+          background: ${theme.accentMuted};
+          color: ${theme.accent};
+        `;
       case 'ready':
-        return `background: ${theme.accentGold}30; color: ${theme.accentGold};`;
+        return `
+          background: ${theme.accentMuted};
+          color: ${theme.accent};
+        `;
       case 'in_progress':
-        return `background: #22c55e20; color: #22c55e;`;
+        return `
+          background: ${theme.liveGlow};
+          color: ${theme.live};
+        `;
       case 'completed':
-        return `background: ${theme.textSecondary}20; color: ${theme.textSecondary};`;
+        return `
+          background: ${theme.surfaceHover};
+          color: ${theme.text};
+        `;
       default:
-        return `background: ${theme.border}; color: ${theme.textSecondary};`;
+        return `
+          background: ${theme.surfaceHover};
+          color: ${theme.textMuted};
+        `;
     }
   }}
 `;
 
-const GameBadge = styled.div`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 1rem;
-  color: ${({ theme }) => theme.textSecondary};
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+const LiveDot = styled.span`
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: ${({ theme }) => theme.live};
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  animation: ${livePulse} 1.5s ease-in-out infinite;
 `;
 
 const Description = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: ${({ theme }) => theme.textSecondary};
   line-height: 1.6;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
+  max-width: 600px;
 `;
 
+// Content Grid
 const ContentGrid = styled.div`
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 320px;
   gap: 2rem;
   
-  @media (max-width: 768px) {
+  @media (max-width: 800px) {
     grid-template-columns: 1fr;
   }
 `;
 
-const Section = styled.section`
-  background: ${({ theme }) => theme.surface};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  padding: 1.5rem;
-  animation: ${fadeIn} 0.5s ease-out 0.1s both;
+const MainColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 `;
 
-const SectionTitle = styled.h2`
-  font-size: 1.1rem;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
+const Sidebar = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  
+  @media (max-width: 800px) {
+    order: -1;
+  }
+`;
+
+// Cards
+const Card = styled.div`
+  background: ${({ theme }) => theme.surface};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 8px;
+  animation: ${fadeIn} 0.4s ease-out 0.1s both;
+`;
+
+const CardHeader = styled.div`
+  padding: 1rem 1.25rem;
   border-bottom: 1px solid ${({ theme }) => theme.border};
 `;
 
-const InfoGrid = styled.div`
+const CardTitle = styled.h3`
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+`;
+
+const CardBody = styled.div`
+  padding: 1.25rem;
+`;
+
+// Details Grid
+const DetailsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
+  gap: 1.25rem;
 `;
 
-const InfoItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+const DetailItem = styled.div``;
+
+const DetailLabel = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.35rem;
 `;
 
-const InfoLabel = styled.span`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.textSecondary};
-`;
-
-const InfoValue = styled.span`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
-  font-weight: 600;
+const DetailValue = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
   color: ${({ theme }) => theme.text};
 `;
 
-const ParticipantsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1rem;
+// Progress Bar
+const ProgressContainer = styled.div`
+  margin-bottom: 1rem;
 `;
 
-const ParticipantItem = styled.div`
+const ProgressHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem;
-  background: ${({ theme }) => theme.backgroundAlt};
-  border-radius: 8px;
+  margin-bottom: 0.5rem;
 `;
 
-const ParticipantName = styled.span`
-  font-family: 'Crimson Pro', Georgia, serif;
+const ProgressLabel = styled.span`
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.textSecondary};
+`;
+
+const ProgressValue = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: ${({ theme }) => theme.text};
 `;
 
-const ParticipantStatus = styled.span<{ $status: string }>`
-  font-size: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+const ProgressBar = styled.div`
+  width: 100%;
+  height: 4px;
+  background: ${({ theme }) => theme.backgroundAlt};
+  border-radius: 2px;
+  overflow: hidden;
+`;
+
+const ProgressFill = styled.div<{ $percent: number }>`
+  width: ${({ $percent }) => $percent}%;
+  height: 100%;
+  background: ${({ theme }) => theme.accent};
+  border-radius: 2px;
+  transition: width 0.5s ease;
+`;
+
+// Participants List
+const ParticipantList = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const ParticipantRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid ${({ theme }) => theme.borderSubtle};
   
-  ${({ $status, theme }) => {
-    switch ($status) {
-      case 'waitlist':
-        return `background: ${theme.accentGold}20; color: ${theme.accentGold};`;
-      default:
-        return `background: ${theme.accent}20; color: ${theme.accent};`;
-    }
-  }}
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const ParticipantInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const ParticipantRank = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textMuted};
+  width: 20px;
+`;
+
+const ParticipantName = styled.span`
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.text};
+`;
+
+const ParticipantBadge = styled.span<{ $type: string }>`
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+  
+  ${({ $type, theme }) => $type === 'waitlist' ? `
+    background: rgba(245, 158, 11, 0.15);
+    color: ${theme.warning};
+  ` : `
+    background: rgba(34, 197, 94, 0.15);
+    color: ${theme.success};
+  `}
 `;
 
 const EmptyText = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  color: ${({ theme }) => theme.textSecondary};
-  font-style: italic;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textMuted};
   text-align: center;
-  padding: 1rem;
+  padding: 2rem 1rem;
+  font-style: italic;
 `;
 
-const ActionButton = styled.button`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
-  font-weight: 600;
+// Action Card
+const ActionCard = styled(Card)<{ $accent?: boolean }>`
+  ${({ $accent, theme }) => $accent && `
+    border-color: ${theme.accent};
+  `}
+`;
+
+const EnterButton = styled.button`
+  width: 100%;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
   padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, ${({ theme }) => theme.accent}, ${({ theme }) => theme.accentGold});
+  background: ${({ theme }) => theme.accent};
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  width: 100%;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   
   &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px ${({ theme }) => theme.shadow};
+    background: ${({ theme }) => theme.accentHover};
+    transform: translateY(-1px);
   }
   
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
 
-const SecondaryButton = styled.button`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0.875rem 1.5rem;
-  background: transparent;
-  color: ${({ theme }) => theme.accent};
-  border: 2px solid ${({ theme }) => theme.accent};
-  border-radius: 8px;
-  cursor: pointer;
+const WithdrawButton = styled.button`
   width: 100%;
-  transition: all 0.2s ease;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  background: transparent;
+  color: ${({ theme }) => theme.textSecondary};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
   
   &:hover:not(:disabled) {
-    background: ${({ theme }) => theme.accent}10;
+    border-color: ${({ theme }) => theme.danger};
+    color: ${({ theme }) => theme.danger};
   }
   
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
+`;
+
+const RegisteredBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.success};
+  margin-bottom: 1rem;
 `;
 
 const AdminLink = styled(Link)`
   display: block;
   text-align: center;
-  font-family: 'Crimson Pro', Georgia, serif;
-  color: ${({ theme }) => theme.textSecondary};
-  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+  padding: 0.75rem;
+  transition: color 0.15s ease;
   
   &:hover {
     color: ${({ theme }) => theme.text};
@@ -313,54 +479,57 @@ const AdminLink = styled(Link)`
 `;
 
 const BracketLink = styled(Link)`
-  display: block;
-  text-align: center;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
   padding: 0.75rem 1rem;
   background: ${({ theme }) => theme.backgroundAlt};
   color: ${({ theme }) => theme.text};
-  border-radius: 8px;
+  border-radius: 6px;
   margin-top: 1rem;
+  transition: all 0.15s ease;
   
   &:hover {
-    background: ${({ theme }) => theme.border};
+    background: ${({ theme }) => theme.surfaceHover};
   }
 `;
 
-const ErrorMessage = styled.p`
-  color: #ef4444;
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.9rem;
-  padding: 0.75rem 1rem;
-  background: #ef444420;
-  border-radius: 8px;
+// Messages
+const Message = styled.div<{ $type: 'success' | 'error' }>`
+  padding: 0.875rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
   margin-bottom: 1rem;
+  
+  ${({ $type, theme }) => $type === 'success' ? `
+    background: rgba(34, 197, 94, 0.1);
+    color: ${theme.success};
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  ` : `
+    background: rgba(239, 68, 68, 0.1);
+    color: ${theme.danger};
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  `}
 `;
 
-const SuccessMessage = styled.p`
-  color: #22c55e;
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.9rem;
-  padding: 0.75rem 1rem;
-  background: #22c55e20;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-`;
-
-const GAME_ICONS: Record<string, string> = {
-  euchre: '🃏',
-  pool: '🎱',
-  chess: '♟️',
+// Game-specific naming
+const GAME_NAMES: Record<string, string> = {
+  euchre: 'Deal Into the Void',
+  pool: 'Break Into the Void',
+  chess: 'Endgame: Into the Void',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft',
-  registration: 'Registration Open',
-  ready: 'Ready to Start',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+  draft: 'Pending',
+  registration: 'Open',
+  ready: 'Begin',
+  in_progress: 'Live',
+  completed: 'Finished',
+  cancelled: 'Void',
 };
 
 export default function TournamentDetailPage() {
@@ -385,6 +554,7 @@ export default function TournamentDetailPage() {
   
   const isRegistered = user && participants.some(p => p.userId === user.id);
   const canRegister = tournament?.status === 'registration' || tournament?.status === 'ready';
+  const isLive = tournament?.status === 'in_progress';
 
   const fetchTournament = useCallback(async () => {
     if (!id) return;
@@ -392,9 +562,7 @@ export default function TournamentDetailPage() {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/tournaments/${id}`);
-      if (!res.ok) {
-        throw new Error('Tournament not found');
-      }
+      if (!res.ok) throw new Error('Tournament not found');
       const data = await res.json();
       setTournament(data.tournament);
       setGame(data.game);
@@ -428,13 +596,11 @@ export default function TournamentDetailPage() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to register');
-      }
+      if (!res.ok) throw new Error(data.error || 'Failed to register');
 
       setSuccess(data.isWaitlisted 
-        ? 'Added to waitlist! You\'ll be notified if a spot opens.'
-        : 'Successfully registered for the tournament!'
+        ? 'Added to waitlist. Awaiting confirmation.'
+        : 'Entry confirmed.'
       );
       fetchTournament();
     } catch (err) {
@@ -445,9 +611,7 @@ export default function TournamentDetailPage() {
   };
 
   const handleWithdraw = async () => {
-    if (!confirm('Are you sure you want to withdraw from this tournament?')) {
-      return;
-    }
+    if (!confirm('Withdraw from this tournament?')) return;
 
     setActionLoading(true);
     setError(null);
@@ -459,12 +623,9 @@ export default function TournamentDetailPage() {
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to withdraw');
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to withdraw');
-      }
-
-      setSuccess('Successfully withdrawn from the tournament');
+      setSuccess('Withdrawn from tournament.');
       fetchTournament();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to withdraw');
@@ -490,7 +651,7 @@ export default function TournamentDetailPage() {
   };
 
   if (isLoading || isUserLoading) {
-    return <Loading text="Loading tournament..." />;
+    return <Loading text="Loading..." />;
   }
 
   if (!tournament) {
@@ -498,195 +659,245 @@ export default function TournamentDetailPage() {
       <Container>
         <Header>
           <Logo href="/dashboard">Renaissance City</Logo>
-          <BackLink href="/tournaments">← Back to Tournaments</BackLink>
+          <BackLink href="/tournaments">← Back</BackLink>
         </Header>
         <Main>
-          <ErrorMessage>{error || 'Tournament not found'}</ErrorMessage>
+          <Message $type="error">{error || 'Tournament not found'}</Message>
         </Main>
       </Container>
     );
   }
 
+  const registeredParticipants = participants.filter(p => p.status === 'registered');
+  const fillPercent = Math.min((participantCount / tournament.maxParticipants) * 100, 100);
+
   return (
     <Container>
       <Head>
-        <title>{tournament.name} | Renaissance City Games</title>
+        <title>{tournament.name} | Renaissance City</title>
         <meta name="description" content={tournament.description || `${tournament.name} tournament`} />
       </Head>
 
       <Header>
         <Logo href="/dashboard">Renaissance City</Logo>
-        <BackLink href="/tournaments">← Back to Tournaments</BackLink>
+        <BackLink href="/tournaments">← Tournaments</BackLink>
       </Header>
 
       <Main>
-        <TournamentHeader>
+        <HeroSection $isLive={isLive}>
+          <Breadcrumb>
+            <Link href="/tournaments">Tournaments</Link> / {tournament.name}
+          </Breadcrumb>
+          
+          <GameLabel>
+            {GAME_NAMES[game?.type || ''] || game?.name || 'Tournament'}
+          </GameLabel>
+          
           <TitleRow>
-            <div>
-              <PageTitle>{tournament.name}</PageTitle>
-              <GameBadge>
-                <span>{game ? GAME_ICONS[game.type] || '🎮' : '🎮'}</span>
-                {game?.name || 'Game'}
-                {game?.isTeamGame && ` • ${game.playersPerTeam}v${game.playersPerTeam}`}
-              </GameBadge>
-            </div>
+            <Title>{tournament.name}</Title>
             <StatusBadge $status={tournament.status}>
+              {isLive && <LiveDot />}
               {STATUS_LABELS[tournament.status] || tournament.status}
             </StatusBadge>
           </TitleRow>
+          
           {tournament.description && (
             <Description>{tournament.description}</Description>
           )}
-        </TournamentHeader>
-
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        {success && <SuccessMessage>{success}</SuccessMessage>}
+        </HeroSection>
 
         <ContentGrid>
-          <div>
-            <Section>
-              <SectionTitle>Tournament Details</SectionTitle>
-              <InfoGrid>
-                <InfoItem>
-                  <InfoLabel>Format</InfoLabel>
-                  <InfoValue>
-                    {tournament.eliminationType 
-                      ? `${tournament.eliminationType === 'double' ? 'Double' : 'Single'} Elimination`
-                      : 'TBD'}
-                  </InfoValue>
-                </InfoItem>
-                <InfoItem>
-                  <InfoLabel>Match Type</InfoLabel>
-                  <InfoValue>
-                    {tournament.bestOf === 1 ? 'Single Game' : `Best of ${tournament.bestOf}`}
-                  </InfoValue>
-                </InfoItem>
-                <InfoItem>
-                  <InfoLabel>Entry Fee</InfoLabel>
-                  <InfoValue>{formatCurrency(tournament.entryFee)}</InfoValue>
-                </InfoItem>
-                <InfoItem>
-                  <InfoLabel>Prize Pool</InfoLabel>
-                  <InfoValue>
-                    {tournament.prizePool && tournament.prizePool > 0 
-                      ? formatCurrency(tournament.prizePool)
-                      : 'None'}
-                  </InfoValue>
-                </InfoItem>
-                <InfoItem>
-                  <InfoLabel>Location</InfoLabel>
-                  <InfoValue>{tournament.location || 'TBD'}</InfoValue>
-                </InfoItem>
-                <InfoItem>
-                  <InfoLabel>Start Time</InfoLabel>
-                  <InfoValue>{formatDate(tournament.startTime)}</InfoValue>
-                </InfoItem>
-              </InfoGrid>
-            </Section>
+          <MainColumn>
+            <Card>
+              <CardHeader>
+                <CardTitle>Details</CardTitle>
+              </CardHeader>
+              <CardBody>
+                <DetailsGrid>
+                  <DetailItem>
+                    <DetailLabel>Format</DetailLabel>
+                    <DetailValue>
+                      {tournament.eliminationType === 'double' ? 'Double Elimination' : 'Single Elimination'}
+                    </DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>Match</DetailLabel>
+                    <DetailValue>
+                      {tournament.bestOf === 1 ? 'Single Game' : `Best of ${tournament.bestOf}`}
+                    </DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>Entry</DetailLabel>
+                    <DetailValue>{formatCurrency(tournament.entryFee)}</DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>Prize</DetailLabel>
+                    <DetailValue>
+                      {tournament.prizePool && tournament.prizePool > 0 
+                        ? formatCurrency(tournament.prizePool)
+                        : '—'}
+                    </DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>Location</DetailLabel>
+                    <DetailValue>{tournament.location || 'TBD'}</DetailValue>
+                  </DetailItem>
+                  <DetailItem>
+                    <DetailLabel>Start</DetailLabel>
+                    <DetailValue>{formatDate(tournament.startTime)}</DetailValue>
+                  </DetailItem>
+                </DetailsGrid>
+              </CardBody>
+            </Card>
 
-            <Section style={{ marginTop: '1.5rem' }}>
-              <SectionTitle>
-                Participants ({participantCount}/{tournament.maxParticipants})
-              </SectionTitle>
-              
-              {game?.isTeamGame ? (
-                teams.length > 0 ? (
-                  <ParticipantsList>
-                    {teams.map((team, index) => (
-                      <ParticipantItem key={team.id}>
-                        <ParticipantName>
-                          {index + 1}. {team.name}
-                        </ParticipantName>
-                        <ParticipantStatus $status={team.isComplete ? 'registered' : 'incomplete'}>
-                          {team.isComplete ? 'Ready' : 'Forming'}
-                        </ParticipantStatus>
-                      </ParticipantItem>
-                    ))}
-                  </ParticipantsList>
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {game?.isTeamGame ? 'Teams' : 'Players'}
+                </CardTitle>
+              </CardHeader>
+              <CardBody>
+                <ProgressContainer>
+                  <ProgressHeader>
+                    <ProgressLabel>Registered</ProgressLabel>
+                    <ProgressValue>{participantCount}/{tournament.maxParticipants}</ProgressValue>
+                  </ProgressHeader>
+                  <ProgressBar>
+                    <ProgressFill $percent={fillPercent} />
+                  </ProgressBar>
+                </ProgressContainer>
+                
+                {game?.isTeamGame ? (
+                  teams.length > 0 ? (
+                    <ParticipantList>
+                      {teams.map((team, index) => (
+                        <ParticipantRow key={team.id}>
+                          <ParticipantInfo>
+                            <ParticipantRank>{index + 1}</ParticipantRank>
+                            <ParticipantName>{team.name}</ParticipantName>
+                          </ParticipantInfo>
+                          <ParticipantBadge $type={team.isComplete ? 'ready' : 'waitlist'}>
+                            {team.isComplete ? 'Ready' : 'Forming'}
+                          </ParticipantBadge>
+                        </ParticipantRow>
+                      ))}
+                    </ParticipantList>
+                  ) : (
+                    <EmptyText>No teams registered. Be the first to enter.</EmptyText>
+                  )
                 ) : (
-                  <EmptyText>No teams registered yet</EmptyText>
-                )
-              ) : (
-                participants.length > 0 ? (
-                  <ParticipantsList>
-                    {participants.map((p, index) => (
-                      <ParticipantItem key={p.id}>
-                        <ParticipantName>
-                          {p.status === 'waitlist' ? 'W' : index + 1}. Player {p.userId?.slice(0, 8)}
-                        </ParticipantName>
-                        <ParticipantStatus $status={p.status}>
-                          {p.status === 'waitlist' ? 'Waitlist' : 'Registered'}
-                        </ParticipantStatus>
-                      </ParticipantItem>
-                    ))}
-                  </ParticipantsList>
+                  registeredParticipants.length > 0 ? (
+                    <ParticipantList>
+                      {registeredParticipants.slice(0, 10).map((p, index) => (
+                        <ParticipantRow key={p.id}>
+                          <ParticipantInfo>
+                            <ParticipantRank>{index + 1}</ParticipantRank>
+                            <ParticipantName>
+                              {p.user?.displayName || p.user?.username || `Player ${p.userId?.slice(0, 6)}`}
+                            </ParticipantName>
+                          </ParticipantInfo>
+                          <ParticipantBadge $type="ready">Entered</ParticipantBadge>
+                        </ParticipantRow>
+                      ))}
+                      {registeredParticipants.length > 10 && (
+                        <EmptyText style={{ padding: '0.5rem', fontStyle: 'normal' }}>
+                          + {registeredParticipants.length - 10} more
+                        </EmptyText>
+                      )}
+                    </ParticipantList>
+                  ) : (
+                    <EmptyText>No players registered. Be the first to enter.</EmptyText>
+                  )
+                )}
+
+                {(tournament.status === 'ready' || tournament.status === 'in_progress') && (
+                  <BracketLink href={`/tournaments/${id}/bracket`}>
+                    View Bracket →
+                  </BracketLink>
+                )}
+              </CardBody>
+            </Card>
+          </MainColumn>
+
+          <Sidebar>
+            <ActionCard $accent={canRegister && !isRegistered}>
+              <CardHeader>
+                <CardTitle>Action</CardTitle>
+              </CardHeader>
+              <CardBody>
+                {error && <Message $type="error">{error}</Message>}
+                {success && <Message $type="success">{success}</Message>}
+                
+                {!user ? (
+                  <EmptyText style={{ padding: 0 }}>Sign in to enter</EmptyText>
+                ) : isRegistered ? (
+                  <>
+                    <RegisteredBadge>
+                      ✓ You have entered this tournament
+                    </RegisteredBadge>
+                    {canRegister && (
+                      <WithdrawButton 
+                        onClick={handleWithdraw} 
+                        disabled={actionLoading}
+                      >
+                        {actionLoading ? 'Processing...' : 'Withdraw'}
+                      </WithdrawButton>
+                    )}
+                  </>
+                ) : canRegister ? (
+                  <EnterButton 
+                    onClick={handleRegister} 
+                    disabled={actionLoading}
+                  >
+                    {actionLoading 
+                      ? 'Processing...' 
+                      : participantCount >= tournament.maxParticipants 
+                        ? 'Join Waitlist' 
+                        : 'Enter Tournament'}
+                  </EnterButton>
                 ) : (
-                  <EmptyText>No players registered yet</EmptyText>
-                )
-              )}
+                  <EmptyText style={{ padding: 0 }}>Registration closed</EmptyText>
+                )}
 
-              {(tournament.status === 'ready' || tournament.status === 'in_progress') && (
-                <BracketLink href={`/tournaments/${id}/bracket`}>
-                  View Bracket →
-                </BracketLink>
-              )}
-            </Section>
-          </div>
-
-          <div>
-            <Section>
-              <SectionTitle>Actions</SectionTitle>
-              
-              {!user ? (
-                <EmptyText>Sign in to join this tournament</EmptyText>
-              ) : isRegistered ? (
-                <>
-                  <SuccessMessage style={{ marginBottom: '1rem' }}>
-                    You are registered!
-                  </SuccessMessage>
-                  {canRegister && (
-                    <SecondaryButton 
-                      onClick={handleWithdraw} 
-                      disabled={actionLoading}
-                    >
-                      {actionLoading ? 'Processing...' : 'Withdraw'}
-                    </SecondaryButton>
-                  )}
-                </>
-              ) : canRegister ? (
-                <ActionButton 
-                  onClick={handleRegister} 
-                  disabled={actionLoading || participantCount >= tournament.maxParticipants}
-                >
-                  {actionLoading 
-                    ? 'Processing...' 
-                    : participantCount >= tournament.maxParticipants 
-                      ? 'Join Waitlist' 
-                      : 'Register Now'}
-                </ActionButton>
-              ) : (
-                <EmptyText>Registration is closed</EmptyText>
-              )}
-
-              {isOrganizer && (
-                <AdminLink href={`/tournaments/${id}/admin`}>
-                  Manage Tournament →
-                </AdminLink>
-              )}
-            </Section>
+                {isOrganizer && (
+                  <AdminLink href={`/tournaments/${id}/admin`}>
+                    Manage Tournament →
+                  </AdminLink>
+                )}
+              </CardBody>
+            </ActionCard>
 
             {((tournament.entryFee && tournament.entryFee > 0) || (tournament.prizePool && tournament.prizePool > 0)) && (
-              <div style={{ marginTop: '1.5rem' }}>
-                <PaymentPlaceholder
-                  entryFee={tournament.entryFee}
-                  prizePool={tournament.prizePool}
-                  prizeDistribution={tournament.prizeDistribution}
-                  participantCount={participantCount}
-                  maxParticipants={tournament.maxParticipants}
-                />
-              </div>
+              <PaymentPlaceholder
+                entryFee={tournament.entryFee}
+                prizePool={tournament.prizePool}
+                prizeDistribution={tournament.prizeDistribution}
+                participantCount={participantCount}
+                maxParticipants={tournament.maxParticipants}
+              />
             )}
-          </div>
+
+            {tournament.startTime && (
+              <Card>
+                <CardBody>
+                  <DetailItem>
+                    <DetailLabel>Tournament Begins</DetailLabel>
+                    <DetailValue style={{ fontSize: '0.9rem' }}>
+                      {formatDate(tournament.startTime)}
+                    </DetailValue>
+                  </DetailItem>
+                  {tournament.registrationDeadline && (
+                    <DetailItem style={{ marginTop: '1rem' }}>
+                      <DetailLabel>Registration Closes</DetailLabel>
+                      <DetailValue style={{ fontSize: '0.9rem' }}>
+                        {formatDate(tournament.registrationDeadline)}
+                      </DetailValue>
+                    </DetailItem>
+                  )}
+                </CardBody>
+              </Card>
+            )}
+          </Sidebar>
         </ContentGrid>
       </Main>
     </Container>

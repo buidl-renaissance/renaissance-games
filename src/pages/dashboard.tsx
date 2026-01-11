@@ -7,16 +7,25 @@ import { useUser } from "@/contexts/UserContext";
 import { Loading } from "@/components/Loading";
 
 // App configuration
-const APP_NAME = "Renaissance City";
+const APP_NAME = "Into the Void";
 
 const fadeIn = keyframes`
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+`;
+
+const pulseGlow = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 20px ${({ theme }) => theme.accentGlow};
+  }
+  50% {
+    box-shadow: 0 0 40px ${({ theme }) => theme.accentGlow};
   }
 `;
 
@@ -43,7 +52,6 @@ const DashboardHeader = styled.div`
   flex-wrap: wrap;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
-  box-shadow: 0 2px 8px ${({ theme }) => theme.shadow};
   
   @media (max-width: 768px) {
     padding: 1rem;
@@ -58,17 +66,16 @@ const UserSection = styled.div`
 `;
 
 const ProfileImageContainer = styled.div`
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid ${({ theme }) => theme.accentGold};
+  border: 2px solid ${({ theme }) => theme.accent};
   background: ${({ theme }) => theme.surface};
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px ${({ theme }) => theme.shadow};
 `;
 
 const ProfileImage = styled.img`
@@ -80,18 +87,14 @@ const ProfileImage = styled.img`
 const DefaultAvatar = styled.div`
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    ${({ theme }) => theme.accent} 0%,
-    ${({ theme }) => theme.accentGold} 100%
-  );
+  background: ${({ theme }) => theme.steelGray};
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 1.2rem;
+  color: ${({ theme }) => theme.signalWhite};
+  font-size: 1rem;
   font-weight: 600;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'Space Grotesk', sans-serif;
 `;
 
 const WelcomeText = styled.div`
@@ -101,23 +104,22 @@ const WelcomeText = styled.div`
 `;
 
 const Greeting = styled.h1`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.5rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
   color: ${({ theme }) => theme.text};
   
   @media (max-width: 768px) {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
 `;
 
 const SubGreeting = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.textSecondary};
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
   margin: 0;
-  font-style: italic;
 `;
 
 const BrandMark = styled.div`
@@ -128,11 +130,12 @@ const BrandMark = styled.div`
 `;
 
 const BrandName = styled.span`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.accent};
-  letter-spacing: 0.05em;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textMuted};
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   
   @media (max-width: 480px) {
     display: none;
@@ -145,88 +148,150 @@ const ContentSection = styled.section`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem 2rem;
+  padding: 4rem 2rem;
   text-align: center;
   animation: ${fadeIn} 0.6s ease-out 0.3s both;
 `;
 
-const PlaceholderTitle = styled.h2`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 2.5rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 1rem;
+const VoidSymbol = styled.div`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid ${({ theme }) => theme.accent};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  animation: ${pulseGlow} 3s ease-in-out infinite;
   
-  @media (max-width: 768px) {
-    font-size: 2rem;
+  &::before {
+    content: '';
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: ${({ theme }) => theme.accent};
+    opacity: 0.3;
   }
 `;
 
+const PlaceholderTitle = styled.h2`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: ${({ theme }) => theme.text};
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+  
+  @media (max-width: 768px) {
+    font-size: 1.75rem;
+  }
+`;
+
+const Subtitle = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.accent};
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  display: block;
+`;
+
 const PlaceholderText = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 1.15rem;
-  color: ${({ theme }) => theme.textSecondary};
-  max-width: 520px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  color: ${({ theme }) => theme.textMuted};
+  max-width: 420px;
   line-height: 1.7;
 `;
 
 const QuickActions = styled.div`
   display: flex;
   gap: 1rem;
-  margin-top: 2rem;
+  margin-top: 3rem;
   flex-wrap: wrap;
   justify-content: center;
 `;
 
 const ActionButton = styled(Link)`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
   font-weight: 600;
-  padding: 0.875rem 1.75rem;
-  background: linear-gradient(135deg, ${({ theme }) => theme.accent}, ${({ theme }) => theme.accentGold});
-  color: white;
-  border-radius: 8px;
+  padding: 1rem 2rem;
+  background: ${({ theme }) => theme.accent};
+  color: ${({ theme }) => theme.signalWhite};
+  border-radius: 4px;
   text-decoration: none;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  letter-spacing: 0.05em;
   
   &:hover {
+    background: ${({ theme }) => theme.accentHover};
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px ${({ theme }) => theme.shadow};
-    color: white;
+    box-shadow: 0 8px 24px ${({ theme }) => theme.accentGlow};
+    color: ${({ theme }) => theme.signalWhite};
   }
 `;
 
 const SecondaryAction = styled(Link)`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0.875rem 1.75rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 1rem 2rem;
   background: transparent;
   color: ${({ theme }) => theme.text};
-  border: 2px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 4px;
   text-decoration: none;
   transition: all 0.2s ease;
+  letter-spacing: 0.05em;
   
   &:hover {
     background: ${({ theme }) => theme.backgroundAlt};
+    border-color: ${({ theme }) => theme.steelGray};
     color: ${({ theme }) => theme.text};
   }
 `;
 
 const Divider = styled.div`
-  width: 60px;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    ${({ theme }) => theme.accentGold},
-    transparent
-  );
+  width: 40px;
+  height: 1px;
+  background: ${({ theme }) => theme.border};
   margin: 1.5rem 0;
+`;
+
+const GameIcons = styled.div`
+  display: flex;
+  gap: 2rem;
+  margin-top: 4rem;
+  opacity: 0.4;
+`;
+
+const GameIcon = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+`;
+
+const IconCircle = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid ${({ theme }) => theme.border};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
 `;
 
 const DashboardPage: React.FC = () => {
@@ -262,7 +327,7 @@ const DashboardPage: React.FC = () => {
 
   // Show loading while checking auth
   if (isUserLoading) {
-    return <Loading text="Loading..." />;
+    return <Loading text="Entering..." />;
   }
 
   // Don't render anything while redirecting
@@ -282,7 +347,7 @@ const DashboardPage: React.FC = () => {
     <Container>
       <Head>
         <title>Dashboard | {APP_NAME}</title>
-        <meta name="description" content={`Your ${APP_NAME} dashboard`} />
+        <meta name="description" content="Enter the void. Compete in tournaments." />
         <link rel="icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
@@ -302,25 +367,27 @@ const DashboardPage: React.FC = () => {
               )}
             </ProfileImageContainer>
             <WelcomeText>
-              <Greeting>Welcome, {displayName}</Greeting>
-              <SubGreeting>What are we building today?</SubGreeting>
+              <Greeting>{displayName}</Greeting>
+              <SubGreeting>Ready to compete</SubGreeting>
             </WelcomeText>
           </UserSection>
           <BrandMark>
-            <BrandName>Renaissance City</BrandName>
+            <BrandName>Into the Void</BrandName>
           </BrandMark>
         </DashboardHeader>
 
         <ContentSection>
-          <PlaceholderTitle>Renaissance City Games</PlaceholderTitle>
+          <VoidSymbol />
+          <PlaceholderTitle>Competitive Rituals</PlaceholderTitle>
+          <Subtitle>Await</Subtitle>
           <Divider />
           <PlaceholderText>
-            Compete in tournaments, climb the ranks, and claim your glory. 
-            Join the Renaissance — where every game is a chance to make history.
+            Step into focused competition. Join tournaments, 
+            advance through brackets, claim your place.
           </PlaceholderText>
           <QuickActions>
             <ActionButton href="/tournaments">
-              🏆 Browse Tournaments
+              Enter Tournaments
             </ActionButton>
             {user && (user.role === 'admin' || user.role === 'organizer') && (
               <SecondaryAction href="/tournaments/create">
@@ -329,10 +396,25 @@ const DashboardPage: React.FC = () => {
             )}
             {user && user.role === 'admin' && (
               <SecondaryAction href="/admin/users">
-                ⚙️ Manage Users
+                Manage Users
               </SecondaryAction>
             )}
           </QuickActions>
+          
+          <GameIcons>
+            <GameIcon>
+              <IconCircle>♟</IconCircle>
+              Chess
+            </GameIcon>
+            <GameIcon>
+              <IconCircle>🎱</IconCircle>
+              Pool
+            </GameIcon>
+            <GameIcon>
+              <IconCircle>🃏</IconCircle>
+              Euchre
+            </GameIcon>
+          </GameIcons>
         </ContentSection>
       </Main>
     </Container>

@@ -11,10 +11,17 @@ interface Tournament {
   gameId: string;
   organizerId: string;
   name: string;
+  description: string | null;
   status: string;
   minParticipants: number;
   maxParticipants: number;
   eliminationType: string | null;
+  entryFee: number | null;
+  prizePool: number | null;
+  bestOf: number;
+  location: string | null;
+  startTime: string | null;
+  registrationDeadline: string | null;
 }
 
 interface Game {
@@ -32,6 +39,7 @@ interface Participant {
   teamId: string | null;
   status: string;
   seed: number | null;
+  user?: { username: string | null; displayName: string | null };
 }
 
 interface Team {
@@ -41,24 +49,20 @@ interface Team {
   isComplete: boolean;
 }
 
-interface User {
-  id: string;
-  username: string | null;
-  displayName: string | null;
-}
-
+// Animations
 const fadeIn = keyframes`
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 `;
 
+// Layout
 const Container = styled.div`
   min-height: 100vh;
   background: ${({ theme }) => theme.background};
 `;
 
 const Header = styled.header`
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 2rem;
   background: ${({ theme }) => theme.surface};
   border-bottom: 1px solid ${({ theme }) => theme.border};
   display: flex;
@@ -67,16 +71,17 @@ const Header = styled.header`
 `;
 
 const Logo = styled(Link)`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
   color: ${({ theme }) => theme.text};
-  text-decoration: none;
+  letter-spacing: -0.02em;
 `;
 
 const BackLink = styled(Link)`
-  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 0.9rem;
   color: ${({ theme }) => theme.textSecondary};
+  transition: color 0.15s ease;
   
   &:hover {
     color: ${({ theme }) => theme.text};
@@ -84,106 +89,234 @@ const BackLink = styled(Link)`
 `;
 
 const Main = styled.main`
-  max-width: 1000px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 2rem;
 `;
 
+// Page Header
 const PageHeader = styled.div`
   margin-bottom: 2rem;
-  animation: ${fadeIn} 0.5s ease-out;
+  animation: ${fadeIn} 0.4s ease-out;
 `;
 
 const TitleRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
 `;
 
+const TitleGroup = styled.div``;
+
 const PageTitle = styled.h1`
-  font-size: 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: ${({ theme }) => theme.text};
+  margin: 0 0 0.25rem 0;
+`;
+
+const PageSubtitle = styled.p`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
   margin: 0;
 `;
 
+const HeaderActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+`;
+
 const StatusBadge = styled.span<{ $status: string }>`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.4rem 0.85rem;
+  border-radius: 4px;
   text-transform: uppercase;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  letter-spacing: 0.03em;
   
   ${({ $status, theme }) => {
     switch ($status) {
+      case 'draft':
+        return `background: ${theme.surfaceHover}; color: ${theme.textMuted};`;
       case 'registration':
-        return `background: ${theme.accent}20; color: ${theme.accent};`;
+        return `background: ${theme.accentMuted}; color: ${theme.accent};`;
       case 'ready':
-        return `background: ${theme.accentGold}30; color: ${theme.accentGold};`;
+        return `background: ${theme.accentMuted}; color: ${theme.accent};`;
       case 'in_progress':
-        return `background: #22c55e20; color: #22c55e;`;
+        return `background: ${theme.liveGlow}; color: ${theme.live};`;
+      case 'completed':
+        return `background: ${theme.surfaceHover}; color: ${theme.text};`;
       default:
-        return `background: ${theme.border}; color: ${theme.textSecondary};`;
+        return `background: ${theme.surfaceHover}; color: ${theme.textMuted};`;
     }
   }}
 `;
 
-const Section = styled.section`
-  background: ${({ theme }) => theme.surface};
+const EditButton = styled(Link)`
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: ${({ theme }) => theme.textSecondary};
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  animation: ${fadeIn} 0.5s ease-out 0.1s both;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    color: ${({ theme }) => theme.text};
+    border-color: ${({ theme }) => theme.textSecondary};
+  }
 `;
 
-const SectionTitle = styled.h2`
-  font-size: 1.1rem;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
+// Tabs
+const TabsContainer = styled.div`
+  display: flex;
+  gap: 0;
   border-bottom: 1px solid ${({ theme }) => theme.border};
+  margin-bottom: 2rem;
+`;
+
+const Tab = styled.button<{ $active: boolean }>`
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.875rem 1.25rem;
+  color: ${({ theme, $active }) => $active ? theme.text : theme.textMuted};
+  background: transparent;
+  border: none;
+  position: relative;
+  transition: color 0.15s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: ${({ theme, $active }) => $active ? theme.accent : 'transparent'};
+    transition: background 0.15s ease;
+  }
+  
+  &:hover {
+    color: ${({ theme }) => theme.text};
+  }
+`;
+
+const TabContent = styled.div`
+  animation: ${fadeIn} 0.3s ease-out;
+`;
+
+// Stats Grid
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+  
+  @media (max-width: 600px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+`;
+
+const StatCard = styled.div`
+  background: ${({ theme }) => theme.surface};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+`;
+
+const StatValue = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+`;
+
+const StatLabel = styled.div`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+`;
+
+// Cards
+const Card = styled.div`
+  background: ${({ theme }) => theme.surface};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+`;
+
+const CardHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
 `;
 
+const CardTitle = styled.h3`
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+`;
+
+const CardBody = styled.div`
+  padding: 1.25rem;
+`;
+
+// Action Buttons
 const ActionButtons = styled.div`
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
 `;
 
-const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 0.75rem 1.25rem;
-  border-radius: 8px;
+const ActionButton = styled.button<{ $variant?: 'primary' | 'danger' | 'success' }>`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.625rem 1.125rem;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   
   ${({ theme, $variant }) => {
     switch ($variant) {
       case 'primary':
         return `
-          background: linear-gradient(135deg, ${theme.accent}, ${theme.accentGold});
+          background: ${theme.accent};
           color: white;
           border: none;
           &:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px ${theme.shadow};
+            background: ${theme.accentHover};
+            transform: translateY(-1px);
+          }
+        `;
+      case 'success':
+        return `
+          background: ${theme.success};
+          color: white;
+          border: none;
+          &:hover:not(:disabled) {
+            opacity: 0.9;
           }
         `;
       case 'danger':
         return `
-          background: #ef4444;
+          background: ${theme.danger};
           color: white;
           border: none;
           &:hover:not(:disabled) {
-            background: #dc2626;
+            opacity: 0.9;
           }
         `;
       default:
@@ -192,185 +325,237 @@ const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' | 'dange
           color: ${theme.text};
           border: 1px solid ${theme.border};
           &:hover:not(:disabled) {
-            background: ${theme.backgroundAlt};
+            background: ${theme.surfaceHover};
           }
         `;
     }
   }}
   
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 `;
 
-const ParticipantGrid = styled.div`
-  display: grid;
-  gap: 0.75rem;
-  margin-top: 1rem;
+const LinkButton = styled(Link)`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.625rem 1.125rem;
+  border-radius: 6px;
+  background: transparent;
+  color: ${({ theme }) => theme.text};
+  border: 1px solid ${({ theme }) => theme.border};
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.surfaceHover};
+  }
 `;
 
-const ParticipantCard = styled.div<{ $selected?: boolean }>`
+// Participants
+const ParticipantList = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const ParticipantRow = styled.div<{ $selected?: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: ${({ theme, $selected }) => $selected ? `${theme.accent}15` : theme.backgroundAlt};
-  border: 1px solid ${({ theme, $selected }) => $selected ? theme.accent : 'transparent'};
-  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  background: ${({ theme, $selected }) => $selected ? theme.accentMuted : 'transparent'};
+  border-bottom: 1px solid ${({ theme }) => theme.borderSubtle};
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
+  
+  &:last-child {
+    border-bottom: none;
+  }
   
   &:hover {
-    background: ${({ theme }) => theme.accent}10;
+    background: ${({ theme }) => theme.surfaceHover};
   }
 `;
 
 const ParticipantInfo = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  align-items: center;
+  gap: 0.75rem;
+`;
+
+const ParticipantRank = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textMuted};
+  width: 24px;
 `;
 
 const ParticipantName = styled.span`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-weight: 600;
+  font-size: 0.9rem;
   color: ${({ theme }) => theme.text};
 `;
 
-const ParticipantMeta = styled.span`
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.textSecondary};
-`;
-
-const ParticipantStatus = styled.span<{ $status: string }>`
-  font-size: 0.75rem;
+const ParticipantBadge = styled.span<{ $status: string }>`
+  font-size: 0.7rem;
+  font-weight: 500;
   padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
   
   ${({ $status, theme }) => {
     switch ($status) {
       case 'waitlist':
-        return `background: ${theme.accentGold}20; color: ${theme.accentGold};`;
+        return `background: rgba(245, 158, 11, 0.15); color: ${theme.warning};`;
       case 'checked_in':
-        return `background: #22c55e20; color: #22c55e;`;
+      case 'registered':
+        return `background: rgba(34, 197, 94, 0.15); color: ${theme.success};`;
       default:
-        return `background: ${theme.accent}20; color: ${theme.accent};`;
+        return `background: ${theme.accentMuted}; color: ${theme.accent};`;
     }
   }}
 `;
 
+// Team Pairing
 const TeamPairingSection = styled.div`
   margin-top: 1.5rem;
-  padding-top: 1rem;
+  padding-top: 1.5rem;
   border-top: 1px solid ${({ theme }) => theme.border};
 `;
 
-const TeamPairingTitle = styled.h3`
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 1rem;
+const PairingTitle = styled.h4`
+  font-size: 0.85rem;
+  font-weight: 500;
   color: ${({ theme }) => theme.text};
   margin-bottom: 1rem;
 `;
 
 const PairingRow = styled.div`
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
   margin-bottom: 1rem;
   
-  @media (max-width: 600px) {
+  @media (max-width: 500px) {
     flex-direction: column;
   }
 `;
 
-const Select = styled.select`
-  flex: 1;
-  padding: 0.75rem 1rem;
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 1rem;
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
-  background: ${({ theme }) => theme.background};
-  color: ${({ theme }) => theme.text};
-  cursor: pointer;
-  
-  &:focus {
-    outline: none;
-    border-color: ${({ theme }) => theme.accent};
-  }
-`;
-
 const Input = styled.input`
-  padding: 0.75rem 1rem;
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 1rem;
+  flex: 1;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9rem;
+  background: ${({ theme }) => theme.backgroundAlt};
   border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
-  background: ${({ theme }) => theme.background};
+  border-radius: 6px;
   color: ${({ theme }) => theme.text};
   
   &:focus {
     outline: none;
     border-color: ${({ theme }) => theme.accent};
   }
+  
+  &::placeholder {
+    color: ${({ theme }) => theme.textMuted};
+  }
 `;
 
+// Info Box
 const InfoBox = styled.div<{ $type?: 'info' | 'warning' | 'success' | 'error' }>`
-  padding: 1rem;
-  border-radius: 8px;
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-size: 0.95rem;
+  padding: 0.875rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
   margin-bottom: 1rem;
   
   ${({ $type, theme }) => {
     switch ($type) {
       case 'warning':
-        return `background: ${theme.accentGold}15; color: ${theme.accentGold};`;
+        return `background: rgba(245, 158, 11, 0.1); color: ${theme.warning}; border: 1px solid rgba(245, 158, 11, 0.2);`;
       case 'success':
-        return `background: #22c55e15; color: #22c55e;`;
+        return `background: rgba(34, 197, 94, 0.1); color: ${theme.success}; border: 1px solid rgba(34, 197, 94, 0.2);`;
       case 'error':
-        return `background: #ef444415; color: #ef4444;`;
+        return `background: rgba(239, 68, 68, 0.1); color: ${theme.danger}; border: 1px solid rgba(239, 68, 68, 0.2);`;
       default:
-        return `background: ${theme.backgroundAlt}; color: ${theme.textSecondary};`;
+        return `background: ${theme.surfaceHover}; color: ${theme.textSecondary}; border: 1px solid ${theme.border};`;
     }
   }}
 `;
 
+// Empty State
 const EmptyText = styled.p`
-  font-family: 'Crimson Pro', Georgia, serif;
-  color: ${({ theme }) => theme.textSecondary};
-  font-style: italic;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textMuted};
   text-align: center;
-  padding: 1rem;
+  padding: 2rem 1rem;
+  font-style: italic;
 `;
 
+// Access Denied
 const AccessDenied = styled.div`
   text-align: center;
   padding: 4rem 2rem;
 `;
 
 const AccessTitle = styled.h2`
-  font-size: 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 500;
   color: ${({ theme }) => theme.text};
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 `;
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft',
-  registration: 'Registration Open',
-  ready: 'Ready to Start',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+// Details Grid
+const DetailsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  
+  @media (max-width: 600px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+`;
+
+const DetailItem = styled.div``;
+
+const DetailLabel = styled.div`
+  font-size: 0.7rem;
+  color: ${({ theme }) => theme.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.25rem;
+`;
+
+const DetailValue = styled.div`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.text};
+`;
+
+// Game naming
+const GAME_NAMES: Record<string, string> = {
+  euchre: 'Deal Into the Void',
+  pool: 'Break Into the Void',
+  chess: 'Endgame: Into the Void',
 };
+
+const STATUS_LABELS: Record<string, string> = {
+  draft: 'Pending',
+  registration: 'Open',
+  ready: 'Ready',
+  in_progress: 'Live',
+  completed: 'Finished',
+  cancelled: 'Void',
+};
+
+type TabType = 'overview' | 'participants' | 'actions';
 
 export default function TournamentAdminPage() {
   const router = useRouter();
   const { id } = router.query;
   const { user, isLoading: isUserLoading } = useUser();
 
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [game, setGame] = useState<Game | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -381,13 +566,11 @@ export default function TournamentAdminPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Team pairing state
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [teamName, setTeamName] = useState('');
 
   const isOrganizer = user && tournament && (
-    user.id === tournament.organizerId ||
-    user.role === 'admin'
+    user.id === tournament.organizerId || user.role === 'admin'
   );
 
   const fetchData = useCallback(async () => {
@@ -428,12 +611,9 @@ export default function TournamentAdminPage() {
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update status');
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to update status');
-      }
-
-      setMessage({ type: 'success', text: `Tournament status updated to ${STATUS_LABELS[status]}` });
+      setMessage({ type: 'success', text: `Status updated to ${STATUS_LABELS[status]}` });
       fetchData();
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to update status' });
@@ -447,17 +627,11 @@ export default function TournamentAdminPage() {
     setMessage(null);
 
     try {
-      const res = await fetch(`/api/tournaments/${id}/bracket`, {
-        method: 'POST',
-      });
-
+      const res = await fetch(`/api/tournaments/${id}/bracket`, { method: 'POST' });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to generate bracket');
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to generate bracket');
-      }
-
-      setMessage({ type: 'success', text: 'Bracket generated successfully!' });
+      setMessage({ type: 'success', text: 'Bracket generated' });
       router.push(`/tournaments/${id}/bracket`);
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to generate bracket' });
@@ -468,7 +642,7 @@ export default function TournamentAdminPage() {
 
   const createTeam = async () => {
     if (!teamName.trim() || selectedPlayers.length !== (game?.playersPerTeam || 2)) {
-      setMessage({ type: 'error', text: `Please provide a team name and select ${game?.playersPerTeam || 2} players` });
+      setMessage({ type: 'error', text: `Select ${game?.playersPerTeam || 2} players and enter team name` });
       return;
     }
 
@@ -479,20 +653,13 @@ export default function TournamentAdminPage() {
       const res = await fetch('/api/teams', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tournamentId: id,
-          teamName,
-          memberIds: selectedPlayers,
-        }),
+        body: JSON.stringify({ tournamentId: id, teamName, memberIds: selectedPlayers }),
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create team');
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to create team');
-      }
-
-      setMessage({ type: 'success', text: `Team "${teamName}" created successfully!` });
+      setMessage({ type: 'success', text: `Team "${teamName}" created` });
       setTeamName('');
       setSelectedPlayers([]);
       fetchData();
@@ -505,26 +672,32 @@ export default function TournamentAdminPage() {
 
   const togglePlayerSelection = (participantId: string) => {
     setSelectedPlayers(prev => {
-      if (prev.includes(participantId)) {
-        return prev.filter(id => id !== participantId);
-      }
-      if (prev.length < (game?.playersPerTeam || 2)) {
-        return [...prev, participantId];
-      }
+      if (prev.includes(participantId)) return prev.filter(pid => pid !== participantId);
+      if (prev.length < (game?.playersPerTeam || 2)) return [...prev, participantId];
       return prev;
     });
   };
 
-  if (isLoading || isUserLoading) {
-    return <Loading text="Loading..." />;
-  }
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '—';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    });
+  };
+
+  const formatCurrency = (cents: number | null) => {
+    if (!cents) return '$0';
+    return `$${(cents / 100).toFixed(0)}`;
+  };
+
+  if (isLoading || isUserLoading) return <Loading text="Loading..." />;
 
   if (!tournament) {
     return (
       <Container>
         <Header>
           <Logo href="/dashboard">Renaissance City</Logo>
-          <BackLink href="/tournaments">← Tournaments</BackLink>
+          <BackLink href="/tournaments">← Back</BackLink>
         </Header>
         <Main>
           <InfoBox $type="error">Tournament not found</InfoBox>
@@ -538,12 +711,12 @@ export default function TournamentAdminPage() {
       <Container>
         <Header>
           <Logo href="/dashboard">Renaissance City</Logo>
-          <BackLink href={`/tournaments/${id}`}>← Back to Tournament</BackLink>
+          <BackLink href={`/tournaments/${id}`}>← Back</BackLink>
         </Header>
         <Main>
           <AccessDenied>
             <AccessTitle>Access Denied</AccessTitle>
-            <EmptyText>Only tournament organizers can access this page.</EmptyText>
+            <EmptyText>Only organizers can access this page.</EmptyText>
           </AccessDenied>
         </Main>
       </Container>
@@ -555,229 +728,343 @@ export default function TournamentAdminPage() {
     participantCount >= tournament.minParticipants;
   const canStartTournament = tournament.status === 'ready';
   const canCompleteTournament = tournament.status === 'in_progress';
+  const isLocked = tournament.status === 'completed' || tournament.status === 'cancelled';
 
-  // Get unassigned players for team pairing (solo registrations not yet on a team)
   const unassignedPlayers = participants.filter(p => !p.teamId && p.status !== 'waitlist');
+  const registeredParticipants = participants.filter(p => p.status === 'registered');
 
   return (
     <Container>
       <Head>
-        <title>Manage {tournament.name} | Renaissance City Games</title>
+        <title>Manage {tournament.name} | Renaissance City</title>
       </Head>
 
       <Header>
         <Logo href="/dashboard">Renaissance City</Logo>
-        <BackLink href={`/tournaments/${id}`}>← Back to Tournament</BackLink>
+        <BackLink href={`/tournaments/${id}`}>← Tournament</BackLink>
       </Header>
 
       <Main>
         <PageHeader>
           <TitleRow>
-            <PageTitle>Manage Tournament</PageTitle>
-            <StatusBadge $status={tournament.status}>
-              {STATUS_LABELS[tournament.status]}
-            </StatusBadge>
+            <TitleGroup>
+              <PageTitle>{tournament.name}</PageTitle>
+              <PageSubtitle>
+                {GAME_NAMES[game?.type || ''] || game?.name || 'Tournament'}
+              </PageSubtitle>
+            </TitleGroup>
+            <HeaderActions>
+              <StatusBadge $status={tournament.status}>
+                {STATUS_LABELS[tournament.status]}
+              </StatusBadge>
+              {!isLocked && (
+                <EditButton href={`/tournaments/${id}/edit`}>Edit</EditButton>
+              )}
+            </HeaderActions>
           </TitleRow>
         </PageHeader>
 
         {message && (
-          <InfoBox $type={message.type}>
-            {message.text}
-          </InfoBox>
+          <InfoBox $type={message.type}>{message.text}</InfoBox>
         )}
 
-        {/* Status Actions */}
-        <Section>
-          <SectionTitle>Tournament Status</SectionTitle>
-          <ActionButtons>
-            {canOpenRegistration && (
-              <ActionButton 
-                $variant="primary" 
-                onClick={() => updateStatus('registration')}
-                disabled={actionLoading}
-              >
-                Open Registration
-              </ActionButton>
-            )}
-            {canGenerateBracket && (
-              <ActionButton 
-                $variant="primary" 
-                onClick={generateBracket}
-                disabled={actionLoading}
-              >
-                Generate Bracket
-              </ActionButton>
-            )}
-            {canStartTournament && (
-              <ActionButton 
-                $variant="primary" 
-                onClick={() => updateStatus('in_progress')}
-                disabled={actionLoading}
-              >
-                Start Tournament
-              </ActionButton>
-            )}
-            {canCompleteTournament && (
-              <ActionButton 
-                onClick={() => updateStatus('completed')}
-                disabled={actionLoading}
-              >
-                Complete Tournament
-              </ActionButton>
-            )}
-            {tournament.status !== 'completed' && tournament.status !== 'cancelled' && (
-              <ActionButton 
-                $variant="danger" 
-                onClick={() => {
-                  if (confirm('Are you sure you want to cancel this tournament?')) {
-                    updateStatus('cancelled');
-                  }
-                }}
-                disabled={actionLoading}
-              >
-                Cancel Tournament
-              </ActionButton>
-            )}
-          </ActionButtons>
+        <TabsContainer>
+          <Tab $active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>
+            Overview
+          </Tab>
+          <Tab $active={activeTab === 'participants'} onClick={() => setActiveTab('participants')}>
+            Participants ({participantCount})
+          </Tab>
+          <Tab $active={activeTab === 'actions'} onClick={() => setActiveTab('actions')}>
+            Actions
+          </Tab>
+        </TabsContainer>
 
-          {tournament.status === 'draft' && (
-            <InfoBox $type="info" style={{ marginTop: '1rem' }}>
-              Open registration to allow players to join the tournament.
-            </InfoBox>
-          )}
-
-          {tournament.status === 'registration' && participantCount < tournament.minParticipants && (
-            <InfoBox $type="warning" style={{ marginTop: '1rem' }}>
-              Need at least {tournament.minParticipants} participants to generate bracket 
-              (currently {participantCount})
-            </InfoBox>
-          )}
-        </Section>
-
-        {/* Participants */}
-        <Section>
-          <SectionTitle>
-            Participants ({participantCount}/{tournament.maxParticipants})
-          </SectionTitle>
-
-          {game?.isTeamGame ? (
+        <TabContent>
+          {activeTab === 'overview' && (
             <>
-              {teams.length > 0 ? (
-                <ParticipantGrid>
-                  {teams.map((team, index) => (
-                    <ParticipantCard key={team.id}>
-                      <ParticipantInfo>
-                        <ParticipantName>{index + 1}. {team.name}</ParticipantName>
-                        <ParticipantMeta>Captain: {team.captainId.slice(0, 8)}</ParticipantMeta>
-                      </ParticipantInfo>
-                      <ParticipantStatus $status={team.isComplete ? 'registered' : 'forming'}>
-                        {team.isComplete ? 'Ready' : 'Forming'}
-                      </ParticipantStatus>
-                    </ParticipantCard>
-                  ))}
-                </ParticipantGrid>
-              ) : (
-                <EmptyText>No teams registered yet</EmptyText>
-              )}
+              <StatsGrid>
+                <StatCard>
+                  <StatValue>{participantCount}/{tournament.maxParticipants}</StatValue>
+                  <StatLabel>Registered</StatLabel>
+                </StatCard>
+                <StatCard>
+                  <StatValue>{teams.length || '—'}</StatValue>
+                  <StatLabel>Teams</StatLabel>
+                </StatCard>
+                <StatCard>
+                  <StatValue>{waitlist.length}</StatValue>
+                  <StatLabel>Waitlist</StatLabel>
+                </StatCard>
+                <StatCard>
+                  <StatValue>{formatCurrency(tournament.prizePool)}</StatValue>
+                  <StatLabel>Prize</StatLabel>
+                </StatCard>
+              </StatsGrid>
 
-              {/* Team Pairing Section */}
-              {unassignedPlayers.length > 0 && tournament.status === 'registration' && (
-                <TeamPairingSection>
-                  <TeamPairingTitle>Manual Team Pairing</TeamPairingTitle>
-                  <InfoBox $type="info">
-                    Select {game.playersPerTeam} players and provide a team name to create a team.
-                  </InfoBox>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Details</CardTitle>
+                  {!isLocked && <LinkButton href={`/tournaments/${id}/edit`}>Edit</LinkButton>}
+                </CardHeader>
+                <CardBody>
+                  <DetailsGrid>
+                    <DetailItem>
+                      <DetailLabel>Format</DetailLabel>
+                      <DetailValue>
+                        {tournament.eliminationType === 'double' ? 'Double Elim' : 'Single Elim'}
+                      </DetailValue>
+                    </DetailItem>
+                    <DetailItem>
+                      <DetailLabel>Match</DetailLabel>
+                      <DetailValue>Best of {tournament.bestOf}</DetailValue>
+                    </DetailItem>
+                    <DetailItem>
+                      <DetailLabel>Entry</DetailLabel>
+                      <DetailValue>{formatCurrency(tournament.entryFee)}</DetailValue>
+                    </DetailItem>
+                    <DetailItem>
+                      <DetailLabel>Location</DetailLabel>
+                      <DetailValue>{tournament.location || '—'}</DetailValue>
+                    </DetailItem>
+                    <DetailItem>
+                      <DetailLabel>Start</DetailLabel>
+                      <DetailValue>{formatDate(tournament.startTime)}</DetailValue>
+                    </DetailItem>
+                    <DetailItem>
+                      <DetailLabel>Deadline</DetailLabel>
+                      <DetailValue>{formatDate(tournament.registrationDeadline)}</DetailValue>
+                    </DetailItem>
+                  </DetailsGrid>
+                </CardBody>
+              </Card>
 
-                  <PairingRow>
-                    <Input
-                      type="text"
-                      placeholder="Team name..."
-                      value={teamName}
-                      onChange={e => setTeamName(e.target.value)}
-                      style={{ flex: 1 }}
-                    />
-                    <ActionButton 
-                      $variant="primary"
-                      onClick={createTeam}
-                      disabled={actionLoading || selectedPlayers.length !== game.playersPerTeam || !teamName.trim()}
-                    >
-                      Create Team
-                    </ActionButton>
-                  </PairingRow>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <ActionButtons>
+                    {canOpenRegistration && (
+                      <ActionButton $variant="primary" onClick={() => updateStatus('registration')} disabled={actionLoading}>
+                        Open Registration
+                      </ActionButton>
+                    )}
+                    {canGenerateBracket && (
+                      <ActionButton $variant="primary" onClick={generateBracket} disabled={actionLoading}>
+                        Generate Bracket
+                      </ActionButton>
+                    )}
+                    {canStartTournament && (
+                      <ActionButton $variant="success" onClick={() => updateStatus('in_progress')} disabled={actionLoading}>
+                        Begin Tournament
+                      </ActionButton>
+                    )}
+                    {(tournament.status === 'ready' || tournament.status === 'in_progress') && (
+                      <LinkButton href={`/tournaments/${id}/bracket`}>View Bracket</LinkButton>
+                    )}
+                    <LinkButton href={`/tournaments/${id}`}>Public Page</LinkButton>
+                  </ActionButtons>
 
-                  <ParticipantGrid>
-                    {unassignedPlayers.map(p => (
-                      <ParticipantCard 
-                        key={p.id}
-                        $selected={selectedPlayers.includes(p.userId || '')}
-                        onClick={() => p.userId && togglePlayerSelection(p.userId)}
+                  {tournament.status === 'draft' && (
+                    <InfoBox style={{ marginTop: '1rem' }}>
+                      Open registration to allow players to enter.
+                    </InfoBox>
+                  )}
+
+                  {tournament.status === 'registration' && participantCount < tournament.minParticipants && (
+                    <InfoBox $type="warning" style={{ marginTop: '1rem' }}>
+                      Need {tournament.minParticipants - participantCount} more participants to generate bracket.
+                    </InfoBox>
+                  )}
+                </CardBody>
+              </Card>
+            </>
+          )}
+
+          {activeTab === 'participants' && (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {game?.isTeamGame ? 'Teams' : 'Players'} ({registeredParticipants.length}/{tournament.maxParticipants})
+                  </CardTitle>
+                </CardHeader>
+                <CardBody style={{ padding: 0 }}>
+                  {game?.isTeamGame ? (
+                    teams.length > 0 ? (
+                      <ParticipantList>
+                        {teams.map((team, index) => (
+                          <ParticipantRow key={team.id}>
+                            <ParticipantInfo>
+                              <ParticipantRank>{index + 1}</ParticipantRank>
+                              <ParticipantName>{team.name}</ParticipantName>
+                            </ParticipantInfo>
+                            <ParticipantBadge $status={team.isComplete ? 'registered' : 'forming'}>
+                              {team.isComplete ? 'Ready' : 'Forming'}
+                            </ParticipantBadge>
+                          </ParticipantRow>
+                        ))}
+                      </ParticipantList>
+                    ) : (
+                      <EmptyText>No teams registered</EmptyText>
+                    )
+                  ) : (
+                    registeredParticipants.length > 0 ? (
+                      <ParticipantList>
+                        {registeredParticipants.map((p, index) => (
+                          <ParticipantRow key={p.id}>
+                            <ParticipantInfo>
+                              <ParticipantRank>{index + 1}</ParticipantRank>
+                              <ParticipantName>
+                                {p.user?.displayName || p.user?.username || `Player ${p.userId?.slice(0, 6)}`}
+                              </ParticipantName>
+                            </ParticipantInfo>
+                            <ParticipantBadge $status={p.status}>Entered</ParticipantBadge>
+                          </ParticipantRow>
+                        ))}
+                      </ParticipantList>
+                    ) : (
+                      <EmptyText>No players registered</EmptyText>
+                    )
+                  )}
+                </CardBody>
+
+                {/* Team Pairing */}
+                {game?.isTeamGame && unassignedPlayers.length > 0 && tournament.status === 'registration' && (
+                  <TeamPairingSection style={{ padding: '1.25rem' }}>
+                    <PairingTitle>Manual Team Pairing</PairingTitle>
+                    <InfoBox>Select {game.playersPerTeam} players to form a team.</InfoBox>
+
+                    <PairingRow>
+                      <Input
+                        type="text"
+                        placeholder="Team name..."
+                        value={teamName}
+                        onChange={e => setTeamName(e.target.value)}
+                      />
+                      <ActionButton 
+                        $variant="primary"
+                        onClick={createTeam}
+                        disabled={actionLoading || selectedPlayers.length !== game.playersPerTeam || !teamName.trim()}
                       >
-                        <ParticipantInfo>
-                          <ParticipantName>Player {p.userId?.slice(0, 8)}</ParticipantName>
-                        </ParticipantInfo>
-                        {selectedPlayers.includes(p.userId || '') && (
-                          <ParticipantStatus $status="checked_in">Selected</ParticipantStatus>
-                        )}
-                      </ParticipantCard>
-                    ))}
-                  </ParticipantGrid>
-                </TeamPairingSection>
+                        Create Team
+                      </ActionButton>
+                    </PairingRow>
+
+                    <ParticipantList>
+                      {unassignedPlayers.map(p => (
+                        <ParticipantRow 
+                          key={p.id}
+                          $selected={selectedPlayers.includes(p.userId || '')}
+                          onClick={() => p.userId && togglePlayerSelection(p.userId)}
+                        >
+                          <ParticipantInfo>
+                            <ParticipantName>
+                              {p.user?.displayName || p.user?.username || `Player ${p.userId?.slice(0, 6)}`}
+                            </ParticipantName>
+                          </ParticipantInfo>
+                          {selectedPlayers.includes(p.userId || '') && (
+                            <ParticipantBadge $status="checked_in">Selected</ParticipantBadge>
+                          )}
+                        </ParticipantRow>
+                      ))}
+                    </ParticipantList>
+                  </TeamPairingSection>
+                )}
+              </Card>
+
+              {waitlist.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Waitlist ({waitlist.length})</CardTitle>
+                  </CardHeader>
+                  <CardBody style={{ padding: 0 }}>
+                    <ParticipantList>
+                      {waitlist.map((p, index) => (
+                        <ParticipantRow key={p.id}>
+                          <ParticipantInfo>
+                            <ParticipantRank>{index + 1}</ParticipantRank>
+                            <ParticipantName>
+                              {p.user?.displayName || p.user?.username || `Player ${p.userId?.slice(0, 6)}`}
+                            </ParticipantName>
+                          </ParticipantInfo>
+                          <ParticipantBadge $status="waitlist">Waitlist</ParticipantBadge>
+                        </ParticipantRow>
+                      ))}
+                    </ParticipantList>
+                  </CardBody>
+                </Card>
               )}
             </>
-          ) : (
-            participants.length > 0 ? (
-              <ParticipantGrid>
-                {participants.map((p, index) => (
-                  <ParticipantCard key={p.id}>
-                    <ParticipantInfo>
-                      <ParticipantName>
-                        {p.status === 'waitlist' ? 'W' : index + 1}. Player {p.userId?.slice(0, 8)}
-                      </ParticipantName>
-                      {p.seed && <ParticipantMeta>Seed: {p.seed}</ParticipantMeta>}
-                    </ParticipantInfo>
-                    <ParticipantStatus $status={p.status}>
-                      {p.status === 'waitlist' ? 'Waitlist' : 'Registered'}
-                    </ParticipantStatus>
-                  </ParticipantCard>
-                ))}
-              </ParticipantGrid>
-            ) : (
-              <EmptyText>No players registered yet</EmptyText>
-            )
           )}
-        </Section>
 
-        {/* Waitlist */}
-        {waitlist.length > 0 && (
-          <Section>
-            <SectionTitle>Waitlist ({waitlist.length})</SectionTitle>
-            <ParticipantGrid>
-              {waitlist.map((p, index) => (
-                <ParticipantCard key={p.id}>
-                  <ParticipantInfo>
-                    <ParticipantName>#{index + 1} Player {p.userId?.slice(0, 8)}</ParticipantName>
-                  </ParticipantInfo>
-                  <ParticipantStatus $status="waitlist">Waitlist</ParticipantStatus>
-                </ParticipantCard>
-              ))}
-            </ParticipantGrid>
-          </Section>
-        )}
+          {activeTab === 'actions' && (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Status Management</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <InfoBox>
+                    Current: <strong>{STATUS_LABELS[tournament.status]}</strong>
+                  </InfoBox>
 
-        {/* Quick Links */}
-        {(tournament.status === 'ready' || tournament.status === 'in_progress') && (
-          <Section>
-            <SectionTitle>Quick Links</SectionTitle>
-            <ActionButtons>
-              <ActionButton as={Link} href={`/tournaments/${id}/bracket`}>
-                View Bracket
-              </ActionButton>
-              <ActionButton as={Link} href={`/tournaments/${id}`}>
-                Public Page
-              </ActionButton>
-            </ActionButtons>
-          </Section>
-        )}
+                  <ActionButtons>
+                    {canOpenRegistration && (
+                      <ActionButton $variant="primary" onClick={() => updateStatus('registration')} disabled={actionLoading}>
+                        Open Registration
+                      </ActionButton>
+                    )}
+                    {canGenerateBracket && (
+                      <ActionButton $variant="primary" onClick={generateBracket} disabled={actionLoading}>
+                        Generate Bracket
+                      </ActionButton>
+                    )}
+                    {canStartTournament && (
+                      <ActionButton $variant="success" onClick={() => updateStatus('in_progress')} disabled={actionLoading}>
+                        Begin Tournament
+                      </ActionButton>
+                    )}
+                    {canCompleteTournament && (
+                      <ActionButton onClick={() => updateStatus('completed')} disabled={actionLoading}>
+                        Complete Tournament
+                      </ActionButton>
+                    )}
+                  </ActionButtons>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Danger Zone</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  {!isLocked ? (
+                    <>
+                      <InfoBox $type="warning" style={{ marginBottom: '1rem' }}>
+                        Cancelling cannot be undone.
+                      </InfoBox>
+                      <ActionButton 
+                        $variant="danger" 
+                        onClick={() => {
+                          if (confirm('Cancel this tournament? This cannot be undone.')) {
+                            updateStatus('cancelled');
+                          }
+                        }}
+                        disabled={actionLoading}
+                      >
+                        Cancel Tournament
+                      </ActionButton>
+                    </>
+                  ) : (
+                    <InfoBox>This tournament is {tournament.status} and cannot be modified.</InfoBox>
+                  )}
+                </CardBody>
+              </Card>
+            </>
+          )}
+        </TabContent>
       </Main>
     </Container>
   );
