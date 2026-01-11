@@ -6,6 +6,7 @@ import {
   getAllTournaments,
   getActiveTournaments,
   getTournamentsByOrganizer,
+  getTournamentsByStatus,
   CreateTournamentInput,
 } from '@/db/tournament';
 
@@ -46,7 +47,11 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       tournaments = await getTournamentsByOrganizer(organizerId);
     } else if (status === 'all') {
       tournaments = await getAllTournaments();
+    } else if (status === 'draft' || status === 'registration' || status === 'in_progress' || status === 'completed' || status === 'cancelled' || status === 'ready') {
+      // Filter by specific status
+      tournaments = await getTournamentsByStatus(status as 'draft' | 'registration' | 'in_progress' | 'completed' | 'cancelled' | 'ready');
     } else {
+      // Default: active tournaments (registration, ready, in_progress)
       tournaments = await getActiveTournaments();
     }
 

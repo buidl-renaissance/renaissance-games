@@ -190,12 +190,20 @@ const SearchInput = styled.input`
   }
 `;
 
-const ResultCount = styled.span`
+const ResultCount = styled.span<{ $loading?: boolean }>`
   font-size: 0.8rem;
   color: ${({ theme }) => theme.textMuted};
+  opacity: ${({ $loading }) => $loading ? 0.6 : 1};
+  transition: opacity 0.15s ease;
 `;
 
 // Tournament Grid
+const TournamentContent = styled.div<{ $loading?: boolean }>`
+  opacity: ${({ $loading }) => $loading ? 0.5 : 1};
+  transition: opacity 0.15s ease;
+  pointer-events: ${({ $loading }) => $loading ? 'none' : 'auto'};
+`;
+
 const TournamentGrid = styled.div`
   display: flex;
   flex-direction: column;
@@ -442,7 +450,8 @@ export default function TournamentsPage() {
   const { user } = useUser();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [games, setGames] = useState<Game[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(false);
   
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
   const [gameFilter, setGameFilter] = useState<string | null>(null);
@@ -450,7 +459,11 @@ export default function TournamentsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
+      // Only show full loading on initial load
+      if (!isInitialLoad) {
+        setIsFiltering(true);
+      }
+      
       try {
         const [tournamentsRes, gamesRes] = await Promise.all([
           fetch(`/api/tournaments?status=${statusFilter}`),
@@ -469,11 +482,13 @@ export default function TournamentsPage() {
       } catch (error) {
         console.error('Error fetching tournaments:', error);
       } finally {
-        setIsLoading(false);
+        setIsInitialLoad(false);
+        setIsFiltering(false);
       }
     };
 
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
 
   const getGame = (gameId: string) => games.find(g => g.id === gameId);
@@ -528,8 +543,8 @@ export default function TournamentsPage() {
     ? sortedTournaments.filter(t => t.id !== featuredTournament.id)
     : sortedTournaments;
 
-  // Show loading only during initial data fetch
-  if (isLoading && tournaments.length === 0) {
+  // Show full-page loading only on initial load
+  if (isInitialLoad) {
     return <Loading text="Loading tournaments..." />;
   }
 
@@ -595,30 +610,29 @@ export default function TournamentsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <ResultCount>
-              {sortedTournaments.length} {sortedTournaments.length === 1 ? 'tournament' : 'tournaments'}
+            <ResultCount $loading={isFiltering}>
+              {isFiltering ? 'Loading...' : `${sortedTournaments.length} ${sortedTournaments.length === 1 ? 'tournament' : 'tournaments'}`}
             </ResultCount>
           </FilterGroup>
         </FilterBar>
 
-        {isLoading ? (
-          <Loading text="Loading..." />
-        ) : sortedTournaments.length === 0 ? (
-          <EmptyState>
-            <EmptyTitle>No tournaments found</EmptyTitle>
-            <EmptyText>
-              {searchQuery || gameFilter
-                ? 'Adjust filters to find tournaments.'
-                : 'No active tournaments. Check back soon.'}
-            </EmptyText>
-            {user && (user.role === 'admin' || user.role === 'organizer') && (
-              <CreateButton href="/tournaments/create">Create Tournament</CreateButton>
-            )}
-          </EmptyState>
-        ) : (
-          <>
-            {/* Featured Tournament - only one accent on screen */}
-            {featuredTournament && (
+        <TournamentContent $loading={isFiltering}>
+          {sortedTournaments.length === 0 && !isFiltering ? (
+            <EmptyState>
+              <EmptyTitle>No tournaments found</EmptyTitle>
+              <EmptyText>
+                {searchQuery || gameFilter
+                  ? 'Adjust filters to find tournaments.'
+                  : 'No active tournaments. Check back soon.'}
+              </EmptyText>
+              {user && (user.role === 'admin' || user.role === 'organizer') && (
+                <CreateButton href="/tournaments/create">Create Tournament</CreateButton>
+              )}
+            </EmptyState>
+          ) : (
+            <>
+              {/* Featured Tournament - only one accent on screen */}
+              {featuredTournament && (
               <FeaturedTournament>
                 <FeaturedLabel>
                   {featuredTournament.status === 'in_progress' ? (
@@ -700,9 +714,10 @@ export default function TournamentsPage() {
                   );
                 })}
               </TournamentGrid>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
+        </TournamentContent>
       </Main>
     </Container>
   );

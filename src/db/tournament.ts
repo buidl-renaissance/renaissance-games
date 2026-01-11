@@ -182,6 +182,16 @@ export async function getActiveTournaments(): Promise<Tournament[]> {
   return results.map(parseTournamentRow);
 }
 
+export async function getTournamentsByStatus(status: TournamentStatus): Promise<Tournament[]> {
+  const results = await db
+    .select()
+    .from(tournaments)
+    .where(eq(tournaments.status, status))
+    .orderBy(desc(tournaments.createdAt));
+  
+  return results.map(parseTournamentRow);
+}
+
 export async function updateTournament(
   id: string,
   updates: Partial<Omit<Tournament, 'id' | 'createdAt'>>
