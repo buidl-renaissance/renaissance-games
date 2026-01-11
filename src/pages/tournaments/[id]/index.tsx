@@ -50,6 +50,7 @@ interface Team {
   name: string;
   captainId: string;
   isComplete: boolean;
+  members?: { userId: string; user?: { username: string | null; displayName: string | null } }[];
 }
 
 // Animations
@@ -478,6 +479,106 @@ const AdminLink = styled(Link)`
   }
 `;
 
+// Team Creation/Join Components
+const TeamSection = styled.div`
+  margin-bottom: 1rem;
+`;
+
+const TeamLabel = styled.label`
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textSecondary};
+  margin-bottom: 0.5rem;
+`;
+
+const TeamInput = styled.input`
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9rem;
+  background: ${({ theme }) => theme.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 6px;
+  color: ${({ theme }) => theme.text};
+  
+  &:focus {
+    outline: none;
+    border-color: ${({ theme }) => theme.accent};
+  }
+  
+  &::placeholder {
+    color: ${({ theme }) => theme.textMuted};
+  }
+`;
+
+const TeamToggle = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+`;
+
+const ToggleButton = styled.button<{ $active: boolean }>`
+  flex: 1;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.5rem;
+  background: ${({ theme, $active }) => $active ? theme.accentMuted : 'transparent'};
+  color: ${({ theme, $active }) => $active ? theme.accent : theme.textSecondary};
+  border: 1px solid ${({ theme, $active }) => $active ? theme.accent : theme.border};
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.surfaceHover};
+  }
+`;
+
+const OpenTeamList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 180px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+`;
+
+const OpenTeamItem = styled.button<{ $selected: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: ${({ theme, $selected }) => $selected ? theme.accentMuted : theme.backgroundAlt};
+  border: 1px solid ${({ theme, $selected }) => $selected ? theme.accent : theme.border};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.textSecondary};
+  }
+`;
+
+const TeamName = styled.span`
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.text};
+`;
+
+const TeamMeta = styled.span`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const NoTeamsText = styled.p`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+  text-align: center;
+  padding: 1rem;
+  font-style: italic;
+`;
+
 const BracketLink = styled(Link)`
   display: flex;
   align-items: center;
@@ -546,15 +647,30 @@ export default function TournamentDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // Team registration state
+  const [teamMode, setTeamMode] = useState<'create' | 'join'>('create');
+  const [newTeamName, setNewTeamName] = useState('');
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   const isOrganizer = user && tournament && (
     user.id === tournament.organizerId || 
     user.role === 'admin'
   );
   
-  const isRegistered = user && participants.some(p => p.userId === user.id);
+  // Check if user is registered (either directly or via a team)
+  const userTeam = teams.find(t => 
+    t.members?.some(m => m.userId === user?.id) || t.captainId === user?.id
+  );
+  const isRegistered = user && (
+    participants.some(p => p.userId === user.id) || 
+    userTeam !== undefined
+  );
   const canRegister = tournament?.status === 'registration' || tournament?.status === 'ready';
   const isLive = tournament?.status === 'in_progress';
+  
+  // Teams that are looking for members (not complete)
+  const openTeams = teams.filter(t => !t.isComplete);
 
   const fetchTournament = useCallback(async () => {
     if (!id) return;
@@ -588,20 +704,49 @@ export default function TournamentDetailPage() {
     setSuccess(null);
 
     try {
+      // Build request body based on game type and mode
+      let body: { teamName?: string; teamId?: string } = {};
+      
+      if (game?.isTeamGame) {
+        if (teamMode === 'create') {
+          if (!newTeamName.trim()) {
+            throw new Error('Please enter a team name');
+          }
+          body = { teamName: newTeamName.trim() };
+        } else if (teamMode === 'join') {
+          if (!selectedTeamId) {
+            throw new Error('Please select a team to join');
+          }
+          body = { teamId: selectedTeamId };
+        }
+      }
+
       const res = await fetch(`/api/tournaments/${id}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || 'Failed to register');
 
-      setSuccess(data.isWaitlisted 
-        ? 'Added to waitlist. Awaiting confirmation.'
-        : 'Entry confirmed.'
-      );
+      // Handle different success scenarios
+      if (game?.isTeamGame) {
+        if (teamMode === 'create') {
+          setSuccess(`Team "${newTeamName}" created! Waiting for a partner to join.`);
+          setNewTeamName('');
+        } else {
+          setSuccess(data.message || 'Joined team successfully!');
+          setSelectedTeamId(null);
+        }
+      } else {
+        setSuccess(data.isWaitlisted 
+          ? 'Added to waitlist. Awaiting confirmation.'
+          : 'Entry confirmed.'
+        );
+      }
+      
       fetchTournament();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to register');
@@ -834,9 +979,9 @@ export default function TournamentDetailPage() {
                 ) : isRegistered ? (
                   <>
                     <RegisteredBadge>
-                      ✓ You have entered this tournament
+                      ✓ {userTeam ? `Team: ${userTeam.name}${userTeam.isComplete ? '' : ' (waiting for partner)'}` : 'You have entered this tournament'}
                     </RegisteredBadge>
-                    {canRegister && (
+                    {canRegister && !userTeam?.isComplete && (
                       <WithdrawButton 
                         onClick={handleWithdraw} 
                         disabled={actionLoading}
@@ -846,16 +991,76 @@ export default function TournamentDetailPage() {
                     )}
                   </>
                 ) : canRegister ? (
-                  <EnterButton 
-                    onClick={handleRegister} 
-                    disabled={actionLoading}
-                  >
-                    {actionLoading 
-                      ? 'Processing...' 
-                      : participantCount >= tournament.maxParticipants 
-                        ? 'Join Waitlist' 
-                        : 'Enter Tournament'}
-                  </EnterButton>
+                  <>
+                    {/* Team game registration */}
+                    {game?.isTeamGame && (
+                      <>
+                        <TeamToggle>
+                          <ToggleButton 
+                            $active={teamMode === 'create'}
+                            onClick={() => setTeamMode('create')}
+                          >
+                            Create Team
+                          </ToggleButton>
+                          <ToggleButton 
+                            $active={teamMode === 'join'}
+                            onClick={() => setTeamMode('join')}
+                          >
+                            Join Team
+                          </ToggleButton>
+                        </TeamToggle>
+                        
+                        {teamMode === 'create' ? (
+                          <TeamSection>
+                            <TeamLabel>Team Name</TeamLabel>
+                            <TeamInput
+                              type="text"
+                              placeholder="Enter team name..."
+                              value={newTeamName}
+                              onChange={(e) => setNewTeamName(e.target.value)}
+                              maxLength={30}
+                            />
+                          </TeamSection>
+                        ) : (
+                          <TeamSection>
+                            <TeamLabel>Join an open team</TeamLabel>
+                            {openTeams.length > 0 ? (
+                              <OpenTeamList>
+                                {openTeams.map((team) => (
+                                  <OpenTeamItem
+                                    key={team.id}
+                                    $selected={selectedTeamId === team.id}
+                                    onClick={() => setSelectedTeamId(selectedTeamId === team.id ? null : team.id)}
+                                  >
+                                    <TeamName>{team.name}</TeamName>
+                                    <TeamMeta>
+                                      {team.members?.length || 1}/{game.playersPerTeam}
+                                    </TeamMeta>
+                                  </OpenTeamItem>
+                                ))}
+                              </OpenTeamList>
+                            ) : (
+                              <NoTeamsText>No teams looking for members</NoTeamsText>
+                            )}
+                          </TeamSection>
+                        )}
+                      </>
+                    )}
+                    
+                    <EnterButton 
+                      onClick={handleRegister} 
+                      disabled={actionLoading || (game?.isTeamGame && teamMode === 'create' && !newTeamName.trim()) || (game?.isTeamGame && teamMode === 'join' && !selectedTeamId)}
+                    >
+                      {actionLoading 
+                        ? 'Processing...' 
+                        : game?.isTeamGame 
+                          ? (teamMode === 'create' ? 'Create Team' : 'Join Team')
+                          : (participantCount >= tournament.maxParticipants 
+                              ? 'Join Waitlist' 
+                              : 'Enter Tournament')
+                      }
+                    </EnterButton>
+                  </>
                 ) : (
                   <EmptyText style={{ padding: 0 }}>Registration closed</EmptyText>
                 )}

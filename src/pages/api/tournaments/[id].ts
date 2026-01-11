@@ -8,6 +8,7 @@ import {
   getRegisteredParticipants,
   getWaitlistParticipants,
   getTeamsByTournament,
+  getTeamMembers,
 } from '@/db/tournament';
 
 /**
@@ -53,10 +54,20 @@ async function handleGet(
     const participants = await getRegisteredParticipants(tournamentId);
     const waitlist = await getWaitlistParticipants(tournamentId);
     
-    // For team games, get teams
+    // For team games, get teams with their members
     let teams = null;
     if (game?.isTeamGame) {
-      teams = await getTeamsByTournament(tournamentId);
+      const rawTeams = await getTeamsByTournament(tournamentId);
+      // Fetch members for each team
+      teams = await Promise.all(
+        rawTeams.map(async (team) => {
+          const members = await getTeamMembers(team.id);
+          return {
+            ...team,
+            members: members.map(m => ({ userId: m.userId })),
+          };
+        })
+      );
     }
 
     return res.status(200).json({
