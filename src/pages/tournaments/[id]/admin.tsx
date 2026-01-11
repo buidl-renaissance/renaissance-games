@@ -570,7 +570,9 @@ export default function TournamentAdminPage() {
   const [teamName, setTeamName] = useState('');
 
   const isOrganizer = user && tournament && (
-    user.id === tournament.organizerId || user.role === 'admin'
+    user.id === tournament.organizerId || 
+    user.role === 'admin' ||
+    user.role === 'organizer'
   );
 
   const fetchData = useCallback(async () => {

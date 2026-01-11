@@ -427,7 +427,8 @@ export default function EditTournamentPage() {
 
   const isOrganizer = user && tournament && (
     user.id === tournament.organizerId ||
-    user.role === 'admin'
+    user.role === 'admin' ||
+    user.role === 'organizer'
   );
 
   const fetchTournament = useCallback(async () => {

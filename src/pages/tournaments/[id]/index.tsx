@@ -655,7 +655,8 @@ export default function TournamentDetailPage() {
 
   const isOrganizer = user && tournament && (
     user.id === tournament.organizerId || 
-    user.role === 'admin'
+    user.role === 'admin' ||
+    user.role === 'organizer'
   );
   
   // Check if user is registered (either directly or via a team)
