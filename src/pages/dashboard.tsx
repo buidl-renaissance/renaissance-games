@@ -122,22 +122,6 @@ const SubGreeting = styled.p`
   margin: 0;
 `;
 
-const BrandMark = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  animation: ${fadeIn} 0.5s ease-out 0.2s both;
-`;
-
-const BrandName = styled.span`
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.textMuted};
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-`;
-
 const HeaderRight = styled.div`
   display: flex;
   align-items: center;

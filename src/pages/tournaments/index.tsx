@@ -116,14 +116,6 @@ const Hero = styled.div`
   animation: ${fadeIn} 0.4s ease-out;
 `;
 
-const HeroTitle = styled.h1`
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 0.5rem;
-  letter-spacing: -0.03em;
-`;
-
 const HeroSubtitle = styled.p`
   font-size: 1rem;
   color: ${({ theme }) => theme.textSecondary};
@@ -454,7 +446,7 @@ export default function TournamentsPage() {
   const [isFiltering, setIsFiltering] = useState(false);
   
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
-  const [gameFilter, setGameFilter] = useState<string | null>(null);
+  const [gameFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
