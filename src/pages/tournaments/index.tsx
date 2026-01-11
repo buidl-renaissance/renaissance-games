@@ -293,32 +293,32 @@ export default function TournamentsPage() {
   const [activeTab, setActiveTab] = useState<'active' | 'all'>('active');
 
   useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const [tournamentsRes, gamesRes] = await Promise.all([
+          fetch(`/api/tournaments?status=${activeTab}`),
+          fetch('/api/games'),
+        ]);
+
+        if (tournamentsRes.ok) {
+          const data = await tournamentsRes.json();
+          setTournaments(data.tournaments || []);
+        }
+
+        if (gamesRes.ok) {
+          const data = await gamesRes.json();
+          setGames(data.games || []);
+        }
+      } catch (error) {
+        console.error('Error fetching tournaments:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchData();
   }, [activeTab]);
-
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const [tournamentsRes, gamesRes] = await Promise.all([
-        fetch(`/api/tournaments?status=${activeTab}`),
-        fetch('/api/games'),
-      ]);
-
-      if (tournamentsRes.ok) {
-        const data = await tournamentsRes.json();
-        setTournaments(data.tournaments || []);
-      }
-
-      if (gamesRes.ok) {
-        const data = await gamesRes.json();
-        setGames(data.games || []);
-      }
-    } catch (error) {
-      console.error('Error fetching tournaments:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const getGame = (gameId: string) => games.find(g => g.id === gameId);
 

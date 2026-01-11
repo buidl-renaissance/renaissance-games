@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -390,13 +390,9 @@ export default function TournamentAdminPage() {
     user.role === 'admin'
   );
 
-  useEffect(() => {
-    if (id) {
-      fetchData();
-    }
-  }, [id]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!id) return;
+    
     setIsLoading(true);
     try {
       const res = await fetch(`/api/tournaments/${id}`);
@@ -414,7 +410,11 @@ export default function TournamentAdminPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const updateStatus = async (status: string) => {
     setActionLoading(true);

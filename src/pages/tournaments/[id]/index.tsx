@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -386,13 +386,9 @@ export default function TournamentDetailPage() {
   const isRegistered = user && participants.some(p => p.userId === user.id);
   const canRegister = tournament?.status === 'registration' || tournament?.status === 'ready';
 
-  useEffect(() => {
-    if (id) {
-      fetchTournament();
-    }
-  }, [id]);
-
-  const fetchTournament = async () => {
+  const fetchTournament = useCallback(async () => {
+    if (!id) return;
+    
     setIsLoading(true);
     try {
       const res = await fetch(`/api/tournaments/${id}`);
@@ -410,7 +406,11 @@ export default function TournamentDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchTournament();
+  }, [fetchTournament]);
 
   const handleRegister = async () => {
     if (!user || !tournament) return;

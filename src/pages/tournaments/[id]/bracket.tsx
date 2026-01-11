@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -332,13 +332,9 @@ export default function BracketPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      fetchData();
-    }
-  }, [id]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!id) return;
+    
     setIsLoading(true);
     try {
       const [tournamentRes, bracketRes] = await Promise.all([
@@ -364,7 +360,11 @@ export default function BracketPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleMatchClick = (match: Match) => {
     if (match.status === 'ready' || match.status === 'in_progress' || match.status === 'awaiting_confirmation') {
@@ -448,7 +448,7 @@ export default function BracketPage() {
         <Main>
           <EmptyState>
             <EmptyTitle>Tournament Not Found</EmptyTitle>
-            <EmptyText>The tournament you're looking for doesn't exist.</EmptyText>
+            <EmptyText>The tournament you&apos;re looking for doesn&apos;t exist.</EmptyText>
           </EmptyState>
         </Main>
       </Container>
@@ -487,7 +487,7 @@ export default function BracketPage() {
         ) : !bracket ? (
           <EmptyState>
             <EmptyTitle>Bracket Not Generated</EmptyTitle>
-            <EmptyText>The bracket hasn't been generated yet. Check back when the tournament starts.</EmptyText>
+            <EmptyText>The bracket hasn&apos;t been generated yet. Check back when the tournament starts.</EmptyText>
           </EmptyState>
         ) : (
           <BracketContainer>
