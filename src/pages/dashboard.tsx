@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import Head from "next/head";
+import Link from "next/link";
 import styled, { keyframes } from "styled-components";
 import { useRouter } from "next/router";
 import { useUser } from "@/contexts/UserContext";
@@ -169,6 +170,53 @@ const PlaceholderText = styled.p`
   line-height: 1.7;
 `;
 
+const QuickActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const ActionButton = styled(Link)`
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.875rem 1.75rem;
+  background: linear-gradient(135deg, ${({ theme }) => theme.accent}, ${({ theme }) => theme.accentGold});
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px ${({ theme }) => theme.shadow};
+    color: white;
+  }
+`;
+
+const SecondaryAction = styled(Link)`
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.875rem 1.75rem;
+  background: transparent;
+  color: ${({ theme }) => theme.text};
+  border: 2px solid ${({ theme }) => theme.border};
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.backgroundAlt};
+    color: ${({ theme }) => theme.text};
+  }
+`;
+
 const Divider = styled.div`
   width: 60px;
   height: 2px;
@@ -264,13 +312,27 @@ const DashboardPage: React.FC = () => {
         </DashboardHeader>
 
         <ContentSection>
-          <PlaceholderTitle>App Block Claimed</PlaceholderTitle>
+          <PlaceholderTitle>Renaissance City Games</PlaceholderTitle>
           <Divider />
           <PlaceholderText>
-            This app block is now part of Renaissance City. What you build here 
-            will connect to others — together, we&apos;re rebuilding Detroit, 
-            one block at a time.
+            Compete in tournaments, climb the ranks, and claim your glory. 
+            Join the Renaissance — where every game is a chance to make history.
           </PlaceholderText>
+          <QuickActions>
+            <ActionButton href="/tournaments">
+              🏆 Browse Tournaments
+            </ActionButton>
+            {user && (user.role === 'admin' || user.role === 'organizer') && (
+              <SecondaryAction href="/tournaments/create">
+                Create Tournament
+              </SecondaryAction>
+            )}
+            {user && user.role === 'admin' && (
+              <SecondaryAction href="/admin/users">
+                ⚙️ Manage Users
+              </SecondaryAction>
+            )}
+          </QuickActions>
         </ContentSection>
       </Main>
     </Container>

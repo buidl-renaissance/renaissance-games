@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getUserById } from '@/db/user';
+import { UserRole } from '@/db/schema';
 
 type ResponseData = {
   user: {
@@ -8,6 +9,7 @@ type ResponseData = {
     username: string | null;
     displayName: string | null;
     pfpUrl: string | null;
+    role: UserRole;
   } | null;
 };
 
@@ -60,6 +62,7 @@ export default async function handler(
         username: user.username ?? null,
         displayName: user.displayName ?? null,
         pfpUrl: user.pfpUrl ?? null,
+        role: user.role,
       },
     });
   } catch (error) {

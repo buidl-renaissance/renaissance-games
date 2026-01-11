@@ -50,6 +50,7 @@ export default async function handler(
       userId: user.id,
       fid: user.fid,
       username: user.username,
+      role: user.role,
     });
 
     return res.status(200).json({
@@ -60,6 +61,7 @@ export default async function handler(
         username: user.username,
         displayName: user.displayName,
         pfpUrl: user.pfpUrl,
+        role: user.role,
       },
     });
   } catch (error) {
