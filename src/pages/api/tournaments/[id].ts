@@ -59,13 +59,26 @@ async function handleGet(
     let teams = null;
     if (game?.isTeamGame) {
       const rawTeams = await getTeamsByTournament(tournamentId);
-      // Fetch members for each team
+      // Fetch members for each team with user details
       teams = await Promise.all(
         rawTeams.map(async (team) => {
           const members = await getTeamMembers(team.id);
+          const membersWithUsers = await Promise.all(
+            members.map(async (member) => {
+              const memberUser = await getUserById(member.userId);
+              return {
+                userId: member.userId,
+                user: memberUser ? {
+                  id: memberUser.id,
+                  displayName: memberUser.displayName,
+                  username: memberUser.username,
+                } : null,
+              };
+            })
+          );
           return {
             ...team,
-            members: members.map(m => ({ userId: m.userId })),
+            members: membersWithUsers,
           };
         })
       );
