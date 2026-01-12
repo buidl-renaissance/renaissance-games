@@ -968,7 +968,7 @@ export default function TournamentDetailPage() {
                             <ParticipantDetails>
                               <ParticipantName>{team.name}</ParticipantName>
                               <ParticipantMembers>
-                                {team.members?.map((m: { user?: { displayName?: string; username?: string } }) => 
+                                {team.members?.map((m) => 
                                   m.user?.displayName || m.user?.username || 'Unknown'
                                 ).join(', ') || 'No members'}
                               </ParticipantMembers>
@@ -1087,7 +1087,7 @@ export default function TournamentDetailPage() {
                                     <TeamInfo>
                                       <TeamName>{team.name}</TeamName>
                                       <TeamMembers>
-                                        {team.members?.map((m: { user?: { displayName?: string; username?: string } }) => 
+                                        {team.members?.map((m) => 
                                           m.user?.displayName || m.user?.username || 'Unknown'
                                         ).join(', ') || 'No members yet'}
                                       </TeamMembers>

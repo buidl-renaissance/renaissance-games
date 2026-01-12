@@ -9,6 +9,7 @@ import {
   getTournamentsByStatus,
   getTournamentsUserCanOrganize,
   CreateTournamentInput,
+  Tournament,
 } from '@/db/tournament';
 
 /**
@@ -46,7 +47,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     const sessionCookie = req.cookies.user_session;
     const currentUser = sessionCookie ? await getUserById(sessionCookie) : null;
 
-    let tournaments;
+    let tournaments: Tournament[];
 
     if (organizerId && typeof organizerId === 'string') {
       tournaments = await getTournamentsByOrganizer(organizerId);
