@@ -674,11 +674,15 @@ export default function TournamentDetailPage() {
   const [teamMode, setTeamMode] = useState<'create' | 'join'>('create');
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  
+  // Organizer state
+  const [additionalOrganizerIds, setAdditionalOrganizerIds] = useState<string[]>([]);
 
+  const isAdditionalOrganizer = additionalOrganizerIds.includes(user?.id || '');
   const isOrganizer = user && tournament && (
     user.id === tournament.organizerId || 
     user.role === 'admin' ||
-    user.role === 'organizer'
+    isAdditionalOrganizer
   );
   
   // Check if user is registered (either directly or via a team)
@@ -718,6 +722,24 @@ export default function TournamentDetailPage() {
   useEffect(() => {
     fetchTournament();
   }, [fetchTournament]);
+
+  // Fetch organizers to check if user is an additional organizer
+  useEffect(() => {
+    const fetchOrganizers = async () => {
+      if (!id) return;
+      try {
+        const res = await fetch(`/api/tournaments/${id}/organizers`);
+        if (res.ok) {
+          const data = await res.json();
+          const ids = (data.additionalOrganizers || []).map((o: { userId: string }) => o.userId);
+          setAdditionalOrganizerIds(ids);
+        }
+      } catch (error) {
+        console.error('Error fetching organizers:', error);
+      }
+    };
+    fetchOrganizers();
+  }, [id]);
 
   const handleRegister = async () => {
     if (!user || !tournament) return;

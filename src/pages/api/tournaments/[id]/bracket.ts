@@ -5,6 +5,7 @@ import {
   getTournamentById,
   getRegisteredParticipants,
   updateTournament,
+  isUserTournamentOrganizer,
 } from '@/db/tournament';
 import {
   getMatchesByTournament,
@@ -95,9 +96,10 @@ async function handlePost(
     }
 
     // Check if user is the organizer or an admin
-    if (tournament.organizerId !== user.id && !isOrganizer(user)) {
+    const canManage = await isUserTournamentOrganizer(tournamentId, user.id) || isOrganizer(user);
+    if (!canManage) {
       return res.status(403).json({
-        error: 'Only the tournament organizer can generate the bracket',
+        error: 'Only tournament organizers can generate the bracket',
       });
     }
 

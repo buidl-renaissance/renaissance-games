@@ -9,6 +9,7 @@ import {
   startTournament,
   closeTournament,
   canStartTournament,
+  isUserTournamentOrganizer,
   TournamentStatus,
 } from '@/db/tournament';
 
@@ -55,9 +56,10 @@ export default async function handler(
     }
 
     // Check if user is the organizer or an admin
-    if (tournament.organizerId !== user.id && !isOrganizer(user)) {
+    const canManage = await isUserTournamentOrganizer(id, user.id) || isOrganizer(user);
+    if (!canManage) {
       return res.status(403).json({
-        error: 'Only the tournament organizer can change the status',
+        error: 'Only tournament organizers can change the status',
       });
     }
 

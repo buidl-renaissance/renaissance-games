@@ -7,6 +7,7 @@ import {
   getActiveTournaments,
   getTournamentsByOrganizer,
   getTournamentsByStatus,
+  getTournamentsUserCanOrganize,
   CreateTournamentInput,
 } from '@/db/tournament';
 
@@ -41,6 +42,10 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { status, organizerId } = req.query;
 
+    // Get current user from session (if any)
+    const sessionCookie = req.cookies.user_session;
+    const currentUser = sessionCookie ? await getUserById(sessionCookie) : null;
+
     let tournaments;
 
     if (organizerId && typeof organizerId === 'string') {
@@ -53,6 +58,20 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     } else {
       // Default: active tournaments (registration, ready, in_progress)
       tournaments = await getActiveTournaments();
+    }
+
+    // Filter draft tournaments - only show to organizers who have access
+    if (status === 'draft' && currentUser) {
+      // Get tournament IDs user can organize
+      const organizableTournamentIds = await getTournamentsUserCanOrganize(currentUser.id);
+      
+      // Admin can see all drafts
+      if (currentUser.role !== 'admin') {
+        tournaments = tournaments.filter(t => organizableTournamentIds.includes(t.id));
+      }
+    } else if (status === 'draft' && !currentUser) {
+      // Non-authenticated users can't see any drafts
+      tournaments = [];
     }
 
     return res.status(200).json({

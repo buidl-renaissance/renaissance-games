@@ -86,6 +86,14 @@ export const tournaments = sqliteTable('tournaments', {
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`).notNull(),
 });
 
+// Tournament organizers (for multiple organizers per tournament)
+export const tournamentOrganizers = sqliteTable('tournament_organizers', {
+  id: text('id').primaryKey(),
+  tournamentId: text('tournamentId').notNull().references(() => tournaments.id),
+  userId: text('userId').notNull().references(() => users.id),
+  addedAt: integer('addedAt', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`).notNull(),
+});
+
 // Teams table (for team-based games like Euchre)
 export const teams = sqliteTable('teams', {
   id: text('id').primaryKey(),

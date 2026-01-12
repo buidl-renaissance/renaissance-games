@@ -9,6 +9,7 @@ import {
   getWaitlistParticipants,
   getTeamsByTournament,
   getTeamMembers,
+  isUserTournamentOrganizer,
 } from '@/db/tournament';
 
 /**
@@ -108,9 +109,10 @@ async function handlePatch(
     }
 
     // Check if user is the organizer or an admin
-    if (tournament.organizerId !== user.id && !isOrganizer(user)) {
+    const canEdit = await isUserTournamentOrganizer(tournamentId, user.id) || isOrganizer(user);
+    if (!canEdit) {
       return res.status(403).json({
-        error: 'Only the tournament organizer can update this tournament',
+        error: 'Only tournament organizers can update this tournament',
       });
     }
 

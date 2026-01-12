@@ -4,6 +4,7 @@ import { db } from './drizzle';
 import {
   tournaments,
   tournamentParticipants,
+  tournamentOrganizers,
   teams,
   teamMembers,
   TournamentStatus,
@@ -658,4 +659,114 @@ function parseParticipantRow(
     registeredAt: (row.registeredAt as Date) || new Date(),
     updatedAt: (row.updatedAt as Date) || new Date(),
   };
+}
+
+// ============================================
+// TOURNAMENT ORGANIZERS
+// ============================================
+
+export interface TournamentOrganizer {
+  id: string;
+  tournamentId: string;
+  userId: string;
+  addedAt: Date;
+}
+
+export async function addTournamentOrganizer(
+  tournamentId: string,
+  userId: string
+): Promise<TournamentOrganizer> {
+  const id = uuidv4();
+  const now = new Date();
+
+  const organizer = {
+    id,
+    tournamentId,
+    userId,
+    addedAt: now,
+  };
+
+  await db.insert(tournamentOrganizers).values(organizer);
+
+  return organizer;
+}
+
+export async function removeTournamentOrganizer(
+  tournamentId: string,
+  userId: string
+): Promise<boolean> {
+  const result = await db
+    .delete(tournamentOrganizers)
+    .where(
+      and(
+        eq(tournamentOrganizers.tournamentId, tournamentId),
+        eq(tournamentOrganizers.userId, userId)
+      )
+    );
+
+  return true;
+}
+
+export async function getTournamentOrganizers(
+  tournamentId: string
+): Promise<TournamentOrganizer[]> {
+  const results = await db
+    .select()
+    .from(tournamentOrganizers)
+    .where(eq(tournamentOrganizers.tournamentId, tournamentId));
+
+  return results.map((row) => ({
+    id: row.id,
+    tournamentId: row.tournamentId,
+    userId: row.userId,
+    addedAt: row.addedAt || new Date(),
+  }));
+}
+
+export async function isUserTournamentOrganizer(
+  tournamentId: string,
+  userId: string
+): Promise<boolean> {
+  // Check if user is the primary organizer
+  const tournament = await getTournamentById(tournamentId);
+  if (tournament && tournament.organizerId === userId) {
+    return true;
+  }
+
+  // Check if user is an additional organizer
+  const results = await db
+    .select()
+    .from(tournamentOrganizers)
+    .where(
+      and(
+        eq(tournamentOrganizers.tournamentId, tournamentId),
+        eq(tournamentOrganizers.userId, userId)
+      )
+    )
+    .limit(1);
+
+  return results.length > 0;
+}
+
+export async function getTournamentsUserCanOrganize(
+  userId: string
+): Promise<string[]> {
+  // Get tournaments where user is primary organizer
+  const primaryOrganizer = await db
+    .select({ id: tournaments.id })
+    .from(tournaments)
+    .where(eq(tournaments.organizerId, userId));
+
+  // Get tournaments where user is additional organizer
+  const additionalOrganizer = await db
+    .select({ tournamentId: tournamentOrganizers.tournamentId })
+    .from(tournamentOrganizers)
+    .where(eq(tournamentOrganizers.userId, userId));
+
+  const tournamentIds = new Set([
+    ...primaryOrganizer.map((t) => t.id),
+    ...additionalOrganizer.map((t) => t.tournamentId),
+  ]);
+
+  return Array.from(tournamentIds);
 }

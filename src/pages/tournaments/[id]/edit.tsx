@@ -32,6 +32,16 @@ interface Game {
   playersPerTeam: number;
 }
 
+interface Organizer {
+  id: string;
+  userId: string;
+  user: {
+    id: string;
+    username: string | null;
+    displayName: string | null;
+  } | null;
+}
+
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -382,6 +392,97 @@ const AccessText = styled.p`
   color: ${({ theme }) => theme.textMuted};
 `;
 
+// Organizer management styles
+const OrganizerList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+`;
+
+const OrganizerRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: ${({ theme }) => theme.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 6px;
+`;
+
+const OrganizerInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+`;
+
+const OrganizerName = styled.span`
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.text};
+`;
+
+const OrganizerUsername = styled.span`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const OrganizerBadge = styled.span`
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background: rgba(123, 92, 255, 0.15);
+  color: ${({ theme }) => theme.accent};
+  border-radius: 3px;
+  text-transform: uppercase;
+`;
+
+const RemoveButton = styled.button`
+  font-size: 0.75rem;
+  padding: 0.375rem 0.625rem;
+  background: transparent;
+  color: ${({ theme }) => theme.danger};
+  border: 1px solid ${({ theme }) => theme.danger};
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const AddOrganizerRow = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const AddButton = styled.button`
+  font-size: 0.85rem;
+  padding: 0.625rem 1rem;
+  background: ${({ theme }) => theme.accent};
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.accentHover};
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
   registration: 'Open',
@@ -411,6 +512,12 @@ export default function EditTournamentPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Organizer state
+  const [organizers, setOrganizers] = useState<Organizer[]>([]);
+  const [primaryOrganizer, setPrimaryOrganizer] = useState<{ id: string; username: string | null; displayName: string | null } | null>(null);
+  const [newOrganizerUsername, setNewOrganizerUsername] = useState('');
+  const [isAddingOrganizer, setIsAddingOrganizer] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -425,10 +532,11 @@ export default function EditTournamentPage() {
     registrationDeadline: '',
   });
 
+  const isAdditionalOrganizer = organizers.some(o => o.userId === user?.id);
   const isOrganizer = user && tournament && (
     user.id === tournament.organizerId ||
     user.role === 'admin' ||
-    user.role === 'organizer'
+    isAdditionalOrganizer
   );
 
   const fetchTournament = useCallback(async () => {
@@ -467,6 +575,74 @@ export default function EditTournamentPage() {
   useEffect(() => {
     fetchTournament();
   }, [fetchTournament]);
+
+  // Fetch organizers
+  const fetchOrganizers = useCallback(async () => {
+    if (!id) return;
+    try {
+      const res = await fetch(`/api/tournaments/${id}/organizers`);
+      if (res.ok) {
+        const data = await res.json();
+        setPrimaryOrganizer(data.primaryOrganizer);
+        setOrganizers(data.additionalOrganizers || []);
+      }
+    } catch (error) {
+      console.error('Error fetching organizers:', error);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchOrganizers();
+  }, [fetchOrganizers]);
+
+  const handleAddOrganizer = async () => {
+    if (!newOrganizerUsername.trim() || !id) return;
+
+    setIsAddingOrganizer(true);
+    try {
+      const res = await fetch(`/api/tournaments/${id}/organizers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: newOrganizerUsername.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to add organizer');
+      }
+
+      setOrganizers(prev => [...prev, data.organizer]);
+      setNewOrganizerUsername('');
+      setMessage({ type: 'success', text: 'Organizer added successfully' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to add organizer' });
+    } finally {
+      setIsAddingOrganizer(false);
+    }
+  };
+
+  const handleRemoveOrganizer = async (userId: string) => {
+    if (!id) return;
+
+    try {
+      const res = await fetch(`/api/tournaments/${id}/organizers`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to remove organizer');
+      }
+
+      setOrganizers(prev => prev.filter(o => o.userId !== userId));
+      setMessage({ type: 'success', text: 'Organizer removed' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to remove organizer' });
+    }
+  };
 
   const formatDateTimeLocal = (isoString: string) => {
     const date = new Date(isoString);
@@ -771,6 +947,70 @@ export default function EditTournamentPage() {
                   />
                 </FormGroup>
               </InputRow>
+            </FormSection>
+
+            <FormSection>
+              <SectionHeader>
+                <SectionIcon>👥</SectionIcon>
+                <SectionTitle>Organizers</SectionTitle>
+              </SectionHeader>
+
+              <OrganizerList>
+                {/* Primary Organizer */}
+                {primaryOrganizer && (
+                  <OrganizerRow>
+                    <OrganizerInfo>
+                      <OrganizerName>
+                        {primaryOrganizer.displayName || primaryOrganizer.username || 'Unknown'}
+                      </OrganizerName>
+                      {primaryOrganizer.username && (
+                        <OrganizerUsername>@{primaryOrganizer.username}</OrganizerUsername>
+                      )}
+                    </OrganizerInfo>
+                    <OrganizerBadge>Owner</OrganizerBadge>
+                  </OrganizerRow>
+                )}
+
+                {/* Additional Organizers */}
+                {organizers.map((org) => (
+                  <OrganizerRow key={org.id}>
+                    <OrganizerInfo>
+                      <OrganizerName>
+                        {org.user?.displayName || org.user?.username || 'Unknown'}
+                      </OrganizerName>
+                      {org.user?.username && (
+                        <OrganizerUsername>@{org.user.username}</OrganizerUsername>
+                      )}
+                    </OrganizerInfo>
+                    {user?.id === tournament?.organizerId && (
+                      <RemoveButton onClick={() => handleRemoveOrganizer(org.userId)}>
+                        Remove
+                      </RemoveButton>
+                    )}
+                  </OrganizerRow>
+                ))}
+              </OrganizerList>
+
+              <FormGroup>
+                <Label>Add Organizer</Label>
+                <AddOrganizerRow>
+                  <Input
+                    type="text"
+                    placeholder="Enter username..."
+                    value={newOrganizerUsername}
+                    onChange={(e) => setNewOrganizerUsername(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddOrganizer())}
+                  />
+                  <AddButton 
+                    type="button"
+                    onClick={handleAddOrganizer}
+                    disabled={isAddingOrganizer || !newOrganizerUsername.trim()}
+                  >
+                    {isAddingOrganizer ? 'Adding...' : 'Add'}
+                  </AddButton>
+                </AddOrganizerRow>
+                <HelpText>Added organizers can view and manage this tournament.</HelpText>
+              </FormGroup>
             </FormSection>
 
             <ButtonRow>

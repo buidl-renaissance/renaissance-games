@@ -15,6 +15,13 @@
       "when": 1768136891795,
       "tag": "0001_classy_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768179176727,
+      "tag": "0002_funny_ultimates",
+      "breakpoints": true
     }
   ]
 }

@@ -568,11 +568,15 @@ export default function TournamentAdminPage() {
 
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [teamName, setTeamName] = useState('');
+  
+  // Organizer state
+  const [additionalOrganizerIds, setAdditionalOrganizerIds] = useState<string[]>([]);
 
+  const isAdditionalOrganizer = additionalOrganizerIds.includes(user?.id || '');
   const isOrganizer = user && tournament && (
     user.id === tournament.organizerId || 
     user.role === 'admin' ||
-    user.role === 'organizer'
+    isAdditionalOrganizer
   );
 
   const fetchData = useCallback(async () => {
@@ -600,6 +604,24 @@ export default function TournamentAdminPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Fetch organizers to check if user is an additional organizer
+  useEffect(() => {
+    const fetchOrganizers = async () => {
+      if (!id) return;
+      try {
+        const res = await fetch(`/api/tournaments/${id}/organizers`);
+        if (res.ok) {
+          const data = await res.json();
+          const ids = (data.additionalOrganizers || []).map((o: { userId: string }) => o.userId);
+          setAdditionalOrganizerIds(ids);
+        }
+      } catch (error) {
+        console.error('Error fetching organizers:', error);
+      }
+    };
+    fetchOrganizers();
+  }, [id]);
 
   const updateStatus = async (status: string) => {
     setActionLoading(true);
