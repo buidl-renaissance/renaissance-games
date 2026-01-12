@@ -5,6 +5,8 @@ import { useRouter } from 'next/router';
 import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
+import { UserHeader } from '@/components/UserHeader';
+import { utcToEstInput, estInputToUtc } from '@/lib/timezone';
 
 interface Tournament {
   id: string;
@@ -645,8 +647,8 @@ export default function EditTournamentPage() {
   };
 
   const formatDateTimeLocal = (isoString: string) => {
-    const date = new Date(isoString);
-    return date.toISOString().slice(0, 16);
+    // Convert UTC to EST for display in the form
+    return utcToEstInput(isoString);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -675,10 +677,10 @@ export default function EditTournamentPage() {
       };
 
       if (formData.startTime) {
-        body.startTime = new Date(formData.startTime).toISOString();
+        body.startTime = estInputToUtc(formData.startTime).toISOString();
       }
       if (formData.registrationDeadline) {
-        body.registrationDeadline = new Date(formData.registrationDeadline).toISOString();
+        body.registrationDeadline = estInputToUtc(formData.registrationDeadline).toISOString();
       }
 
       const res = await fetch(`/api/tournaments/${id}`, {
@@ -715,10 +717,7 @@ export default function EditTournamentPage() {
   if (!tournament) {
     return (
       <Container>
-        <Header>
-          <Logo href="/dashboard">Into the Void</Logo>
-          <BackLink href="/tournaments">← Back to Tournaments</BackLink>
-        </Header>
+        <UserHeader showBack backHref="/dashboard" />
         <Main>
           <Message $type="error">Tournament not found</Message>
         </Main>
@@ -729,10 +728,7 @@ export default function EditTournamentPage() {
   if (!isOrganizer) {
     return (
       <Container>
-        <Header>
-          <Logo href="/dashboard">Into the Void</Logo>
-          <BackLink href={`/tournaments/${id}`}>← Back to Tournament</BackLink>
-        </Header>
+        <UserHeader showBack backHref={`/tournaments/${id}`} />
         <Main>
           <AccessDenied>
             <AccessTitle>Access Restricted</AccessTitle>
@@ -751,10 +747,7 @@ export default function EditTournamentPage() {
         <title>Edit {tournament.name} | Into the Void</title>
       </Head>
 
-      <Header>
-        <Logo href="/dashboard">Into the Void</Logo>
-        <BackLink href={`/tournaments/${id}/admin`}>← Back to Admin</BackLink>
-      </Header>
+      <UserHeader showBack backHref={`/tournaments/${id}/admin`} />
 
       <Main>
         <PageHeader>

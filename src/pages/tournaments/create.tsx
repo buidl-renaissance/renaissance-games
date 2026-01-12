@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
+import { UserHeader } from '@/components/UserHeader';
 
 interface Game {
   id: string;
@@ -419,10 +420,7 @@ export default function CreateTournamentPage() {
         <Head>
           <title>Create Tournament | Into the Void</title>
         </Head>
-        <Header>
-          <Logo href="/dashboard">Into the Void</Logo>
-          <BackLink href="/tournaments">← Back to Tournaments</BackLink>
-        </Header>
+        <UserHeader showBack backHref="/dashboard" />
         <Main>
           <AccessDenied>
             <AccessTitle>Access Restricted</AccessTitle>
@@ -441,10 +439,7 @@ export default function CreateTournamentPage() {
         <title>Create Tournament | Into the Void</title>
       </Head>
 
-      <Header>
-        <Logo href="/dashboard">Into the Void</Logo>
-        <BackLink href="/tournaments">← Back to Tournaments</BackLink>
-      </Header>
+      <UserHeader showBack backHref="/dashboard" />
 
       <Main>
         <PageHeader>

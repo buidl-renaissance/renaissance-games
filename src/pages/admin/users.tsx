@@ -4,6 +4,7 @@ import Link from 'next/link';
 import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
+import { UserHeader } from '@/components/UserHeader';
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(12px); }
@@ -386,10 +387,7 @@ export default function AdminUsersPage() {
         <Head>
           <title>User Management | Into the Void</title>
         </Head>
-        <Header>
-          <Logo href="/dashboard">Into the Void</Logo>
-          <BackLink href="/dashboard">← Dashboard</BackLink>
-        </Header>
+        <UserHeader showBack backHref="/dashboard" />
         <Main>
           <AccessDenied>
             <AccessTitle>Access Restricted</AccessTitle>
@@ -406,10 +404,7 @@ export default function AdminUsersPage() {
         <title>User Management | Into the Void</title>
       </Head>
 
-      <Header>
-        <Logo href="/dashboard">Into the Void</Logo>
-        <BackLink href="/dashboard">← Dashboard</BackLink>
-      </Header>
+      <UserHeader showBack backHref="/dashboard" />
 
       <Main>
         <PageHeader>

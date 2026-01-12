@@ -5,6 +5,7 @@ import styled, { keyframes } from "styled-components";
 import { useRouter } from "next/router";
 import { useUser } from "@/contexts/UserContext";
 import { Loading } from "@/components/Loading";
+import { utcToEstDisplay } from "@/lib/timezone";
 
 // App configuration
 const APP_NAME = "Into the Void";
@@ -25,6 +26,8 @@ interface Tournament {
   prizePool: number | null;
   location: string | null;
   startTime: string | null;
+  participantCount: number;
+  isRegistered?: boolean;
 }
 
 // Animations
@@ -36,11 +39,6 @@ const fadeIn = keyframes`
 const livePulse = keyframes`
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
-`;
-
-const subtleGlow = keyframes`
-  0%, 100% { box-shadow: 0 0 20px rgba(123, 92, 255, 0.15); }
-  50% { box-shadow: 0 0 30px rgba(123, 92, 255, 0.25); }
 `;
 
 const spin = keyframes`
@@ -103,28 +101,16 @@ const ProfileImage = styled.img`
   object-fit: cover;
 `;
 
-const DefaultAvatar = styled.div`
-  width: 100%;
-  height: 100%;
-  background: ${({ theme }) => theme.border};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${({ theme }) => theme.text};
-  font-size: 0.9rem;
+const DefaultAvatar = styled.span`
+  font-size: 0.8rem;
   font-weight: 600;
-  font-family: 'Space Grotesk', sans-serif;
+  color: ${({ theme }) => theme.accent};
 `;
 
 const UserName = styled.span`
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: ${({ theme }) => theme.text};
-  
-  @media (max-width: 480px) {
-    display: none;
-  }
 `;
 
 const HeaderRight = styled.div`
@@ -141,7 +127,7 @@ const IconButton = styled(Link)`
   align-items: center;
   justify-content: center;
   color: ${({ theme }) => theme.textMuted};
-  background: transparent;
+  background: ${({ theme }) => theme.surface};
   border: 1px solid ${({ theme }) => theme.border};
   transition: all 0.15s ease;
   
@@ -193,58 +179,46 @@ const ContentArea = styled.div`
   padding: 1rem;
 `;
 
-// Filters
-const FilterBar = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-  flex-wrap: wrap;
+// Section Styles
+const Section = styled.section`
+  margin-bottom: 2rem;
+  animation: ${fadeIn} 0.4s ease-out;
 `;
 
-const FilterGroup = styled.div`
+const SectionHeader = styled.div`
   display: flex;
-  gap: 0.25rem;
   align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 `;
 
-const FilterButton = styled.button<{ $active: boolean }>`
+const SectionTitle = styled.h2`
   font-size: 0.85rem;
-  padding: 0.5rem 0.875rem;
-  border-radius: 4px;
-  transition: all 0.15s ease;
-  
-  ${({ theme, $active }) => $active ? `
-    background: ${theme.accent};
-    color: white;
-  ` : `
-    background: transparent;
-    color: ${theme.textMuted};
-    
-    &:hover {
-      color: ${theme.text};
-      background: ${theme.surfaceHover};
-    }
-  `}
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 `;
 
-const ResultCount = styled.span<{ $loading?: boolean }>`
-  font-size: 0.8rem;
+const SectionCount = styled.span`
+  font-size: 0.75rem;
   color: ${({ theme }) => theme.textMuted};
-  opacity: ${({ $loading }) => $loading ? 0.6 : 1};
-  transition: opacity 0.15s ease;
+  background: ${({ theme }) => theme.surfaceHover};
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+`;
+
+const SectionEmpty = styled.p`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+  padding: 1rem;
+  text-align: center;
+  background: ${({ theme }) => theme.surface};
+  border-radius: 8px;
+  border: 1px dashed ${({ theme }) => theme.border};
 `;
 
 // Tournament List
-const TournamentContent = styled.div<{ $loading?: boolean }>`
-  opacity: ${({ $loading }) => $loading ? 0.5 : 1};
-  transition: opacity 0.15s ease;
-  pointer-events: ${({ $loading }) => $loading ? 'none' : 'auto'};
-`;
-
 const TournamentGrid = styled.div`
   display: flex;
   flex-direction: column;
@@ -256,7 +230,7 @@ const TournamentGrid = styled.div`
 
 const TournamentRow = styled(Link)<{ $status: string }>`
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   gap: 1rem;
   padding: 1rem 1.25rem;
   background: ${({ theme }) => theme.surface};
@@ -272,13 +246,12 @@ const TournamentRow = styled(Link)<{ $status: string }>`
     border-left: 2px solid ${theme.accent};
   `}
   
+  ${({ $status, theme }) => $status === 'registered' && `
+    border-left: 2px solid rgb(34, 197, 94);
+  `}
+  
   &:hover {
     background: ${({ theme }) => theme.surfaceHover};
-  }
-  
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr auto;
-    gap: 0.75rem;
   }
 `;
 
@@ -289,14 +262,15 @@ const TournamentMain = styled.div`
   min-width: 0;
 `;
 
-const GameLabel = styled.span`
-  font-size: 0.7rem;
-  color: ${({ theme }) => theme.textSecondary};
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+const TournamentHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 `;
 
 const GameType = styled.span`
+  display: inline-block;
+  width: fit-content;
   font-size: 0.65rem;
   font-weight: 600;
   color: ${({ theme }) => theme.accent};
@@ -305,6 +279,12 @@ const GameType = styled.span`
   padding: 0.15rem 0.4rem;
   background: ${({ theme }) => theme.accentMuted};
   border-radius: 3px;
+`;
+
+const PrizePool = styled.span`
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgb(34, 197, 94);
 `;
 
 const TournamentTitle = styled.h3`
@@ -321,6 +301,7 @@ const TournamentMeta = styled.div`
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  flex-wrap: wrap;
 `;
 
 const MetaItem = styled.span`
@@ -328,37 +309,17 @@ const MetaItem = styled.span`
   color: ${({ theme }) => theme.textMuted};
 `;
 
-const TournamentStats = styled.div`
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
-  
-  @media (max-width: 600px) {
-    display: none;
-  }
-`;
-
-const Stat = styled.div`
-  text-align: right;
-`;
-
-const StatValue = styled.div`
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text};
-`;
-
-const StatLabel = styled.div`
-  font-size: 0.65rem;
-  color: ${({ theme }) => theme.textMuted};
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-`;
-
 const TournamentStatus = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
   min-width: 80px;
-  text-align: right;
+`;
+
+const RegistrationCount = styled.span`
+  font-size: 0.7rem;
+  color: ${({ theme }) => theme.textMuted};
 `;
 
 const StatusBadge = styled.span<{ $status: string }>`
@@ -391,6 +352,11 @@ const StatusBadge = styled.span<{ $status: string }>`
           background: ${theme.surfaceHover};
           color: ${theme.text};
         `;
+      case 'registered':
+        return `
+          background: rgba(34, 197, 94, 0.15);
+          color: rgb(34, 197, 94);
+        `;
       default:
         return `
           background: ${theme.surfaceHover};
@@ -408,81 +374,6 @@ const LiveDot = styled.span`
   border-radius: 50%;
   margin-right: 0.4rem;
   animation: ${livePulse} 1.5s ease-in-out infinite;
-`;
-
-// Featured Tournament
-const FeaturedTournament = styled.div`
-  background: ${({ theme }) => theme.surface};
-  border: 1px solid ${({ theme }) => theme.accent};
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  animation: ${subtleGlow} 3s ease-in-out infinite;
-`;
-
-const FeaturedLabel = styled.div`
-  font-size: 0.65rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.accent};
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.75rem;
-  display: flex;
-  align-items: center;
-`;
-
-const FeaturedTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 0.5rem;
-`;
-
-const FeaturedMeta = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-`;
-
-const EnterButton = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.85rem;
-  font-weight: 500;
-  padding: 0.6rem 1.25rem;
-  background: ${({ theme }) => theme.accent};
-  color: white;
-  border-radius: 6px;
-  transition: all 0.15s ease;
-  
-  &:hover {
-    background: ${({ theme }) => theme.accentHover};
-    transform: translateY(-1px);
-  }
-`;
-
-// Empty State
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 3rem 1.5rem;
-  color: ${({ theme }) => theme.textSecondary};
-  animation: ${fadeIn} 0.4s ease-out;
-`;
-
-const EmptyTitle = styled.h2`
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text};
-  margin-bottom: 0.5rem;
-`;
-
-const EmptyText = styled.p`
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 1.5rem;
 `;
 
 // Inline Loading
@@ -509,19 +400,6 @@ const LoadingText = styled.p`
   color: ${({ theme }) => theme.textMuted};
 `;
 
-// Game naming
-const GAME_NAMES: Record<string, string> = {
-  euchre: 'Deal Into the Void',
-  pool: 'Break Into the Void',
-  chess: 'Endgame: Into the Void',
-};
-
-const GAME_ICONS: Record<string, string> = {
-  euchre: '🃏',
-  pool: '🎱',
-  chess: '♟',
-};
-
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
   registration: 'Open',
@@ -529,9 +407,8 @@ const STATUS_LABELS: Record<string, string> = {
   in_progress: 'Live',
   completed: 'Done',
   cancelled: 'Void',
+  registered: 'Registered',
 };
-
-type StatusFilter = 'active' | 'registration' | 'in_progress' | 'draft';
 
 const DashboardPage: React.FC = () => {
   const router = useRouter();
@@ -539,11 +416,10 @@ const DashboardPage: React.FC = () => {
   const [imageError, setImageError] = useState(false);
   
   // Tournament state
-  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [liveTournaments, setLiveTournaments] = useState<Tournament[]>([]);
+  const [openTournaments, setOpenTournaments] = useState<Tournament[]>([]);
   const [games, setGames] = useState<Game[]>([]);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
+  const [isLoading, setIsLoading] = useState(true);
 
   // Redirect to home if not authenticated
   useEffect(() => {
@@ -568,83 +444,44 @@ const DashboardPage: React.FC = () => {
     callReady();
   }, []);
 
-  // Fetch tournaments
+  // Fetch dashboard data
   useEffect(() => {
     const fetchData = async () => {
-      if (!isInitialLoad) {
-        setIsFiltering(true);
-      }
-      
       try {
-        const [tournamentsRes, gamesRes] = await Promise.all([
-          fetch(`/api/tournaments?status=${statusFilter}`),
-          fetch('/api/games'),
-        ]);
+        const res = await fetch('/api/dashboard');
+        const data = await res.json();
+        
+        console.log('Dashboard response:', data);
 
-        if (tournamentsRes.ok) {
-          const data = await tournamentsRes.json();
-          setTournaments(data.tournaments || []);
-        }
-
-        if (gamesRes.ok) {
-          const data = await gamesRes.json();
+        if (res.ok) {
+          setLiveTournaments(data.liveTournaments || []);
+          setOpenTournaments(data.openTournaments || []);
           setGames(data.games || []);
+        } else {
+          console.error('Dashboard API error:', data.error);
         }
       } catch (error) {
-        console.error('Error fetching tournaments:', error);
+        console.error('Error fetching dashboard data:', error);
       } finally {
-        setIsInitialLoad(false);
-        setIsFiltering(false);
+        setIsLoading(false);
       }
     };
 
     if (user) {
       fetchData();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, user]);
+  }, [user]);
 
   const getGame = (gameId: string) => games.find(g => g.id === gameId);
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    const datePart = date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
-    const timePart = date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-    }).toLowerCase();
-    return `${datePart} @ ${timePart}`;
+    return utcToEstDisplay(dateString);
   };
 
   const formatCurrency = (cents: number | null) => {
     if (!cents) return null;
     return `$${(cents / 100).toFixed(0)}`;
   };
-
-  // Sort tournaments
-  const sortedTournaments = [...tournaments].sort((a, b) => {
-    const statusOrder: Record<string, number> = {
-      in_progress: 0,
-      registration: 1,
-      ready: 2,
-      completed: 3,
-      cancelled: 4,
-      draft: 5,
-    };
-    return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
-  });
-
-  // Get featured tournament
-  const featuredTournament = sortedTournaments.find(
-    t => t.status === 'in_progress' || t.status === 'registration'
-  );
-  const remainingTournaments = featuredTournament 
-    ? sortedTournaments.filter(t => t.id !== featuredTournament.id)
-    : sortedTournaments;
 
   const canCreateTournament = user && (user.role === 'admin' || user.role === 'organizer');
 
@@ -663,6 +500,54 @@ const DashboardPage: React.FC = () => {
 
   const displayName = user.username || user.displayName || `User ${user.fid}`;
   const initials = displayName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+
+  const renderTournamentRow = (tournament: Tournament, index: number) => {
+    const game = getGame(tournament.gameId);
+    // Show "registered" status if user is registered, otherwise show actual status
+    const displayStatus = tournament.isRegistered ? 'registered' : tournament.status;
+    
+    return (
+      <TournamentRow 
+        key={tournament.id} 
+        href={`/tournaments/${tournament.id}`}
+        $status={displayStatus}
+        style={{ animationDelay: `${index * 0.05}s` }}
+      >
+        <TournamentMain>
+          <TournamentHeader>
+            <GameType>
+              {game?.name || 'Tournament'}
+            </GameType>
+            {tournament.prizePool && tournament.prizePool > 0 && (
+              <PrizePool>{formatCurrency(tournament.prizePool)}</PrizePool>
+            )}
+          </TournamentHeader>
+          <TournamentTitle>{tournament.name}</TournamentTitle>
+          <TournamentMeta>
+            {tournament.startTime && (
+              <MetaItem>{formatDate(tournament.startTime)}</MetaItem>
+            )}
+            {tournament.startTime && tournament.location && (
+              <MetaItem>•</MetaItem>
+            )}
+            {tournament.location && (
+              <MetaItem>{tournament.location}</MetaItem>
+            )}
+          </TournamentMeta>
+        </TournamentMain>
+
+        <TournamentStatus>
+          <StatusBadge $status={displayStatus}>
+            {displayStatus === 'in_progress' && <LiveDot />}
+            {STATUS_LABELS[displayStatus] || displayStatus}
+          </StatusBadge>
+          <RegistrationCount>
+            {tournament.participantCount}/{tournament.maxParticipants}
+          </RegistrationCount>
+        </TournamentStatus>
+      </TournamentRow>
+    );
+  };
 
   return (
     <Container>
@@ -711,150 +596,46 @@ const DashboardPage: React.FC = () => {
         <HeaderSpacer />
         
         <ContentArea>
-          <FilterBar>
-            <FilterGroup>
-              <FilterButton 
-                $active={statusFilter === 'active'} 
-                onClick={() => setStatusFilter('active')}
-              >
-                Active
-              </FilterButton>
-              <FilterButton 
-                $active={statusFilter === 'registration'} 
-                onClick={() => setStatusFilter('registration')}
-              >
-                Open
-              </FilterButton>
-              <FilterButton 
-                $active={statusFilter === 'in_progress'} 
-                onClick={() => setStatusFilter('in_progress')}
-              >
-                Live
-              </FilterButton>
-              {canCreateTournament && (
-                <FilterButton 
-                  $active={statusFilter === 'draft'} 
-                  onClick={() => setStatusFilter('draft')}
-                >
-                  Drafts
-                </FilterButton>
-              )}
-            </FilterGroup>
-            <ResultCount $loading={isFiltering}>
-              {isFiltering ? 'Loading...' : `${sortedTournaments.length} ${sortedTournaments.length === 1 ? 'tournament' : 'tournaments'}`}
-            </ResultCount>
-          </FilterBar>
-
-          {isInitialLoad || isFiltering ? (
+          {isLoading ? (
             <LoadingArea>
               <LoadingSpinner />
-              <LoadingText>{isInitialLoad ? 'Loading tournaments...' : 'Loading...'}</LoadingText>
+              <LoadingText>Loading tournaments...</LoadingText>
             </LoadingArea>
           ) : (
-            <TournamentContent $loading={false}>
-              {sortedTournaments.length === 0 ? (
-                <EmptyState>
-                  <EmptyTitle>No tournaments found</EmptyTitle>
-                  <EmptyText>
-                    {statusFilter === 'draft' 
-                      ? 'No draft tournaments. Create one to get started.'
-                      : 'No tournaments available. Check back soon.'}
-                  </EmptyText>
-                  {canCreateTournament && (
-                    <EnterButton href="/tournaments/create">Create Tournament</EnterButton>
-                  )}
-                </EmptyState>
-              ) : (
-                <>
-                  {featuredTournament && statusFilter === 'active' && (
-                    <FeaturedTournament>
-                      <FeaturedLabel>
-                        {featuredTournament.status === 'in_progress' ? (
-                          <><LiveDot />Live Now</>
-                        ) : (
-                          'Open for Entry'
-                        )}
-                      </FeaturedLabel>
-                      <FeaturedTitle>{featuredTournament.name}</FeaturedTitle>
-                      <FeaturedMeta>
-                        <MetaItem>
-                          <GameType>
-                            {GAME_ICONS[getGame(featuredTournament.gameId)?.type || ''] || '🎮'}{' '}
-                            {getGame(featuredTournament.gameId)?.name || 'Tournament'}
-                          </GameType>
-                        </MetaItem>
-                        {featuredTournament.location && (
-                          <MetaItem>📍 {featuredTournament.location}</MetaItem>
-                        )}
-                        {featuredTournament.startTime && (
-                          <MetaItem>{formatDate(featuredTournament.startTime)}</MetaItem>
-                        )}
-                      </FeaturedMeta>
-                      <EnterButton href={`/tournaments/${featuredTournament.id}`}>
-                        {featuredTournament.status === 'in_progress' ? 'View Bracket' : 'Enter'} →
-                      </EnterButton>
-                    </FeaturedTournament>
-                  )}
+            <>
+              {/* Live Tournaments Section */}
+              <Section>
+                <SectionHeader>
+                  <SectionTitle>
+                    <LiveDot />
+                    Live
+                  </SectionTitle>
+                  <SectionCount>{liveTournaments.length}</SectionCount>
+                </SectionHeader>
+                {liveTournaments.length === 0 ? (
+                  <SectionEmpty>No live tournaments right now</SectionEmpty>
+                ) : (
+                  <TournamentGrid>
+                    {liveTournaments.map((tournament, index) => renderTournamentRow(tournament, index))}
+                  </TournamentGrid>
+                )}
+              </Section>
 
-                  {(statusFilter === 'active' ? remainingTournaments : sortedTournaments).length > 0 && (
-                    <TournamentGrid>
-                      {(statusFilter === 'active' ? remainingTournaments : sortedTournaments).map((tournament, index) => {
-                        const game = getGame(tournament.gameId);
-                        
-                        return (
-                          <TournamentRow 
-                            key={tournament.id} 
-                            href={`/tournaments/${tournament.id}`}
-                            $status={tournament.status}
-                            style={{ animationDelay: `${index * 0.05}s` }}
-                          >
-                            <TournamentMain>
-                              <GameLabel>
-                                <GameType>
-                                  {GAME_ICONS[game?.type || ''] || '🎮'}{' '}
-                                  {game?.name || 'Tournament'}
-                                </GameType>
-                              </GameLabel>
-                              <TournamentTitle>{tournament.name}</TournamentTitle>
-                              <TournamentMeta>
-                                {tournament.location && (
-                                  <MetaItem>{tournament.location}</MetaItem>
-                                )}
-                                {tournament.startTime && (
-                                  <MetaItem>{formatDate(tournament.startTime)}</MetaItem>
-                                )}
-                              </TournamentMeta>
-                            </TournamentMain>
-
-                            <TournamentStats>
-                              <Stat>
-                                <StatValue>
-                                  {tournament.minParticipants}–{tournament.maxParticipants}
-                                </StatValue>
-                                <StatLabel>Players</StatLabel>
-                              </Stat>
-                              {tournament.prizePool && tournament.prizePool > 0 && (
-                                <Stat>
-                                  <StatValue>{formatCurrency(tournament.prizePool)}</StatValue>
-                                  <StatLabel>Prize</StatLabel>
-                                </Stat>
-                              )}
-                            </TournamentStats>
-
-                            <TournamentStatus>
-                              <StatusBadge $status={tournament.status}>
-                                {tournament.status === 'in_progress' && <LiveDot />}
-                                {STATUS_LABELS[tournament.status] || tournament.status}
-                              </StatusBadge>
-                            </TournamentStatus>
-                          </TournamentRow>
-                        );
-                      })}
-                    </TournamentGrid>
-                  )}
-                </>
-              )}
-            </TournamentContent>
+              {/* Open Tournaments Section */}
+              <Section>
+                <SectionHeader>
+                  <SectionTitle>Open for Registration</SectionTitle>
+                  <SectionCount>{openTournaments.length}</SectionCount>
+                </SectionHeader>
+                {openTournaments.length === 0 ? (
+                  <SectionEmpty>No open tournaments available</SectionEmpty>
+                ) : (
+                  <TournamentGrid>
+                    {openTournaments.map((tournament, index) => renderTournamentRow(tournament, index))}
+                  </TournamentGrid>
+                )}
+              </Section>
+            </>
           )}
         </ContentArea>
       </Main>

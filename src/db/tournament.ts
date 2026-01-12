@@ -1,3 +1,4 @@
+// Tournament database operations
 import { v4 as uuidv4 } from 'uuid';
 import { eq, desc, and, or } from 'drizzle-orm';
 import { db } from './drizzle';
@@ -532,6 +533,43 @@ export async function getUserParticipant(
   
   if (results.length === 0) return null;
   return parseParticipantRow(results[0]);
+}
+
+export async function getUserRegisteredTournamentIds(
+  userId: string
+): Promise<string[]> {
+  // Get tournaments where user is directly registered
+  const directRegistrations = await db
+    .select({ tournamentId: tournamentParticipants.tournamentId })
+    .from(tournamentParticipants)
+    .where(eq(tournamentParticipants.userId, userId));
+
+  // Get tournaments where user is part of a team
+  const teamMemberships = await db
+    .select({ teamId: teamMembers.teamId })
+    .from(teamMembers)
+    .where(eq(teamMembers.userId, userId));
+
+  const teamIds = teamMemberships.map(tm => tm.teamId);
+  
+  let teamTournamentIds: string[] = [];
+  if (teamIds.length > 0) {
+    // Get tournament IDs for each team
+    for (const teamId of teamIds) {
+      const team = await getTeamById(teamId);
+      if (team) {
+        teamTournamentIds.push(team.tournamentId);
+      }
+    }
+  }
+
+  // Combine and deduplicate
+  const allTournamentIds = new Set([
+    ...directRegistrations.map(r => r.tournamentId),
+    ...teamTournamentIds,
+  ]);
+
+  return Array.from(allTournamentIds);
 }
 
 // ============================================

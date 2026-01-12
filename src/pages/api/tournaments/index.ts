@@ -8,9 +8,11 @@ import {
   getTournamentsByOrganizer,
   getTournamentsByStatus,
   getTournamentsUserCanOrganize,
+  getParticipantCount,
   CreateTournamentInput,
   Tournament,
 } from '@/db/tournament';
+import { estInputToUtc } from '@/lib/timezone';
 
 /**
  * GET /api/tournaments - List tournaments
@@ -75,9 +77,20 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       tournaments = [];
     }
 
+    // Add participant count to each tournament
+    const tournamentsWithCounts = await Promise.all(
+      tournaments.map(async (tournament) => {
+        const participantCount = await getParticipantCount(tournament.id);
+        return {
+          ...tournament,
+          participantCount,
+        };
+      })
+    );
+
     return res.status(200).json({
       success: true,
-      tournaments,
+      tournaments: tournamentsWithCounts,
     });
   } catch (error) {
     console.error('Error fetching tournaments:', error);
@@ -176,8 +189,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       prizePool,
       prizeDistribution,
       bestOf,
-      registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : undefined,
-      startTime: startTime ? new Date(startTime) : undefined,
+      registrationDeadline: registrationDeadline ? estInputToUtc(registrationDeadline) : undefined,
+      startTime: startTime ? estInputToUtc(startTime) : undefined,
       location,
     };
 

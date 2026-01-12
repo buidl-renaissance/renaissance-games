@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
+import { UserHeader } from '@/components/UserHeader';
 import BracketView from '@/components/tournament/BracketView';
 
 interface Tournament {
@@ -545,10 +546,7 @@ export default function BracketPage() {
   if (!tournament) {
     return (
       <Container>
-        <Header>
-          <Logo href="/dashboard">Into the Void</Logo>
-          <BackLink href="/tournaments">← Tournaments</BackLink>
-        </Header>
+        <UserHeader showBack backHref="/dashboard" />
         <Main>
           <EmptyState>
             <EmptyIcon>×</EmptyIcon>
@@ -566,15 +564,12 @@ export default function BracketPage() {
         <title>Bracket — {tournament.name} | Into the Void</title>
       </Head>
 
-      <Header>
-        <Logo href="/dashboard">Into the Void</Logo>
-        <BackLink href={`/tournaments/${id}`}>← Back to Tournament</BackLink>
-      </Header>
+      <UserHeader showBack backHref={`/tournaments/${id}`} />
 
       <Main>
         <PageHeader>
           <BreadcrumbNav>
-            <Link href="/tournaments">Tournaments</Link>
+            <Link href="/dashboard">Dashboard</Link>
             {' / '}
             <Link href={`/tournaments/${id}`}>{tournament.name}</Link>
             {' / '}

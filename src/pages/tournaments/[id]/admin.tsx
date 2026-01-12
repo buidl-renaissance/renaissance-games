@@ -5,6 +5,8 @@ import { useRouter } from 'next/router';
 import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
+import { UserHeader } from '@/components/UserHeader';
+import { utcToEstDisplay } from '@/lib/timezone';
 
 interface Tournament {
   id: string;
@@ -568,7 +570,7 @@ export default function TournamentAdminPage() {
 
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [teamName, setTeamName] = useState('');
-  
+
   // Organizer state
   const [additionalOrganizerIds, setAdditionalOrganizerIds] = useState<string[]>([]);
 
@@ -704,9 +706,7 @@ export default function TournamentAdminPage() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '—';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-    });
+    return utcToEstDisplay(dateString) || '—';
   };
 
   const formatCurrency = (cents: number | null) => {
@@ -720,10 +720,7 @@ export default function TournamentAdminPage() {
   if (!tournament) {
     return (
       <Container>
-        <Header>
-          <Logo href="/dashboard">Renaissance City</Logo>
-          <BackLink href="/tournaments">← Back</BackLink>
-        </Header>
+        <UserHeader showBack backHref="/dashboard" />
         <Main>
           <InfoBox $type="error">Tournament not found</InfoBox>
         </Main>
@@ -734,10 +731,7 @@ export default function TournamentAdminPage() {
   if (!isOrganizer) {
     return (
       <Container>
-        <Header>
-          <Logo href="/dashboard">Renaissance City</Logo>
-          <BackLink href={`/tournaments/${id}`}>← Back</BackLink>
-        </Header>
+        <UserHeader showBack backHref={`/tournaments/${id}`} />
         <Main>
           <AccessDenied>
             <AccessTitle>Access Denied</AccessTitle>
@@ -764,10 +758,7 @@ export default function TournamentAdminPage() {
         <title>Manage {tournament.name} | Renaissance City</title>
       </Head>
 
-      <Header>
-        <Logo href="/dashboard">Renaissance City</Logo>
-        <BackLink href={`/tournaments/${id}`}>← Tournament</BackLink>
-      </Header>
+      <UserHeader showBack backHref={`/tournaments/${id}`} />
 
       <Main>
         <PageHeader>

@@ -5,7 +5,9 @@ import { useRouter } from 'next/router';
 import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
+import { UserHeader } from '@/components/UserHeader';
 import { PaymentPlaceholder } from '@/components/tournament/PaymentPlaceholder';
+import { utcToEstDisplay } from '@/lib/timezone';
 
 interface Tournament {
   id: string;
@@ -674,7 +676,7 @@ export default function TournamentDetailPage() {
   const [teamMode, setTeamMode] = useState<'create' | 'join'>('create');
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  
+
   // Organizer state
   const [additionalOrganizerIds, setAdditionalOrganizerIds] = useState<string[]>([]);
 
@@ -826,13 +828,7 @@ export default function TournamentDetailPage() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'TBD';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
+    return utcToEstDisplay(dateString) || 'TBD';
   };
 
   const formatCurrency = (cents: number | null) => {
@@ -848,10 +844,7 @@ export default function TournamentDetailPage() {
   if (!tournament) {
     return (
       <Container>
-        <Header>
-          <Logo href="/dashboard">Renaissance City</Logo>
-          <BackLink href="/tournaments">← Back</BackLink>
-        </Header>
+        <UserHeader showBack backHref="/dashboard" />
         <Main>
           <Message $type="error">{error || 'Tournament not found'}</Message>
         </Main>
@@ -869,15 +862,12 @@ export default function TournamentDetailPage() {
         <meta name="description" content={tournament.description || `${tournament.name} tournament`} />
       </Head>
 
-      <Header>
-        <Logo href="/dashboard">Renaissance City</Logo>
-        <BackLink href="/tournaments">← Tournaments</BackLink>
-      </Header>
+      <UserHeader showBack backHref="/dashboard" />
 
       <Main>
         <HeroSection $isLive={isLive}>
           <Breadcrumb>
-            <Link href="/tournaments">Tournaments</Link> / {tournament.name}
+            <Link href="/dashboard">Dashboard</Link> / {tournament.name}
           </Breadcrumb>
           
           <GameLabel>
@@ -966,7 +956,7 @@ export default function TournamentDetailPage() {
                           <ParticipantInfo>
                             <ParticipantRank>{index + 1}</ParticipantRank>
                             <ParticipantDetails>
-                              <ParticipantName>{team.name}</ParticipantName>
+                            <ParticipantName>{team.name}</ParticipantName>
                               <ParticipantMembers>
                                 {team.members?.map((m) => 
                                   m.user?.displayName || m.user?.username || 'Unknown'
@@ -1085,7 +1075,7 @@ export default function TournamentDetailPage() {
                                     onClick={() => setSelectedTeamId(selectedTeamId === team.id ? null : team.id)}
                                   >
                                     <TeamInfo>
-                                      <TeamName>{team.name}</TeamName>
+                                    <TeamName>{team.name}</TeamName>
                                       <TeamMembers>
                                         {team.members?.map((m) => 
                                           m.user?.displayName || m.user?.username || 'Unknown'
