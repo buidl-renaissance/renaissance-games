@@ -46,13 +46,27 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
 
     const teams = await getTeamsByTournament(tournamentId);
 
-    // Get members for each team
+    // Get members for each team with user details
     const teamsWithMembers = await Promise.all(
       teams.map(async (team) => {
         const members = await getTeamMembers(team.id);
+        // Fetch user details for each member
+        const membersWithUsers = await Promise.all(
+          members.map(async (member) => {
+            const user = await getUserById(member.userId);
+            return {
+              ...member,
+              user: user ? {
+                id: user.id,
+                displayName: user.displayName,
+                username: user.username,
+              } : null,
+            };
+          })
+        );
         return {
           ...team,
-          members,
+          members: membersWithUsers,
         };
       })
     );

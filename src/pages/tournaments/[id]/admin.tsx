@@ -445,7 +445,7 @@ const PairingRow = styled.div`
 const Input = styled.input`
   flex: 1;
   padding: 0.625rem 0.875rem;
-  font-size: 0.9rem;
+  font-size: 16px;
   background: ${({ theme }) => theme.backgroundAlt};
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 6px;
@@ -540,11 +540,11 @@ const GAME_NAMES: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Pending',
+  draft: 'Draft',
   registration: 'Open',
   ready: 'Ready',
   in_progress: 'Live',
-  completed: 'Finished',
+  completed: 'Done',
   cancelled: 'Void',
 };
 

@@ -200,7 +200,7 @@ const Input = styled.input`
   width: 100%;
   padding: 0.75rem 1rem;
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 4px;
   background: ${({ theme }) => theme.background};
@@ -227,7 +227,7 @@ const TextArea = styled.textarea`
   width: 100%;
   padding: 0.75rem 1rem;
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 4px;
   background: ${({ theme }) => theme.background};
@@ -247,7 +247,7 @@ const Select = styled.select`
   width: 100%;
   padding: 0.75rem 1rem;
   font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
+  font-size: 16px;
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 4px;
   background: ${({ theme }) => theme.background};
@@ -384,11 +384,11 @@ const AccessText = styled.p`
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
-  registration: 'Registration',
+  registration: 'Open',
   ready: 'Ready',
-  in_progress: 'In Progress',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+  in_progress: 'Live',
+  completed: 'Done',
+  cancelled: 'Void',
 };
 
 const getGameIcon = (gameType?: string): string => {

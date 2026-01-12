@@ -19,6 +19,12 @@ a {
   text-decoration: none;
 }
 
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
 /* Prevent white flash on page load */
 html {
   color-scheme: dark;

@@ -409,9 +409,12 @@ const EmptyText = styled.p`
 `;
 
 const STATUS_LABELS: Record<string, string> = {
+  draft: 'Draft',
+  registration: 'Open',
   ready: 'Ready',
   in_progress: 'Live',
-  completed: 'Completed',
+  completed: 'Done',
+  cancelled: 'Void',
 };
 
 export default function BracketPage() {

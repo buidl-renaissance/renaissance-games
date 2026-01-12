@@ -374,6 +374,17 @@ const ParticipantName = styled.span`
   color: ${({ theme }) => theme.text};
 `;
 
+const ParticipantDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+`;
+
+const ParticipantMembers = styled.span`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
 const ParticipantBadge = styled.span<{ $type: string }>`
   font-size: 0.7rem;
   font-weight: 500;
@@ -495,7 +506,7 @@ const TeamLabel = styled.label`
 const TeamInput = styled.input`
   width: 100%;
   padding: 0.625rem 0.875rem;
-  font-size: 0.9rem;
+  font-size: 16px;
   background: ${({ theme }) => theme.backgroundAlt};
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 6px;
@@ -560,10 +571,21 @@ const OpenTeamItem = styled.button<{ $selected: boolean }>`
   }
 `;
 
+const TeamInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
 const TeamName = styled.span`
   font-size: 0.9rem;
   font-weight: 500;
   color: ${({ theme }) => theme.text};
+`;
+
+const TeamMembers = styled.span`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
 `;
 
 const TeamMeta = styled.span`
@@ -625,11 +647,11 @@ const GAME_NAMES: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Pending',
+  draft: 'Draft',
   registration: 'Open',
-  ready: 'Begin',
+  ready: 'Ready',
   in_progress: 'Live',
-  completed: 'Finished',
+  completed: 'Done',
   cancelled: 'Void',
 };
 
@@ -921,7 +943,14 @@ export default function TournamentDetailPage() {
                         <ParticipantRow key={team.id}>
                           <ParticipantInfo>
                             <ParticipantRank>{index + 1}</ParticipantRank>
-                            <ParticipantName>{team.name}</ParticipantName>
+                            <ParticipantDetails>
+                              <ParticipantName>{team.name}</ParticipantName>
+                              <ParticipantMembers>
+                                {team.members?.map((m: { user?: { displayName?: string; username?: string } }) => 
+                                  m.user?.displayName || m.user?.username || 'Unknown'
+                                ).join(', ') || 'No members'}
+                              </ParticipantMembers>
+                            </ParticipantDetails>
                           </ParticipantInfo>
                           <ParticipantBadge $type={team.isComplete ? 'ready' : 'waitlist'}>
                             {team.isComplete ? 'Ready' : 'Forming'}
@@ -1033,7 +1062,14 @@ export default function TournamentDetailPage() {
                                     $selected={selectedTeamId === team.id}
                                     onClick={() => setSelectedTeamId(selectedTeamId === team.id ? null : team.id)}
                                   >
-                                    <TeamName>{team.name}</TeamName>
+                                    <TeamInfo>
+                                      <TeamName>{team.name}</TeamName>
+                                      <TeamMembers>
+                                        {team.members?.map((m: { user?: { displayName?: string; username?: string } }) => 
+                                          m.user?.displayName || m.user?.username || 'Unknown'
+                                        ).join(', ') || 'No members yet'}
+                                      </TeamMembers>
+                                    </TeamInfo>
                                     <TeamMeta>
                                       {team.members?.length || 1}/{game.playersPerTeam}
                                     </TeamMeta>

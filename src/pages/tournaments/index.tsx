@@ -164,7 +164,7 @@ const FilterButton = styled.button<{ $active: boolean }>`
 
 const SearchInput = styled.input`
   padding: 0.5rem 0.875rem;
-  font-size: 0.85rem;
+  font-size: 16px;
   background: ${({ theme }) => theme.backgroundAlt};
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 4px;
@@ -440,11 +440,11 @@ const GAME_ICONS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: 'Pending',
-  registration: 'Enter',
-  ready: 'Begin',
+  draft: 'Draft',
+  registration: 'Open',
+  ready: 'Ready',
   in_progress: 'Live',
-  completed: 'Finished',
+  completed: 'Done',
   cancelled: 'Void',
 };
 
@@ -499,10 +499,16 @@ export default function TournamentsPage() {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    const datePart = date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
     });
+    const timePart = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).toLowerCase();
+    return `${datePart} @ ${timePart}`;
   };
 
   const formatCurrency = (cents: number | null) => {

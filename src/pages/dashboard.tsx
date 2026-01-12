@@ -608,10 +608,16 @@ const DashboardPage: React.FC = () => {
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = new Date(dateString);
+    const datePart = date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
     });
+    const timePart = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+    }).toLowerCase();
+    return `${datePart} @ ${timePart}`;
   };
 
   const formatCurrency = (cents: number | null) => {
