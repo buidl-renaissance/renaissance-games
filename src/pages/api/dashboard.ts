@@ -90,15 +90,20 @@ export default async function handler(
       return res.status(401).json({ error: 'User not found' });
     }
 
+    // Check if user can see draft tournaments
+    const canSeeDrafts = user.role === 'admin' || user.role === 'organizer';
+
     // Fetch all data in parallel
     const [
       registrationTournaments,
       liveTournaments,
+      draftTournaments,
       userTournamentIds,
       games,
     ] = await Promise.all([
       getTournamentsByStatus('registration'),
       getTournamentsByStatus('in_progress'),
+      canSeeDrafts ? getTournamentsByStatus('draft') : Promise.resolve([]),
       getUserTournamentIds(user.id),
       getAllGames(),
     ]);
@@ -115,15 +120,17 @@ export default async function handler(
     };
 
     // Add info to all tournament lists
-    const [liveWithCount, openWithCount] = await Promise.all([
+    const [liveWithCount, openWithCount, draftWithCount] = await Promise.all([
       addTournamentInfo(liveTournaments),
       addTournamentInfo(registrationTournaments),
+      addTournamentInfo(draftTournaments),
     ]);
 
     return res.status(200).json({
       success: true,
       liveTournaments: liveWithCount,
       openTournaments: openWithCount,
+      draftTournaments: draftWithCount,
       games,
     });
   } catch (error) {

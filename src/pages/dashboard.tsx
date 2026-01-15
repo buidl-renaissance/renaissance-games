@@ -250,6 +250,10 @@ const TournamentRow = styled(Link)<{ $status: string }>`
     border-left: 2px solid rgb(34, 197, 94);
   `}
   
+  ${({ $status, theme }) => $status === 'draft' && `
+    border-left: 2px solid ${theme.textMuted};
+  `}
+  
   &:hover {
     background: ${({ theme }) => theme.surfaceHover};
   }
@@ -357,6 +361,11 @@ const StatusBadge = styled.span<{ $status: string }>`
           background: rgba(34, 197, 94, 0.15);
           color: rgb(34, 197, 94);
         `;
+      case 'draft':
+        return `
+          background: ${theme.surfaceHover};
+          color: ${theme.textMuted};
+        `;
       default:
         return `
           background: ${theme.surfaceHover};
@@ -418,6 +427,7 @@ const DashboardPage: React.FC = () => {
   // Tournament state
   const [liveTournaments, setLiveTournaments] = useState<Tournament[]>([]);
   const [openTournaments, setOpenTournaments] = useState<Tournament[]>([]);
+  const [draftTournaments, setDraftTournaments] = useState<Tournament[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -456,6 +466,7 @@ const DashboardPage: React.FC = () => {
         if (res.ok) {
           setLiveTournaments(data.liveTournaments || []);
           setOpenTournaments(data.openTournaments || []);
+          setDraftTournaments(data.draftTournaments || []);
           setGames(data.games || []);
         } else {
           console.error('Dashboard API error:', data.error);
@@ -635,6 +646,19 @@ const DashboardPage: React.FC = () => {
                   </TournamentGrid>
                 )}
               </Section>
+
+              {/* Draft Tournaments Section - Only for admins/organizers */}
+              {canCreateTournament && draftTournaments.length > 0 && (
+                <Section>
+                  <SectionHeader>
+                    <SectionTitle>Draft</SectionTitle>
+                    <SectionCount>{draftTournaments.length}</SectionCount>
+                  </SectionHeader>
+                  <TournamentGrid>
+                    {draftTournaments.map((tournament, index) => renderTournamentRow(tournament, index))}
+                  </TournamentGrid>
+                </Section>
+              )}
             </>
           )}
         </ContentArea>
