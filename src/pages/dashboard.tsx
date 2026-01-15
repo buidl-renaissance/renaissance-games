@@ -20,6 +20,7 @@ interface Tournament {
   id: string;
   gameId: string;
   name: string;
+  description: string | null;
   status: string;
   minParticipants: number;
   maxParticipants: number;
@@ -324,6 +325,17 @@ const MetaItem = styled.span`
   color: ${({ theme }) => theme.textMuted};
 `;
 
+const TournamentDescription = styled.p`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
 const TournamentStatus = styled.div`
   display: flex;
   flex-direction: column;
@@ -568,6 +580,9 @@ const DashboardPage: React.FC = () => {
               <MetaItem>{tournament.location}</MetaItem>
             )}
           </TournamentMeta>
+          {tournament.description && (
+            <TournamentDescription>{tournament.description}</TournamentDescription>
+          )}
         </TournamentMain>
 
         <TournamentStatus>
