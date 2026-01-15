@@ -552,7 +552,7 @@ export async function getUserRegisteredTournamentIds(
 
   const teamIds = teamMemberships.map(tm => tm.teamId);
   
-  let teamTournamentIds: string[] = [];
+  const teamTournamentIds: string[] = [];
   if (teamIds.length > 0) {
     // Get tournament IDs for each team
     for (const teamId of teamIds) {

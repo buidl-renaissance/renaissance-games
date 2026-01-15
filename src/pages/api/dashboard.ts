@@ -30,7 +30,7 @@ async function getUserTournamentIds(userId: string): Promise<string[]> {
 
   // Get tournament IDs from teams
   const teamIds = teamMemberships.map(tm => tm.teamId);
-  let teamTournamentIds: string[] = [];
+  const teamTournamentIds: string[] = [];
   
   if (teamIds.length > 0) {
     for (const teamId of teamIds) {
