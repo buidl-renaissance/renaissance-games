@@ -4,13 +4,26 @@ import { sql } from 'drizzle-orm';
 // User roles
 export type UserRole = 'user' | 'organizer' | 'admin';
 
+// User status enum values
+export const USER_STATUSES = ['active', 'inactive', 'banned'] as const;
+export type UserStatus = typeof USER_STATUSES[number];
+
 // Users table
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
-  fid: text('fid').notNull().unique(),
+  fid: text('fid').unique(), // Optional - only for Farcaster users
+  phone: text('phone').unique(), // For direct registration/login
+  email: text('email'), // Optional
   username: text('username'),
-  displayName: text('displayName'),
-  pfpUrl: text('pfpUrl'),
+  name: text('name'), // Synced from Farcaster/Renaissance
+  pfpUrl: text('pfpUrl'), // Synced from Farcaster/Renaissance
+  displayName: text('displayName'), // App-specific name (editable)
+  profilePicture: text('profilePicture'), // App-specific profile picture (editable)
+  accountAddress: text('accountAddress'), // Wallet address from Renaissance auth
+  pinHash: text('pinHash'), // bcrypt hash of 4-digit PIN (nullable for existing/miniapp users)
+  failedPinAttempts: integer('failedPinAttempts').default(0), // Failed PIN attempts counter (default 0)
+  lockedAt: integer('lockedAt', { mode: 'timestamp' }), // Timestamp when account was locked (null = not locked)
+  status: text('status').$type<UserStatus>().default('active'), // User status: active, inactive, banned
   role: text('role').$type<UserRole>().default('user').notNull(),
   createdAt: integer('createdAt', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`).notNull(),
