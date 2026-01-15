@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
 import { UserHeader } from '@/components/UserHeader';
+
+interface UserSearchResult {
+  id: string;
+  username: string | null;
+  displayName: string | null;
+  pfpUrl: string | null;
+}
 
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(12px); }
@@ -310,6 +317,100 @@ const AccessText = styled.p`
   color: ${({ theme }) => theme.textMuted};
 `;
 
+// Autocomplete styles
+const AutocompleteWrapper = styled.div`
+  position: relative;
+  flex: 1;
+`;
+
+const AutocompleteDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: ${({ theme }) => theme.surface};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 100;
+`;
+
+const AutocompleteItem = styled.button`
+  width: 100%;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.backgroundAlt};
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid ${({ theme }) => theme.border};
+  }
+`;
+
+const AutocompleteAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.backgroundAlt};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+`;
+
+const AutocompleteAvatarImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const AutocompleteAvatarInitial = styled.span`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const AutocompleteInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+`;
+
+const AutocompleteName = styled.span`
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.text};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const AutocompleteUsername = styled.span`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const AutocompleteEmpty = styled.div`
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
 export default function AdminUsersPage() {
   const { user, isLoading } = useUser();
   const [username, setUsername] = useState('');
@@ -318,16 +419,91 @@ export default function AdminUsersPage() {
   const [result, setResult] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [foundUser, setFoundUser] = useState<{ id: string; username: string; displayName: string; role: string } | null>(null);
 
-  const handleLookup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!username.trim()) return;
+  // Autocomplete state
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Search for users with debouncing
+  const searchUsers = useCallback(async (query: string) => {
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data.users || []);
+        setShowDropdown(true);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Handle username input change with debounce
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setUsername(value);
+
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Debounce search
+    searchTimeoutRef.current = setTimeout(() => {
+      searchUsers(value);
+    }, 300);
+  };
+
+  // Select a user from the dropdown
+  const selectUser = (selectedUser: UserSearchResult) => {
+    setUsername(selectedUser.username || '');
+    setShowDropdown(false);
+    setSearchResults([]);
+    // Automatically look up the user
+    handleLookupUser(selectedUser.username || '');
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleLookupUser = async (usernameToLookup: string) => {
+    if (!usernameToLookup.trim()) return;
 
     setIsSubmitting(true);
     setResult(null);
     setFoundUser(null);
 
     try {
-      const res = await fetch(`/api/user/role?username=${encodeURIComponent(username)}`);
+      const res = await fetch(`/api/user/role?username=${encodeURIComponent(usernameToLookup)}`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -341,6 +517,11 @@ export default function AdminUsersPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    handleLookupUser(username);
   };
 
   const handleUpdateRole = async () => {
@@ -387,7 +568,7 @@ export default function AdminUsersPage() {
         <Head>
           <title>User Management | Into the Void</title>
         </Head>
-        <UserHeader showBack backHref="/dashboard" />
+        <UserHeader showBack backHref="/dashboard" hideActions />
         <Main>
           <AccessDenied>
             <AccessTitle>Access Restricted</AccessTitle>
@@ -404,7 +585,7 @@ export default function AdminUsersPage() {
         <title>User Management | Into the Void</title>
       </Head>
 
-      <UserHeader showBack backHref="/dashboard" />
+      <UserHeader showBack backHref="/dashboard" hideActions />
 
       <Main>
         <PageHeader>
@@ -422,13 +603,64 @@ export default function AdminUsersPage() {
             <FormRow>
               <FormGroup>
                 <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter username..."
-                />
+                <AutocompleteWrapper ref={dropdownRef}>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={handleUsernameChange}
+                    onFocus={() => {
+                      if (searchResults.length > 0) {
+                        setShowDropdown(true);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setShowDropdown(false);
+                      }
+                    }}
+                    placeholder="Search by username..."
+                    autoComplete="off"
+                  />
+                  {showDropdown && (
+                    <AutocompleteDropdown>
+                      {isSearching ? (
+                        <AutocompleteEmpty>Searching...</AutocompleteEmpty>
+                      ) : searchResults.length === 0 ? (
+                        <AutocompleteEmpty>No users found</AutocompleteEmpty>
+                      ) : (
+                        searchResults.map((searchUser) => (
+                          <AutocompleteItem
+                            key={searchUser.id}
+                            type="button"
+                            onClick={() => selectUser(searchUser)}
+                          >
+                            <AutocompleteAvatar>
+                              {searchUser.pfpUrl ? (
+                                <AutocompleteAvatarImg
+                                  src={searchUser.pfpUrl}
+                                  alt={searchUser.displayName || searchUser.username || ''}
+                                />
+                              ) : (
+                                <AutocompleteAvatarInitial>
+                                  {(searchUser.displayName || searchUser.username || '?')[0].toUpperCase()}
+                                </AutocompleteAvatarInitial>
+                              )}
+                            </AutocompleteAvatar>
+                            <AutocompleteInfo>
+                              <AutocompleteName>
+                                {searchUser.displayName || searchUser.username || 'Unknown'}
+                              </AutocompleteName>
+                              {searchUser.username && (
+                                <AutocompleteUsername>@{searchUser.username}</AutocompleteUsername>
+                              )}
+                            </AutocompleteInfo>
+                          </AutocompleteItem>
+                        ))
+                      )}
+                    </AutocompleteDropdown>
+                  )}
+                </AutocompleteWrapper>
               </FormGroup>
               <Button type="submit" $variant="secondary" disabled={isSubmitting || !username.trim()}>
                 {isSubmitting ? 'Searching...' : 'Find User'}
