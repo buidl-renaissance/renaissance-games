@@ -58,7 +58,7 @@ export default async function handler(
     return res.status(200).json({
       user: {
         id: user.id,
-        fid: user.fid,
+        fid: user.fid ?? null,
         username: user.username ?? null,
         displayName: user.displayName ?? null,
         pfpUrl: user.pfpUrl ?? null,
