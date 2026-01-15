@@ -1,6 +1,6 @@
 // Tournament database operations
 import { v4 as uuidv4 } from 'uuid';
-import { eq, desc, and, or } from 'drizzle-orm';
+import { eq, desc, and, or, ne } from 'drizzle-orm';
 import { db } from './drizzle';
 import {
   tournaments,
@@ -442,6 +442,25 @@ export async function getParticipantCount(tournamentId: string): Promise<number>
   return participants.length;
 }
 
+export async function getIndividualParticipantCount(tournamentId: string): Promise<number> {
+  const participants = await getRegisteredParticipants(tournamentId);
+  
+  let count = 0;
+  
+  for (const participant of participants) {
+    if (participant.userId) {
+      // Direct individual registration
+      count += 1;
+    } else if (participant.teamId) {
+      // Team registration - count team members
+      const members = await getTeamMembers(participant.teamId);
+      count += members.length;
+    }
+  }
+  
+  return count;
+}
+
 export async function updateParticipantStatus(
   id: string,
   status: ParticipantStatus
@@ -508,7 +527,8 @@ export async function isUserRegistered(
     .where(
       and(
         eq(tournamentParticipants.tournamentId, tournamentId),
-        eq(tournamentParticipants.userId, userId)
+        eq(tournamentParticipants.userId, userId),
+        ne(tournamentParticipants.status, 'withdrawn')
       )
     )
     .limit(1);
@@ -526,7 +546,8 @@ export async function getUserParticipant(
     .where(
       and(
         eq(tournamentParticipants.tournamentId, tournamentId),
-        eq(tournamentParticipants.userId, userId)
+        eq(tournamentParticipants.userId, userId),
+        ne(tournamentParticipants.status, 'withdrawn')
       )
     )
     .limit(1);

@@ -10,7 +10,7 @@ import {
 } from '@/db/schema';
 import {
   getTournamentsByStatus,
-  getParticipantCount,
+  getIndividualParticipantCount,
   Tournament,
 } from '@/db/tournament';
 
@@ -113,7 +113,7 @@ export default async function handler(
       return Promise.all(
         tournaments.map(async (t) => ({
           ...t,
-          participantCount: await getParticipantCount(t.id),
+          participantCount: await getIndividualParticipantCount(t.id),
           isRegistered: userTournamentIds.includes(t.id),
         }))
       );
