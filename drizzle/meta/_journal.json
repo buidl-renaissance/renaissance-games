@@ -29,6 +29,20 @@
       "when": 1768450837818,
       "tag": "0003_blushing_falcon",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1768482144275,
+      "tag": "0004_superb_energizer",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1768482182298,
+      "tag": "0005_motionless_thundra",
+      "breakpoints": true
     }
   ]
 }
