@@ -51,12 +51,31 @@ async function handleGet(
 
     // Get associated data
     const game = await getGameById(tournament.gameId);
-    const participantCount = await getParticipantCount(tournamentId);
-    const participants = await getRegisteredParticipants(tournamentId);
+    const rawParticipants = await getRegisteredParticipants(tournamentId);
     const waitlist = await getWaitlistParticipants(tournamentId);
+    
+    // Fetch user details for each participant
+    const participants = await Promise.all(
+      rawParticipants.map(async (participant) => {
+        if (participant.userId) {
+          const user = await getUserById(participant.userId);
+          return {
+            ...participant,
+            user: user ? {
+              displayName: user.displayName,
+              username: user.username,
+              pfpUrl: user.pfpUrl,
+            } : null,
+          };
+        }
+        return participant;
+      })
+    );
     
     // For team games, get teams with their members
     let teams = null;
+    let participantCount = 0;
+    
     if (game?.isTeamGame) {
       const rawTeams = await getTeamsByTournament(tournamentId);
       // Fetch members for each team with user details
@@ -82,6 +101,11 @@ async function handleGet(
           };
         })
       );
+      // For team games, count all team members as participants
+      participantCount = teams.reduce((sum, team) => sum + (team.members?.length || 0), 0);
+    } else {
+      // For solo games, count registered participants
+      participantCount = await getParticipantCount(tournamentId);
     }
 
     return res.status(200).json({

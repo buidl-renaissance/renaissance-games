@@ -6,7 +6,6 @@ import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
 import { UserHeader } from '@/components/UserHeader';
-import { PaymentPlaceholder } from '@/components/tournament/PaymentPlaceholder';
 import { utcToEstDisplay } from '@/lib/timezone';
 
 interface Tournament {
@@ -44,7 +43,7 @@ interface Participant {
   teamId: string | null;
   status: string;
   seed: number | null;
-  user?: { username: string | null; displayName: string | null };
+  user?: { username: string | null; displayName: string | null; pfpUrl: string | null };
 }
 
 interface Team {
@@ -66,42 +65,10 @@ const subtleGlow = keyframes`
   50% { box-shadow: 0 0 50px rgba(123, 92, 255, 0.35); }
 `;
 
-const livePulse = keyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-`;
-
 // Layout
 const Container = styled.div`
   min-height: 100vh;
   background: ${({ theme }) => theme.background};
-`;
-
-const Header = styled.header`
-  padding: 0.75rem 1rem;
-  background: ${({ theme }) => theme.surface};
-  border-bottom: 1px solid ${({ theme }) => theme.border};
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-const Logo = styled(Link)`
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.text};
-  letter-spacing: -0.02em;
-`;
-
-const BackLink = styled(Link)`
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.textSecondary};
-  transition: color 0.15s ease;
-  
-  &:hover {
-    color: ${({ theme }) => theme.text};
-  }
 `;
 
 const Main = styled.main`
@@ -124,94 +91,27 @@ const HeroSection = styled.div<{ $isLive?: boolean }>`
   `}
 `;
 
-const Breadcrumb = styled.div`
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.textMuted};
-  margin-bottom: 1.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  
-  a {
-    color: ${({ theme }) => theme.textMuted};
-    
-    &:hover {
-      color: ${({ theme }) => theme.textSecondary};
-    }
-  }
-`;
-
-const GameLabel = styled.div`
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.accent};
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.75rem;
-`;
-
-const TitleRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-`;
-
 const Title = styled.h1`
   font-size: 2rem;
   font-weight: 600;
   color: ${({ theme }) => theme.text};
-  margin: 0;
+  margin: 0.5rem 0 0 0;
   letter-spacing: -0.02em;
 `;
 
-const StatusBadge = styled.span<{ $status: string }>`
+const RegDeadline = styled.div`
   font-size: 0.75rem;
   font-weight: 500;
-  padding: 0.4rem 0.85rem;
-  border-radius: 4px;
+  color: ${({ theme }) => theme.accent};
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  
-  ${({ $status, theme }) => {
-    switch ($status) {
-      case 'registration':
-        return `
-          background: ${theme.accentMuted};
-          color: ${theme.accent};
-        `;
-      case 'ready':
-        return `
-          background: ${theme.accentMuted};
-          color: ${theme.accent};
-        `;
-      case 'in_progress':
-        return `
-          background: ${theme.liveGlow};
-          color: ${theme.live};
-        `;
-      case 'completed':
-        return `
-          background: ${theme.surfaceHover};
-          color: ${theme.text};
-        `;
-      default:
-        return `
-          background: ${theme.surfaceHover};
-          color: ${theme.textMuted};
-        `;
-    }
-  }}
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
 `;
 
-const LiveDot = styled.span`
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  background: ${({ theme }) => theme.live};
-  border-radius: 50%;
-  margin-right: 0.5rem;
-  animation: ${livePulse} 1.5s ease-in-out infinite;
+const StartTime = styled.div`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textSecondary};
+  margin-top: 0.25rem;
 `;
 
 const Description = styled.p`
@@ -225,10 +125,24 @@ const Description = styled.p`
 const HeroMeta = styled.div`
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 1rem 2rem;
   margin-top: 1.25rem;
   padding-top: 1.25rem;
   border-top: 1px solid ${({ theme }) => theme.border};
+`;
+
+const GameChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.4rem 0.75rem;
+  background: ${({ theme }) => theme.accentMuted};
+  color: ${({ theme }) => theme.accent};
+  border-radius: 4px;
+  text-transform: capitalize;
 `;
 
 const HeroMetaItem = styled.div`
@@ -369,6 +283,20 @@ const ParticipantInfo = styled.div`
   gap: 0.75rem;
 `;
 
+const ParticipantAvatar = styled.div<{ $url?: string | null }>`
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: ${({ theme, $url }) => $url ? `url(${$url}) center/cover` : theme.accentMuted};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.accent};
+  flex-shrink: 0;
+`;
+
 const ParticipantRank = styled.span`
   font-family: 'Space Grotesk', sans-serif;
   font-size: 0.8rem;
@@ -485,16 +413,49 @@ const RegisteredBadge = styled.div`
   margin-bottom: 1rem;
 `;
 
-const AdminLink = styled(Link)`
+const AdminButton = styled(Link)`
   display: block;
   text-align: center;
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.textMuted};
-  padding: 0.75rem;
-  transition: color 0.15s ease;
-  
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textSecondary};
+  padding: 0.75rem 1rem;
+  background: ${({ theme }) => theme.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 6px;
+  margin-top: 0.75rem;
+  transition: all 0.15s ease;
+
   &:hover {
+    background: ${({ theme }) => theme.surfaceHover};
     color: ${({ theme }) => theme.text};
+    border-color: ${({ theme }) => theme.textMuted};
+  }
+`;
+
+const ShareButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textSecondary};
+  padding: 0.75rem 1rem;
+  background: ${({ theme }) => theme.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 6px;
+  margin-top: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.surfaceHover};
+    color: ${({ theme }) => theme.text};
+    border-color: ${({ theme }) => theme.textMuted};
   }
 `;
 
@@ -609,121 +570,6 @@ const NoTeamsText = styled.p`
   font-style: italic;
 `;
 
-// Team Display Components
-const TeamCard = styled.div<{ $expanded?: boolean }>`
-  background: ${({ theme }) => theme.backgroundAlt};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-  
-  &:last-child {
-    margin-bottom: 0;
-  }
-`;
-
-const TeamCardHeader = styled.button`
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.25rem;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  text-align: left;
-  transition: background 0.15s ease;
-  
-  &:hover {
-    background: ${({ theme }) => theme.surfaceHover};
-  }
-`;
-
-const TeamCardTitle = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-`;
-
-const TeamCardName = styled.span`
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 1rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text};
-`;
-
-const TeamCardStatus = styled.span<{ $complete: boolean }>`
-  font-size: 0.75rem;
-  color: ${({ theme, $complete }) => $complete ? theme.success : theme.warning};
-`;
-
-const TeamExpandIcon = styled.span<{ $expanded: boolean }>`
-  font-size: 0.8rem;
-  color: ${({ theme }) => theme.textMuted};
-  transition: transform 0.2s ease;
-  transform: rotate(${({ $expanded }) => $expanded ? '180deg' : '0deg'});
-`;
-
-const TeamCardBody = styled.div<{ $expanded: boolean }>`
-  max-height: ${({ $expanded }) => $expanded ? '300px' : '0'};
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-  border-top: ${({ $expanded, theme }) => $expanded ? `1px solid ${theme.border}` : 'none'};
-`;
-
-const MemberList = styled.div`
-  padding: 1rem 1.25rem;
-`;
-
-const MemberRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  
-  &:not(:last-child) {
-    border-bottom: 1px solid ${({ theme }) => theme.borderSubtle};
-  }
-`;
-
-const MemberAvatar = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.accentMuted};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.accent};
-`;
-
-const MemberInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-`;
-
-const MemberName = styled.span`
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.text};
-`;
-
-const MemberRole = styled.span`
-  font-size: 0.7rem;
-  color: ${({ theme }) => theme.textMuted};
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-`;
-
-const NoMembersText = styled.p`
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.textMuted};
-  font-style: italic;
-  margin: 0;
-`;
-
 const BracketLink = styled(Link)`
   display: flex;
   align-items: center;
@@ -762,22 +608,6 @@ const Message = styled.div<{ $type: 'success' | 'error' }>`
   `}
 `;
 
-// Game-specific naming
-const GAME_NAMES: Record<string, string> = {
-  euchre: 'Deal Into the Void',
-  pool: 'Break Into the Void',
-  chess: 'Endgame: Into the Void',
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  draft: 'Draft',
-  registration: 'Open',
-  ready: 'Ready',
-  in_progress: 'Live',
-  completed: 'Done',
-  cancelled: 'Void',
-};
-
 export default function TournamentDetailPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -797,21 +627,6 @@ export default function TournamentDetailPage() {
   const [teamMode, setTeamMode] = useState<'create' | 'join'>('create');
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
-  
-  // Expanded teams state for viewing members
-  const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
-  
-  const toggleTeamExpanded = (teamId: string) => {
-    setExpandedTeams(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(teamId)) {
-        newSet.delete(teamId);
-      } else {
-        newSet.add(teamId);
-      }
-      return newSet;
-    });
-  };
   
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?';
@@ -967,6 +782,31 @@ export default function TournamentDetailPage() {
     }
   };
 
+  const handleShare = async () => {
+    const url = window.location.href;
+    const title = tournament?.name || 'Tournament';
+    const text = `Join ${title}!`;
+
+    // Try native share first (works on mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text, url });
+        return;
+      } catch {
+        // User cancelled or share failed, fall back to clipboard
+      }
+    }
+
+    // Fall back to clipboard
+    try {
+      await navigator.clipboard.writeText(url);
+      setSuccess('Link copied to clipboard!');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch {
+      setError('Failed to copy link');
+    }
+  };
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'TBD';
     return utcToEstDisplay(dateString) || 'TBD';
@@ -1007,21 +847,21 @@ export default function TournamentDetailPage() {
 
       <Main>
         <HeroSection $isLive={isLive}>
-          <Breadcrumb>
-            <Link href="/dashboard">Dashboard</Link> / {tournament.name}
-          </Breadcrumb>
+          <GameChip>{game?.name || 'Tournament'}</GameChip>
           
-          <GameLabel>
-            {GAME_NAMES[game?.type || ''] || game?.name || 'Tournament'}
-          </GameLabel>
+          <Title>{tournament.name}</Title>
           
-          <TitleRow>
-            <Title>{tournament.name}</Title>
-            <StatusBadge $status={tournament.status}>
-              {isLive && <LiveDot />}
-              {STATUS_LABELS[tournament.status] || tournament.status}
-            </StatusBadge>
-          </TitleRow>
+          {tournament.registrationDeadline && (
+            <RegDeadline>Registration closes {formatDate(tournament.registrationDeadline)}</RegDeadline>
+          )}
+          
+          {tournament.startTime && (
+            <StartTime>{formatDate(tournament.startTime)}</StartTime>
+          )}
+
+          {tournament.location && (
+            <StartTime>{tournament.location}</StartTime>
+          )}
           
           {tournament.description && (
             <Description>{tournament.description}</Description>
@@ -1032,42 +872,19 @@ export default function TournamentDetailPage() {
               <HeroMetaLabel>Format</HeroMetaLabel>
               <HeroMetaValue>
                 {tournament.eliminationType === 'double' ? 'Double Elim' : 'Single Elim'}
+                {' · '}
+                {tournament.bestOf === 1 ? 'Single Game' : `Bo${tournament.bestOf}`}
               </HeroMetaValue>
             </HeroMetaItem>
             <HeroMetaItem>
-              <HeroMetaLabel>Match</HeroMetaLabel>
+              <HeroMetaLabel>Entry / Prize</HeroMetaLabel>
               <HeroMetaValue>
-                {tournament.bestOf === 1 ? 'Single Game' : `Best of ${tournament.bestOf}`}
+                {formatCurrency(tournament.entryFee)}
+                {tournament.prizePool && tournament.prizePool > 0 && (
+                  <> / {formatCurrency(tournament.prizePool)}</>
+                )}
               </HeroMetaValue>
             </HeroMetaItem>
-            <HeroMetaItem>
-              <HeroMetaLabel>Entry</HeroMetaLabel>
-              <HeroMetaValue>{formatCurrency(tournament.entryFee)}</HeroMetaValue>
-            </HeroMetaItem>
-            {tournament.prizePool && tournament.prizePool > 0 && (
-              <HeroMetaItem>
-                <HeroMetaLabel>Prize</HeroMetaLabel>
-                <HeroMetaValue>{formatCurrency(tournament.prizePool)}</HeroMetaValue>
-              </HeroMetaItem>
-            )}
-            {tournament.location && (
-              <HeroMetaItem>
-                <HeroMetaLabel>Location</HeroMetaLabel>
-                <HeroMetaValue>{tournament.location}</HeroMetaValue>
-              </HeroMetaItem>
-            )}
-            {tournament.startTime && (
-              <HeroMetaItem>
-                <HeroMetaLabel>Starts</HeroMetaLabel>
-                <HeroMetaValue>{formatDate(tournament.startTime)}</HeroMetaValue>
-              </HeroMetaItem>
-            )}
-            {tournament.registrationDeadline && (
-              <HeroMetaItem>
-                <HeroMetaLabel>Reg. Closes</HeroMetaLabel>
-                <HeroMetaValue>{formatDate(tournament.registrationDeadline)}</HeroMetaValue>
-              </HeroMetaItem>
-            )}
           </HeroMeta>
         </HeroSection>
 
@@ -1080,7 +897,7 @@ export default function TournamentDetailPage() {
               <CardBody>
                 <ProgressContainer>
                   <ProgressHeader>
-                    <ProgressLabel>{game?.isTeamGame ? 'Teams Registered' : 'Players Registered'}</ProgressLabel>
+                    <ProgressLabel>Players Registered</ProgressLabel>
                     <ProgressValue>{participantCount}/{tournament.maxParticipants}</ProgressValue>
                   </ProgressHeader>
                   <ProgressBar>
@@ -1088,13 +905,16 @@ export default function TournamentDetailPage() {
                   </ProgressBar>
                 </ProgressContainer>
 
-                {!game?.isTeamGame && (
+                {!game?.isTeamGame ? (
                   registeredParticipants.length > 0 ? (
                     <ParticipantList>
                       {registeredParticipants.slice(0, 10).map((p, index) => (
                         <ParticipantRow key={p.id}>
                           <ParticipantInfo>
                             <ParticipantRank>{index + 1}</ParticipantRank>
+                            <ParticipantAvatar $url={p.user?.pfpUrl}>
+                              {!p.user?.pfpUrl && getInitials(p.user?.displayName || p.user?.username)}
+                            </ParticipantAvatar>
                             <ParticipantName>
                               {p.user?.displayName || p.user?.username || `Player ${p.userId?.slice(0, 6)}`}
                             </ParticipantName>
@@ -1111,10 +931,57 @@ export default function TournamentDetailPage() {
                   ) : (
                     <EmptyText>No players registered. Be the first to enter.</EmptyText>
                   )
-                )}
-
-                {game?.isTeamGame && teams.length === 0 && (
-                  <EmptyText>No teams registered. Be the first to enter.</EmptyText>
+                ) : (
+                  // Team game registration display
+                  teams.length > 0 ? (
+                    <>
+                      {/* Complete teams */}
+                      {teams.filter(t => t.isComplete).length > 0 && (
+                        <ParticipantList>
+                          {teams.filter(t => t.isComplete).map((team) => (
+                            <ParticipantRow key={team.id}>
+                              <ParticipantInfo>
+                                <ParticipantDetails>
+                                  <ParticipantName style={{ fontWeight: 500 }}>{team.name}</ParticipantName>
+                                  <ParticipantMembers>
+                                    {team.members?.map(m => m.user?.displayName || m.user?.username || 'Unknown').join(', ')}
+                                  </ParticipantMembers>
+                                </ParticipantDetails>
+                              </ParticipantInfo>
+                              <ParticipantBadge $type="ready">Ready</ParticipantBadge>
+                            </ParticipantRow>
+                          ))}
+                        </ParticipantList>
+                      )}
+                      
+                      {/* Teams looking for members */}
+                      {teams.filter(t => !t.isComplete).length > 0 && (
+                        <>
+                          <CardTitle style={{ marginTop: teams.filter(t => t.isComplete).length > 0 ? '1.5rem' : 0, marginBottom: '0.75rem' }}>
+                            Looking for Teammates
+                          </CardTitle>
+                          <ParticipantList>
+                            {teams.filter(t => !t.isComplete).map((team) => (
+                              <ParticipantRow key={team.id}>
+                                <ParticipantInfo>
+                                  <ParticipantDetails>
+                                    <ParticipantName>{team.name}</ParticipantName>
+                                    <ParticipantMembers>
+                                      {team.members?.map(m => m.user?.displayName || m.user?.username || 'Unknown').join(', ')}
+                                      {' · '}{team.members?.length || 0}/{game?.playersPerTeam} players
+                                    </ParticipantMembers>
+                                  </ParticipantDetails>
+                                </ParticipantInfo>
+                                <ParticipantBadge $type="waitlist">Forming</ParticipantBadge>
+                              </ParticipantRow>
+                            ))}
+                          </ParticipantList>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <EmptyText>No teams registered. Be the first to enter.</EmptyText>
+                  )
                 )}
 
                 {(tournament.status === 'ready' || tournament.status === 'in_progress') && (
@@ -1125,64 +992,10 @@ export default function TournamentDetailPage() {
               </CardBody>
             </Card>
 
-            {/* Teams Section - Only for team games */}
-            {game?.isTeamGame && teams.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Teams ({teams.length})</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  {teams.map((team) => {
-                    const isExpanded = expandedTeams.has(team.id);
-                    return (
-                      <TeamCard key={team.id} $expanded={isExpanded}>
-                        <TeamCardHeader onClick={() => toggleTeamExpanded(team.id)}>
-                          <TeamCardTitle>
-                            <TeamCardName>{team.name}</TeamCardName>
-                            <TeamCardStatus $complete={team.isComplete}>
-                              {team.isComplete 
-                                ? `${team.members?.length || 0} members • Ready` 
-                                : `${team.members?.length || 0}/${game.playersPerTeam} members • Looking for players`}
-                            </TeamCardStatus>
-                          </TeamCardTitle>
-                          <TeamExpandIcon $expanded={isExpanded}>▼</TeamExpandIcon>
-                        </TeamCardHeader>
-                        <TeamCardBody $expanded={isExpanded}>
-                          <MemberList>
-                            {team.members && team.members.length > 0 ? (
-                              team.members.map((member) => (
-                                <MemberRow key={member.userId}>
-                                  <MemberAvatar>
-                                    {getInitials(member.user?.displayName || member.user?.username)}
-                                  </MemberAvatar>
-                                  <MemberInfo>
-                                    <MemberName>
-                                      {member.user?.displayName || member.user?.username || 'Unknown'}
-                                    </MemberName>
-                                    <MemberRole>
-                                      {member.userId === team.captainId ? 'Captain' : 'Member'}
-                                    </MemberRole>
-                                  </MemberInfo>
-                                </MemberRow>
-                              ))
-                            ) : (
-                              <NoMembersText>No members yet</NoMembersText>
-                            )}
-                          </MemberList>
-                        </TeamCardBody>
-                      </TeamCard>
-                    );
-                  })}
-                </CardBody>
-              </Card>
-            )}
           </MainColumn>
 
           <Sidebar>
             <ActionCard $accent={canRegister && !isRegistered}>
-              <CardHeader>
-                <CardTitle>Action</CardTitle>
-              </CardHeader>
               <CardBody>
                 {error && <Message $type="error">{error}</Message>}
                 {success && <Message $type="success">{success}</Message>}
@@ -1285,23 +1098,18 @@ export default function TournamentDetailPage() {
                   <EmptyText style={{ padding: 0 }}>Registration closed</EmptyText>
                 )}
 
+                <ShareButton onClick={handleShare}>
+                  Share Tournament
+                </ShareButton>
+
                 {isOrganizer && (
-                  <AdminLink href={`/tournaments/${id}/admin`}>
-                    Manage Tournament →
-                  </AdminLink>
+                  <AdminButton href={`/tournaments/${id}/admin`}>
+                    Manage Tournament
+                  </AdminButton>
                 )}
               </CardBody>
             </ActionCard>
 
-            {((tournament.entryFee && tournament.entryFee > 0) || (tournament.prizePool && tournament.prizePool > 0)) && (
-              <PaymentPlaceholder
-                entryFee={tournament.entryFee}
-                prizePool={tournament.prizePool}
-                prizeDistribution={tournament.prizeDistribution}
-                participantCount={participantCount}
-                maxParticipants={tournament.maxParticipants}
-              />
-            )}
           </Sidebar>
         </ContentGrid>
       </Main>
