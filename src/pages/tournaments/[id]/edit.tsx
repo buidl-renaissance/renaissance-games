@@ -284,6 +284,24 @@ const InputRow = styled.div`
   }
 `;
 
+const DateInputRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const DateInput = styled(Input)`
+  max-width: 200px;
+  
+  @media (max-width: 500px) {
+    max-width: 100%;
+  }
+`;
+
 const HelpText = styled.p`
   font-family: 'Inter', sans-serif;
   font-size: 0.8rem;
@@ -291,11 +309,28 @@ const HelpText = styled.p`
   margin-top: 0.5rem;
 `;
 
-const ButtonRow = styled.div`
+const BottomBar = styled.div`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: ${({ theme }) => theme.surface};
+  border-top: 1px solid ${({ theme }) => theme.border};
+  padding: 1rem;
   display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 0.5rem;
+  justify-content: center;
+  z-index: 100;
+`;
+
+const BottomBarContent = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 560px;
+`;
+
+const FormSpacer = styled.div`
+  height: 80px;
 `;
 
 const SubmitButton = styled.button<{ $loading?: boolean }>`
@@ -312,6 +347,7 @@ const SubmitButton = styled.button<{ $loading?: boolean }>`
   position: relative;
   overflow: hidden;
   letter-spacing: 0.05em;
+  flex: 1;
   
   ${({ $loading, theme }) => $loading && `
     &::after {
@@ -334,8 +370,6 @@ const SubmitButton = styled.button<{ $loading?: boolean }>`
   
   &:hover:not(:disabled) {
     background: ${({ theme }) => theme.accentHover};
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px ${({ theme }) => theme.accentGlow};
   }
   
   &:disabled {
@@ -356,6 +390,8 @@ const CancelButton = styled(Link)`
   text-decoration: none;
   transition: all 0.2s ease;
   letter-spacing: 0.05em;
+  text-align: center;
+  flex: 1;
   
   &:hover {
     background: ${({ theme }) => theme.backgroundAlt};
@@ -773,7 +809,7 @@ export default function EditTournamentPage() {
             This tournament is {tournament.status} and cannot be edited.
           </Message>
         ) : (
-          <Form onSubmit={handleSubmit}>
+          <Form id="edit-form" onSubmit={handleSubmit}>
             <FormSection>
               <SectionHeader>
                 <SectionIcon>○</SectionIcon>
@@ -917,10 +953,10 @@ export default function EditTournamentPage() {
                 />
               </FormGroup>
 
-              <InputRow>
+              <DateInputRow>
                 <FormGroup>
                   <Label htmlFor="registrationDeadline">Registration Deadline</Label>
-                  <Input
+                  <DateInput
                     id="registrationDeadline"
                     name="registrationDeadline"
                     type="datetime-local"
@@ -931,7 +967,7 @@ export default function EditTournamentPage() {
 
                 <FormGroup>
                   <Label htmlFor="startTime">Start Time</Label>
-                  <Input
+                  <DateInput
                     id="startTime"
                     name="startTime"
                     type="datetime-local"
@@ -939,7 +975,7 @@ export default function EditTournamentPage() {
                     onChange={handleChange}
                   />
                 </FormGroup>
-              </InputRow>
+              </DateInputRow>
             </FormSection>
 
             <FormSection>
@@ -1006,13 +1042,17 @@ export default function EditTournamentPage() {
               </FormGroup>
             </FormSection>
 
-            <ButtonRow>
+            <FormSpacer />
+          </Form>
+
+          <BottomBar>
+            <BottomBarContent>
               <CancelButton href={`/tournaments/${id}/admin`}>Cancel</CancelButton>
-              <SubmitButton type="submit" disabled={isSaving} $loading={isSaving}>
+              <SubmitButton type="submit" form="edit-form" disabled={isSaving} $loading={isSaving}>
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </SubmitButton>
-            </ButtonRow>
-          </Form>
+            </BottomBarContent>
+          </BottomBar>
         )}
       </Main>
     </Container>

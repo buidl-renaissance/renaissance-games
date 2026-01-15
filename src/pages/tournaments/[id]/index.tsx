@@ -222,6 +222,36 @@ const Description = styled.p`
   max-width: 600px;
 `;
 
+const HeroMeta = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid ${({ theme }) => theme.border};
+`;
+
+const HeroMetaItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 80px;
+`;
+
+const HeroMetaLabel = styled.span`
+  font-size: 0.65rem;
+  color: ${({ theme }) => theme.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+`;
+
+const HeroMetaValue = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.text};
+`;
+
 // Content Grid
 const ContentGrid = styled.div`
   display: grid;
@@ -273,30 +303,6 @@ const CardTitle = styled.h3`
 
 const CardBody = styled.div`
   padding: 1.25rem;
-`;
-
-// Details Grid
-const DetailsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-`;
-
-const DetailItem = styled.div``;
-
-const DetailLabel = styled.div`
-  font-size: 0.75rem;
-  color: ${({ theme }) => theme.textMuted};
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  margin-bottom: 0.35rem;
-`;
-
-const DetailValue = styled.div`
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.text};
 `;
 
 // Progress Bar
@@ -603,6 +609,121 @@ const NoTeamsText = styled.p`
   font-style: italic;
 `;
 
+// Team Display Components
+const TeamCard = styled.div<{ $expanded?: boolean }>`
+  background: ${({ theme }) => theme.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
+const TeamCardHeader = styled.button`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.surfaceHover};
+  }
+`;
+
+const TeamCardTitle = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const TeamCardName = styled.span`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.text};
+`;
+
+const TeamCardStatus = styled.span<{ $complete: boolean }>`
+  font-size: 0.75rem;
+  color: ${({ theme, $complete }) => $complete ? theme.success : theme.warning};
+`;
+
+const TeamExpandIcon = styled.span<{ $expanded: boolean }>`
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.textMuted};
+  transition: transform 0.2s ease;
+  transform: rotate(${({ $expanded }) => $expanded ? '180deg' : '0deg'});
+`;
+
+const TeamCardBody = styled.div<{ $expanded: boolean }>`
+  max-height: ${({ $expanded }) => $expanded ? '300px' : '0'};
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  border-top: ${({ $expanded, theme }) => $expanded ? `1px solid ${theme.border}` : 'none'};
+`;
+
+const MemberList = styled.div`
+  padding: 1rem 1.25rem;
+`;
+
+const MemberRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  
+  &:not(:last-child) {
+    border-bottom: 1px solid ${({ theme }) => theme.borderSubtle};
+  }
+`;
+
+const MemberAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.accentMuted};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.accent};
+`;
+
+const MemberInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+`;
+
+const MemberName = styled.span`
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.text};
+`;
+
+const MemberRole = styled.span`
+  font-size: 0.7rem;
+  color: ${({ theme }) => theme.textMuted};
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+`;
+
+const NoMembersText = styled.p`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+  font-style: italic;
+  margin: 0;
+`;
+
 const BracketLink = styled(Link)`
   display: flex;
   align-items: center;
@@ -676,6 +797,26 @@ export default function TournamentDetailPage() {
   const [teamMode, setTeamMode] = useState<'create' | 'join'>('create');
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  
+  // Expanded teams state for viewing members
+  const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
+  
+  const toggleTeamExpanded = (teamId: string) => {
+    setExpandedTeams(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(teamId)) {
+        newSet.delete(teamId);
+      } else {
+        newSet.add(teamId);
+      }
+      return newSet;
+    });
+  };
+  
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return '?';
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  };
 
   // Organizer state
   const [additionalOrganizerIds, setAdditionalOrganizerIds] = useState<string[]>([]);
@@ -885,95 +1026,69 @@ export default function TournamentDetailPage() {
           {tournament.description && (
             <Description>{tournament.description}</Description>
           )}
+
+          <HeroMeta>
+            <HeroMetaItem>
+              <HeroMetaLabel>Format</HeroMetaLabel>
+              <HeroMetaValue>
+                {tournament.eliminationType === 'double' ? 'Double Elim' : 'Single Elim'}
+              </HeroMetaValue>
+            </HeroMetaItem>
+            <HeroMetaItem>
+              <HeroMetaLabel>Match</HeroMetaLabel>
+              <HeroMetaValue>
+                {tournament.bestOf === 1 ? 'Single Game' : `Best of ${tournament.bestOf}`}
+              </HeroMetaValue>
+            </HeroMetaItem>
+            <HeroMetaItem>
+              <HeroMetaLabel>Entry</HeroMetaLabel>
+              <HeroMetaValue>{formatCurrency(tournament.entryFee)}</HeroMetaValue>
+            </HeroMetaItem>
+            {tournament.prizePool && tournament.prizePool > 0 && (
+              <HeroMetaItem>
+                <HeroMetaLabel>Prize</HeroMetaLabel>
+                <HeroMetaValue>{formatCurrency(tournament.prizePool)}</HeroMetaValue>
+              </HeroMetaItem>
+            )}
+            {tournament.location && (
+              <HeroMetaItem>
+                <HeroMetaLabel>Location</HeroMetaLabel>
+                <HeroMetaValue>{tournament.location}</HeroMetaValue>
+              </HeroMetaItem>
+            )}
+            {tournament.startTime && (
+              <HeroMetaItem>
+                <HeroMetaLabel>Starts</HeroMetaLabel>
+                <HeroMetaValue>{formatDate(tournament.startTime)}</HeroMetaValue>
+              </HeroMetaItem>
+            )}
+            {tournament.registrationDeadline && (
+              <HeroMetaItem>
+                <HeroMetaLabel>Reg. Closes</HeroMetaLabel>
+                <HeroMetaValue>{formatDate(tournament.registrationDeadline)}</HeroMetaValue>
+              </HeroMetaItem>
+            )}
+          </HeroMeta>
         </HeroSection>
 
         <ContentGrid>
           <MainColumn>
             <Card>
               <CardHeader>
-                <CardTitle>Details</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <DetailsGrid>
-                  <DetailItem>
-                    <DetailLabel>Format</DetailLabel>
-                    <DetailValue>
-                      {tournament.eliminationType === 'double' ? 'Double Elimination' : 'Single Elimination'}
-                    </DetailValue>
-                  </DetailItem>
-                  <DetailItem>
-                    <DetailLabel>Match</DetailLabel>
-                    <DetailValue>
-                      {tournament.bestOf === 1 ? 'Single Game' : `Best of ${tournament.bestOf}`}
-                    </DetailValue>
-                  </DetailItem>
-                  <DetailItem>
-                    <DetailLabel>Entry</DetailLabel>
-                    <DetailValue>{formatCurrency(tournament.entryFee)}</DetailValue>
-                  </DetailItem>
-                  <DetailItem>
-                    <DetailLabel>Prize</DetailLabel>
-                    <DetailValue>
-                      {tournament.prizePool && tournament.prizePool > 0 
-                        ? formatCurrency(tournament.prizePool)
-                        : '—'}
-                    </DetailValue>
-                  </DetailItem>
-                  <DetailItem>
-                    <DetailLabel>Location</DetailLabel>
-                    <DetailValue>{tournament.location || 'TBD'}</DetailValue>
-                  </DetailItem>
-                  <DetailItem>
-                    <DetailLabel>Start</DetailLabel>
-                    <DetailValue>{formatDate(tournament.startTime)}</DetailValue>
-                  </DetailItem>
-                </DetailsGrid>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {game?.isTeamGame ? 'Teams' : 'Players'}
-                </CardTitle>
+                <CardTitle>Registration</CardTitle>
               </CardHeader>
               <CardBody>
                 <ProgressContainer>
                   <ProgressHeader>
-                    <ProgressLabel>Registered</ProgressLabel>
+                    <ProgressLabel>{game?.isTeamGame ? 'Teams Registered' : 'Players Registered'}</ProgressLabel>
                     <ProgressValue>{participantCount}/{tournament.maxParticipants}</ProgressValue>
                   </ProgressHeader>
                   <ProgressBar>
                     <ProgressFill $percent={fillPercent} />
                   </ProgressBar>
                 </ProgressContainer>
-                
-                {game?.isTeamGame ? (
-                  teams.length > 0 ? (
-                    <ParticipantList>
-                      {teams.map((team, index) => (
-                        <ParticipantRow key={team.id}>
-                          <ParticipantInfo>
-                            <ParticipantRank>{index + 1}</ParticipantRank>
-                            <ParticipantDetails>
-                            <ParticipantName>{team.name}</ParticipantName>
-                              <ParticipantMembers>
-                                {team.members?.map((m) => 
-                                  m.user?.displayName || m.user?.username || 'Unknown'
-                                ).join(', ') || 'No members'}
-                              </ParticipantMembers>
-                            </ParticipantDetails>
-                          </ParticipantInfo>
-                          <ParticipantBadge $type={team.isComplete ? 'ready' : 'waitlist'}>
-                            {team.isComplete ? 'Ready' : 'Forming'}
-                          </ParticipantBadge>
-                        </ParticipantRow>
-                      ))}
-                    </ParticipantList>
-                  ) : (
-                    <EmptyText>No teams registered. Be the first to enter.</EmptyText>
-                  )
-                ) : (
+
+                {!game?.isTeamGame && (
                   registeredParticipants.length > 0 ? (
                     <ParticipantList>
                       {registeredParticipants.slice(0, 10).map((p, index) => (
@@ -998,6 +1113,10 @@ export default function TournamentDetailPage() {
                   )
                 )}
 
+                {game?.isTeamGame && teams.length === 0 && (
+                  <EmptyText>No teams registered. Be the first to enter.</EmptyText>
+                )}
+
                 {(tournament.status === 'ready' || tournament.status === 'in_progress') && (
                   <BracketLink href={`/tournaments/${id}/bracket`}>
                     View Bracket →
@@ -1005,6 +1124,58 @@ export default function TournamentDetailPage() {
                 )}
               </CardBody>
             </Card>
+
+            {/* Teams Section - Only for team games */}
+            {game?.isTeamGame && teams.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Teams ({teams.length})</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  {teams.map((team) => {
+                    const isExpanded = expandedTeams.has(team.id);
+                    return (
+                      <TeamCard key={team.id} $expanded={isExpanded}>
+                        <TeamCardHeader onClick={() => toggleTeamExpanded(team.id)}>
+                          <TeamCardTitle>
+                            <TeamCardName>{team.name}</TeamCardName>
+                            <TeamCardStatus $complete={team.isComplete}>
+                              {team.isComplete 
+                                ? `${team.members?.length || 0} members • Ready` 
+                                : `${team.members?.length || 0}/${game.playersPerTeam} members • Looking for players`}
+                            </TeamCardStatus>
+                          </TeamCardTitle>
+                          <TeamExpandIcon $expanded={isExpanded}>▼</TeamExpandIcon>
+                        </TeamCardHeader>
+                        <TeamCardBody $expanded={isExpanded}>
+                          <MemberList>
+                            {team.members && team.members.length > 0 ? (
+                              team.members.map((member) => (
+                                <MemberRow key={member.userId}>
+                                  <MemberAvatar>
+                                    {getInitials(member.user?.displayName || member.user?.username)}
+                                  </MemberAvatar>
+                                  <MemberInfo>
+                                    <MemberName>
+                                      {member.user?.displayName || member.user?.username || 'Unknown'}
+                                    </MemberName>
+                                    <MemberRole>
+                                      {member.userId === team.captainId ? 'Captain' : 'Member'}
+                                    </MemberRole>
+                                  </MemberInfo>
+                                </MemberRow>
+                              ))
+                            ) : (
+                              <NoMembersText>No members yet</NoMembersText>
+                            )}
+                          </MemberList>
+                        </TeamCardBody>
+                      </TeamCard>
+                    );
+                  })}
+                </CardBody>
+              </Card>
+            )}
           </MainColumn>
 
           <Sidebar>
@@ -1130,27 +1301,6 @@ export default function TournamentDetailPage() {
                 participantCount={participantCount}
                 maxParticipants={tournament.maxParticipants}
               />
-            )}
-
-            {tournament.startTime && (
-              <Card>
-                <CardBody>
-                  <DetailItem>
-                    <DetailLabel>Tournament Begins</DetailLabel>
-                    <DetailValue style={{ fontSize: '0.9rem' }}>
-                      {formatDate(tournament.startTime)}
-                    </DetailValue>
-                  </DetailItem>
-                  {tournament.registrationDeadline && (
-                    <DetailItem style={{ marginTop: '1rem' }}>
-                      <DetailLabel>Registration Closes</DetailLabel>
-                      <DetailValue style={{ fontSize: '0.9rem' }}>
-                        {formatDate(tournament.registrationDeadline)}
-                      </DetailValue>
-                    </DetailItem>
-                  )}
-                </CardBody>
-              </Card>
             )}
           </Sidebar>
         </ContentGrid>

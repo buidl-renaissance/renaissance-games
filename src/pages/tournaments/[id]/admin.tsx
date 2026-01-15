@@ -44,11 +44,21 @@ interface Participant {
   user?: { username: string | null; displayName: string | null };
 }
 
+interface TeamMember {
+  userId: string;
+  user: {
+    id: string;
+    displayName: string | null;
+    username: string | null;
+  } | null;
+}
+
 interface Team {
   id: string;
   name: string;
   captainId: string;
   isComplete: boolean;
+  members?: TeamMember[];
 }
 
 // Animations
@@ -417,6 +427,43 @@ const ParticipantBadge = styled.span<{ $status: string }>`
         return `background: ${theme.accentMuted}; color: ${theme.accent};`;
     }
   }}
+`;
+
+const TeamRowContainer = styled.div`
+  border-bottom: 1px solid ${({ theme }) => theme.borderSubtle};
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const TeamHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: transparent;
+  transition: background 0.15s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.surfaceHover};
+  }
+`;
+
+const TeamMembersList = styled.div`
+  padding: 0 1rem 0.75rem 2.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+const TeamMemberChip = styled.span`
+  font-size: 0.8rem;
+  padding: 0.25rem 0.625rem;
+  background: ${({ theme }) => theme.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 4px;
+  color: ${({ theme }) => theme.textSecondary};
 `;
 
 // Team Pairing
@@ -911,15 +958,26 @@ export default function TournamentAdminPage() {
                     teams.length > 0 ? (
                       <ParticipantList>
                         {teams.map((team, index) => (
-                          <ParticipantRow key={team.id}>
-                            <ParticipantInfo>
-                              <ParticipantRank>{index + 1}</ParticipantRank>
-                              <ParticipantName>{team.name}</ParticipantName>
-                            </ParticipantInfo>
-                            <ParticipantBadge $status={team.isComplete ? 'registered' : 'forming'}>
-                              {team.isComplete ? 'Ready' : 'Forming'}
-                            </ParticipantBadge>
-                          </ParticipantRow>
+                          <TeamRowContainer key={team.id}>
+                            <TeamHeader>
+                              <ParticipantInfo>
+                                <ParticipantRank>{index + 1}</ParticipantRank>
+                                <ParticipantName>{team.name}</ParticipantName>
+                              </ParticipantInfo>
+                              <ParticipantBadge $status={team.isComplete ? 'registered' : 'forming'}>
+                                {team.isComplete ? 'Ready' : 'Forming'}
+                              </ParticipantBadge>
+                            </TeamHeader>
+                            {team.members && team.members.length > 0 && (
+                              <TeamMembersList>
+                                {team.members.map((member) => (
+                                  <TeamMemberChip key={member.userId}>
+                                    {member.user?.displayName || member.user?.username || `Player ${member.userId.slice(0, 6)}`}
+                                  </TeamMemberChip>
+                                ))}
+                              </TeamMembersList>
+                            )}
+                          </TeamRowContainer>
                         ))}
                       </ParticipantList>
                     ) : (
