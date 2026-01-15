@@ -1,12 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getUserById } from '@/db/user';
 import { seedDefaultGames, getAllGames } from '@/db/game';
-import { eq } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import { db } from '@/db/drizzle';
 import {
   tournamentParticipants,
   teamMembers,
   teams,
+  type ParticipantStatus,
 } from '@/db/schema';
 import {
   getTournamentsByStatus,
@@ -16,11 +17,16 @@ import {
 
 // Get all tournament IDs where user is registered (directly or via team)
 async function getUserTournamentIds(userId: string): Promise<string[]> {
-  // Get tournaments where user is directly registered
+  // Get tournaments where user is directly registered (excluding withdrawn)
   const directRegistrations = await db
     .select({ tournamentId: tournamentParticipants.tournamentId })
     .from(tournamentParticipants)
-    .where(eq(tournamentParticipants.userId, userId));
+    .where(
+      and(
+        eq(tournamentParticipants.userId, userId),
+        ne(tournamentParticipants.status, 'withdrawn' as ParticipantStatus)
+      )
+    );
 
   // Get teams the user is a member of
   const teamMemberships = await db
@@ -28,20 +34,26 @@ async function getUserTournamentIds(userId: string): Promise<string[]> {
     .from(teamMembers)
     .where(eq(teamMembers.userId, userId));
 
-  // Get tournament IDs from teams
+  // Get tournament IDs from teams (excluding withdrawn teams)
   const teamIds = teamMemberships.map(tm => tm.teamId);
   const teamTournamentIds: string[] = [];
   
   if (teamIds.length > 0) {
     for (const teamId of teamIds) {
-      const teamResult = await db
-        .select({ tournamentId: teams.tournamentId })
-        .from(teams)
-        .where(eq(teams.id, teamId))
+      // Check if team's tournament participant record exists and is not withdrawn
+      const participantRecord = await db
+        .select({ tournamentId: tournamentParticipants.tournamentId })
+        .from(tournamentParticipants)
+        .where(
+          and(
+            eq(tournamentParticipants.teamId, teamId),
+            ne(tournamentParticipants.status, 'withdrawn' as ParticipantStatus)
+          )
+        )
         .limit(1);
       
-      if (teamResult.length > 0) {
-        teamTournamentIds.push(teamResult[0].tournamentId);
+      if (participantRecord.length > 0) {
+        teamTournamentIds.push(participantRecord[0].tournamentId);
       }
     }
   }

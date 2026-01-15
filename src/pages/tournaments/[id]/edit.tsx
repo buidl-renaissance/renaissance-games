@@ -512,6 +512,7 @@ export default function EditTournamentPage() {
   const [game, setGame] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Organizer state
@@ -530,9 +531,47 @@ export default function EditTournamentPage() {
     prizePool: '',
     bestOf: '1',
     location: '',
+    startDate: '',
     startTime: '',
-    registrationDeadline: '',
+    registrationDate: '',
+    registrationTime: '',
   });
+
+  // Generate time options at 15-minute intervals
+  const timeOptions = Array.from({ length: 96 }, (_, i) => {
+    const hours = Math.floor(i / 4);
+    const minutes = (i % 4) * 15;
+    const value = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    const hour12 = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    const ampm = hours < 12 ? 'AM' : 'PM';
+    const label = `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    return { value, label };
+  });
+
+  // Combine date and time into datetime-local format
+  const combineDateAndTime = (date: string, time: string): string | undefined => {
+    if (!date) return undefined;
+    if (!time) return `${date}T00:00`;
+    return `${date}T${time}`;
+  };
+
+  // Split datetime-local into separate date and time
+  const splitDateTimeLocal = (datetimeLocal: string): { date: string; time: string } => {
+    if (!datetimeLocal) return { date: '', time: '' };
+    const [date, time] = datetimeLocal.split('T');
+    // Round time to nearest 15-minute interval for the select
+    if (time) {
+      const [hours, minutes] = time.split(':').map(Number);
+      const roundedMinutes = Math.round(minutes / 15) * 15;
+      const finalMinutes = roundedMinutes === 60 ? 0 : roundedMinutes;
+      const finalHours = roundedMinutes === 60 ? hours + 1 : hours;
+      return { 
+        date, 
+        time: `${finalHours.toString().padStart(2, '0')}:${finalMinutes.toString().padStart(2, '0')}` 
+      };
+    }
+    return { date, time: '' };
+  };
 
   const isAdditionalOrganizer = organizers.some(o => o.userId === user?.id);
   const isOrganizer = user && tournament && (
@@ -554,6 +593,9 @@ export default function EditTournamentPage() {
 
         // Populate form with tournament data
         const t = data.tournament;
+        const startDateTime = t.startTime ? splitDateTimeLocal(formatDateTimeLocal(t.startTime)) : { date: '', time: '' };
+        const regDateTime = t.registrationDeadline ? splitDateTimeLocal(formatDateTimeLocal(t.registrationDeadline)) : { date: '', time: '' };
+        
         setFormData({
           name: t.name || '',
           description: t.description || '',
@@ -563,8 +605,10 @@ export default function EditTournamentPage() {
           prizePool: t.prizePool ? String(t.prizePool / 100) : '',
           bestOf: String(t.bestOf || 1),
           location: t.location || '',
-          startTime: t.startTime ? formatDateTimeLocal(t.startTime) : '',
-          registrationDeadline: t.registrationDeadline ? formatDateTimeLocal(t.registrationDeadline) : '',
+          startDate: startDateTime.date,
+          startTime: startDateTime.time,
+          registrationDate: regDateTime.date,
+          registrationTime: regDateTime.time,
         });
       }
     } catch (error) {
@@ -676,11 +720,14 @@ export default function EditTournamentPage() {
         location: formData.location || null,
       };
 
-      if (formData.startTime) {
-        body.startTime = estInputToUtc(formData.startTime).toISOString();
+      const startDateTime = combineDateAndTime(formData.startDate, formData.startTime);
+      const regDateTime = combineDateAndTime(formData.registrationDate, formData.registrationTime);
+      
+      if (startDateTime) {
+        body.startTime = estInputToUtc(startDateTime).toISOString();
       }
-      if (formData.registrationDeadline) {
-        body.registrationDeadline = estInputToUtc(formData.registrationDeadline).toISOString();
+      if (regDateTime) {
+        body.registrationDeadline = estInputToUtc(regDateTime).toISOString();
       }
 
       const res = await fetch(`/api/tournaments/${id}`, {
@@ -697,21 +744,26 @@ export default function EditTournamentPage() {
 
       setMessage({ type: 'success', text: 'Tournament updated successfully' });
       setTournament(data.tournament);
+      setIsSaving(false);
 
-      // Redirect after a short delay
+      // Show loading state during redirect
+      setIsRedirecting(true);
       setTimeout(() => {
         router.push(`/tournaments/${id}/admin`);
-      }, 1500);
+      }, 800);
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to update tournament' });
-    } finally {
       setIsSaving(false);
     }
   };
 
-  // Only show loading for data fetch
+  // Show loading for data fetch or during redirect after save
   if (isLoading) {
     return <Loading text="Loading..." />;
+  }
+
+  if (isRedirecting) {
+    return <Loading text="Saved! Redirecting..." />;
   }
 
   if (!tournament) {
@@ -917,29 +969,54 @@ export default function EditTournamentPage() {
                 />
               </FormGroup>
 
-              <InputRow>
-                <FormGroup>
-                  <Label htmlFor="registrationDeadline">Registration Deadline</Label>
+              <FormGroup>
+                <Label>Registration Deadline</Label>
+                <InputRow>
                   <Input
-                    id="registrationDeadline"
-                    name="registrationDeadline"
-                    type="datetime-local"
-                    value={formData.registrationDeadline}
+                    id="registrationDate"
+                    name="registrationDate"
+                    type="date"
+                    value={formData.registrationDate}
                     onChange={handleChange}
                   />
-                </FormGroup>
+                  <Select
+                    id="registrationTime"
+                    name="registrationTime"
+                    value={formData.registrationTime}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select time...</option>
+                    {timeOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </Select>
+                </InputRow>
+              </FormGroup>
 
-                <FormGroup>
-                  <Label htmlFor="startTime">Start Time</Label>
+              <FormGroup>
+                <Label>Start Date & Time</Label>
+                <InputRow>
                   <Input
+                    id="startDate"
+                    name="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                  />
+                  <Select
                     id="startTime"
                     name="startTime"
-                    type="datetime-local"
                     value={formData.startTime}
                     onChange={handleChange}
-                  />
-                </FormGroup>
-              </InputRow>
+                  >
+                    <option value="">Select time...</option>
+                    {timeOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </Select>
+                </InputRow>
+              </FormGroup>
+              <HelpText>All times are in Eastern Time (EST/EDT)</HelpText>
             </FormSection>
 
             <FormSection>

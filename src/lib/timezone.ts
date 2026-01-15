@@ -9,57 +9,53 @@
 const EST_TIMEZONE = 'America/New_York';
 
 /**
+ * Get the UTC offset in minutes for America/New_York at a specific UTC time.
+ * Returns negative for behind UTC (EST = -300, EDT = -240)
+ */
+function getEstOffsetMinutes(utcDate: Date): number {
+  // Format the same instant in both UTC and EST
+  const utcString = utcDate.toLocaleString('en-US', { timeZone: 'UTC' });
+  const estString = utcDate.toLocaleString('en-US', { timeZone: EST_TIMEZONE });
+  
+  // Parse both strings back to dates (will be interpreted as local, but we only care about the difference)
+  const utcParsed = new Date(utcString);
+  const estParsed = new Date(estString);
+  
+  // The difference tells us the offset
+  return (estParsed.getTime() - utcParsed.getTime()) / 60000;
+}
+
+/**
  * Convert a datetime-local input string (assumed EST) to UTC Date
  * datetime-local format: "2026-01-15T14:00"
  */
 export function estInputToUtc(datetimeLocalString: string): Date {
-  // The datetime-local input gives us a string without timezone
-  // We need to interpret it as EST and convert to UTC
+  if (!datetimeLocalString) {
+    return new Date(NaN);
+  }
   
-  // Create a date string with EST timezone explicitly
-  const estDateString = `${datetimeLocalString}:00`;
-  
-  // Use Intl to get the UTC offset for EST at this particular date/time
-  const tempDate = new Date(datetimeLocalString);
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: EST_TIMEZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-  
-  // Parse the EST time and convert to UTC
-  // EST is UTC-5, EDT is UTC-4
-  const parts = formatter.formatToParts(tempDate);
-  const getPart = (type: string) => parts.find(p => p.type === type)?.value || '00';
-  
-  // We need to figure out the offset for the target date in EST
-  // Create the date in UTC first, then adjust
+  // Parse the datetime-local string
   const [datePart, timePart] = datetimeLocalString.split('T');
+  if (!datePart || !timePart) {
+    return new Date(NaN);
+  }
+  
   const [year, month, day] = datePart.split('-').map(Number);
   const [hour, minute] = timePart.split(':').map(Number);
   
-  // Create a date object and use the timezone to convert properly
-  // This approach: create a date assuming EST, then let JS convert to UTC
-  const estDate = new Date(
-    new Date(datetimeLocalString).toLocaleString('en-US', { timeZone: EST_TIMEZONE })
-  );
+  // Create a UTC date with the same numeric values
+  // (pretending the EST time is UTC for now)
+  const assumedUtc = new Date(Date.UTC(year, month - 1, day, hour, minute, 0, 0));
   
-  // Get the offset in minutes for EST/EDT
-  const utcDate = new Date(datetimeLocalString + 'Z'); // Treat as UTC first
-  const estString = utcDate.toLocaleString('en-US', { timeZone: EST_TIMEZONE });
-  const estParsed = new Date(estString);
-  const offsetMinutes = (utcDate.getTime() - estParsed.getTime()) / 60000;
+  // Get the EST offset at this approximate time
+  // (close enough - DST transitions don't happen mid-day)
+  const estOffset = getEstOffsetMinutes(assumedUtc);
   
-  // Create final UTC date by adding the offset to the user's input
-  const userInputAsUtc = new Date(`${datetimeLocalString}:00Z`);
-  const finalUtc = new Date(userInputAsUtc.getTime() - offsetMinutes * 60000);
+  // Subtract the offset to convert EST -> UTC
+  // If EST is UTC-5 (offset = -300), we add 300 minutes (5 hours) to get UTC
+  const utcTime = assumedUtc.getTime() - estOffset * 60000;
   
-  return finalUtc;
+  return new Date(utcTime);
 }
 
 /**
@@ -84,7 +80,7 @@ export function utcToEstDisplay(utcDate: Date | string | null): string | null {
     minute: '2-digit',
   }).toLowerCase();
   
-  return `${datePart} @ ${timePart}`;
+  return `${datePart} @ ${timePart} EST`;
 }
 
 /**

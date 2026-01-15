@@ -23,6 +23,7 @@ interface Tournament {
   status: string;
   minParticipants: number;
   maxParticipants: number;
+  entryFee: number | null;
   prizePool: number | null;
   location: string | null;
   startTime: string | null;
@@ -272,22 +273,32 @@ const TournamentHeader = styled.div`
   gap: 0.5rem;
 `;
 
-const GameType = styled.span`
+const GameType = styled.span<{ $isRegistered?: boolean }>`
   display: inline-block;
   width: fit-content;
   font-size: 0.65rem;
   font-weight: 600;
-  color: ${({ theme }) => theme.accent};
+  color: ${({ theme, $isRegistered }) => $isRegistered ? 'rgb(34, 197, 94)' : theme.accent};
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.15rem 0.4rem;
-  background: ${({ theme }) => theme.accentMuted};
+  background: ${({ theme, $isRegistered }) => $isRegistered ? 'rgba(34, 197, 94, 0.15)' : theme.accentMuted};
   border-radius: 3px;
 `;
 
-const PrizePool = styled.span`
-  font-size: 0.75rem;
-  font-weight: 700;
+const EntryPayout = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+`;
+
+const EntryFee = styled.span`
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const PayoutAmount = styled.span`
   color: rgb(34, 197, 94);
 `;
 
@@ -526,11 +537,23 @@ const DashboardPage: React.FC = () => {
       >
         <TournamentMain>
           <TournamentHeader>
-            <GameType>
+            <GameType $isRegistered={tournament.isRegistered}>
               {game?.name || 'Tournament'}
             </GameType>
-            {tournament.prizePool && tournament.prizePool > 0 && (
-              <PrizePool>{formatCurrency(tournament.prizePool)}</PrizePool>
+            {((tournament.entryFee && tournament.entryFee > 0) || (tournament.prizePool && tournament.prizePool > 0)) && (
+              <EntryPayout>
+                {tournament.entryFee && tournament.entryFee > 0 ? (
+                  <EntryFee>{formatCurrency(tournament.entryFee)}</EntryFee>
+                ) : (
+                  <EntryFee>Free</EntryFee>
+                )}
+                <span style={{ color: 'inherit', opacity: 0.5 }}>→</span>
+                <PayoutAmount>
+                  {tournament.prizePool && tournament.prizePool > 0 
+                    ? formatCurrency(tournament.prizePool) 
+                    : '$0'}
+                </PayoutAmount>
+              </EntryPayout>
             )}
           </TournamentHeader>
           <TournamentTitle>{tournament.name}</TournamentTitle>
