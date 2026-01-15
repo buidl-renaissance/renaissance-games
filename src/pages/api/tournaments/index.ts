@@ -15,6 +15,20 @@ import {
 import { estInputToUtc } from '@/lib/timezone';
 
 /**
+ * Parse a datetime string that could be either:
+ * - An ISO string (already UTC): "2026-01-16T01:00:00.000Z"
+ * - A datetime-local string (assumed EST): "2026-01-15T20:00"
+ */
+function parseDateTime(dateString: string): Date {
+  // If it's an ISO string (contains 'Z' or timezone offset), parse directly
+  if (dateString.includes('Z') || /[+-]\d{2}:\d{2}$/.test(dateString)) {
+    return new Date(dateString);
+  }
+  // Otherwise treat as EST datetime-local and convert to UTC
+  return estInputToUtc(dateString);
+}
+
+/**
  * GET /api/tournaments - List tournaments
  * Query params:
  *   - status: 'active' | 'all' (default: 'active')
@@ -189,8 +203,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       prizePool,
       prizeDistribution,
       bestOf,
-      registrationDeadline: registrationDeadline ? estInputToUtc(registrationDeadline) : undefined,
-      startTime: startTime ? estInputToUtc(startTime) : undefined,
+      registrationDeadline: registrationDeadline ? parseDateTime(registrationDeadline) : undefined,
+      startTime: startTime ? parseDateTime(startTime) : undefined,
       location,
     };
 

@@ -11,18 +11,57 @@ const EST_TIMEZONE = 'America/New_York';
 /**
  * Get the UTC offset in minutes for America/New_York at a specific UTC time.
  * Returns negative for behind UTC (EST = -300, EDT = -240)
+ * Uses Intl.DateTimeFormat for consistent server/client behavior.
  */
 function getEstOffsetMinutes(utcDate: Date): number {
-  // Format the same instant in both UTC and EST
-  const utcString = utcDate.toLocaleString('en-US', { timeZone: 'UTC' });
-  const estString = utcDate.toLocaleString('en-US', { timeZone: EST_TIMEZONE });
+  // Use Intl.DateTimeFormat to get numeric parts in both timezones
+  const utcFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
   
-  // Parse both strings back to dates (will be interpreted as local, but we only care about the difference)
-  const utcParsed = new Date(utcString);
-  const estParsed = new Date(estString);
+  const estFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: EST_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+
+  const getParts = (formatter: Intl.DateTimeFormat) => {
+    const parts = formatter.formatToParts(utcDate);
+    const get = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
+    return {
+      year: get('year'),
+      month: get('month'),
+      day: get('day'),
+      hour: get('hour'),
+      minute: get('minute'),
+    };
+  };
+
+  const utcParts = getParts(utcFormatter);
+  const estParts = getParts(estFormatter);
+
+  // Calculate total minutes from midnight for both
+  const utcMinutes = utcParts.day * 24 * 60 + utcParts.hour * 60 + utcParts.minute;
+  const estMinutes = estParts.day * 24 * 60 + estParts.hour * 60 + estParts.minute;
+
+  // Handle day boundary (e.g., UTC is Jan 2, EST is Jan 1)
+  let diff = estMinutes - utcMinutes;
   
-  // The difference tells us the offset
-  return (estParsed.getTime() - utcParsed.getTime()) / 60000;
+  // If the difference is too large, we crossed a day boundary
+  if (diff > 12 * 60) diff -= 24 * 60;
+  if (diff < -12 * 60) diff += 24 * 60;
+
+  return diff;
 }
 
 /**
@@ -60,6 +99,7 @@ export function estInputToUtc(datetimeLocalString: string): Date {
 
 /**
  * Convert a UTC Date to EST for display
+ * Uses Intl.DateTimeFormat for consistent server/client behavior.
  */
 export function utcToEstDisplay(utcDate: Date | string | null): string | null {
   if (!utcDate) return null;
@@ -68,19 +108,26 @@ export function utcToEstDisplay(utcDate: Date | string | null): string | null {
   
   if (isNaN(date.getTime())) return null;
   
-  const datePart = date.toLocaleDateString('en-US', {
+  // Use explicit Intl.DateTimeFormat for consistency
+  const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone: EST_TIMEZONE,
     month: 'short',
     day: 'numeric',
-  });
-  
-  const timePart = date.toLocaleTimeString('en-US', {
-    timeZone: EST_TIMEZONE,
     hour: 'numeric',
     minute: '2-digit',
-  }).toLowerCase();
+    hour12: true,
+  });
   
-  return `${datePart} @ ${timePart} EST`;
+  const parts = formatter.formatToParts(date);
+  const getPart = (type: string) => parts.find(p => p.type === type)?.value || '';
+  
+  const month = getPart('month');
+  const day = getPart('day');
+  const hour = getPart('hour');
+  const minute = getPart('minute');
+  const dayPeriod = getPart('dayPeriod').toLowerCase();
+  
+  return `${month} ${day} @ ${hour}:${minute} ${dayPeriod} EST`;
 }
 
 /**

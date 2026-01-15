@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import styled, { keyframes } from 'styled-components';
+import styled, { keyframes, css } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
 import { UserHeader } from '@/components/UserHeader';
@@ -42,6 +42,13 @@ interface Organizer {
     username: string | null;
     displayName: string | null;
   } | null;
+}
+
+interface UserSearchResult {
+  id: string;
+  username: string | null;
+  displayName: string | null;
+  pfpUrl: string | null;
 }
 
 const fadeIn = keyframes`
@@ -97,8 +104,11 @@ const BackLink = styled(Link)`
 
 const Main = styled.main`
   max-width: 560px;
+  width: 100%;
   margin: 0 auto;
   padding: 1rem;
+  box-sizing: border-box;
+  overflow-x: hidden;
 `;
 
 const PageHeader = styled.div`
@@ -159,6 +169,8 @@ const Form = styled.form`
   flex-direction: column;
   gap: 1.5rem;
   animation: ${fadeIn} 0.5s ease-out 0.1s both;
+  width: 100%;
+  min-width: 0;
 `;
 
 const FormSection = styled.section`
@@ -166,6 +178,8 @@ const FormSection = styled.section`
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 4px;
   padding: 1rem;
+  box-sizing: border-box;
+  width: 100%;
 `;
 
 const SectionHeader = styled.div`
@@ -193,6 +207,8 @@ const SectionTitle = styled.h2`
 
 const FormGroup = styled.div`
   margin-bottom: 1.25rem;
+  width: 100%;
+  min-width: 0;
   
   &:last-child {
     margin-bottom: 0;
@@ -210,7 +226,10 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.75rem 1rem;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.75rem 0.75rem;
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   border: 1px solid ${({ theme }) => theme.border};
@@ -257,7 +276,10 @@ const TextArea = styled.textarea`
 
 const Select = styled.select`
   width: 100%;
-  padding: 0.75rem 1rem;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.75rem 0.5rem;
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   border: 1px solid ${({ theme }) => theme.border};
@@ -266,6 +288,11 @@ const Select = styled.select`
   color: ${({ theme }) => theme.text};
   cursor: pointer;
   transition: all 0.2s ease;
+  text-align: center;
+  text-align-last: center;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   
   &:focus {
     outline: none;
@@ -277,10 +304,29 @@ const Select = styled.select`
 const InputRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
   
-  @media (max-width: 500px) {
-    grid-template-columns: 1fr;
+  /* Ensure children don't overflow */
+  & > * {
+    min-width: 0;
+  }
+`;
+
+const DateTimeRow = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  
+  & > input[type="date"] {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  & > select {
+    flex: 1;
+    min-width: 0;
   }
 `;
 
@@ -313,7 +359,7 @@ const SubmitButton = styled.button<{ $loading?: boolean }>`
   overflow: hidden;
   letter-spacing: 0.05em;
   
-  ${({ $loading, theme }) => $loading && `
+  ${({ $loading, theme }) => $loading && css`
     &::after {
       content: '';
       position: absolute;
@@ -485,6 +531,100 @@ const AddButton = styled.button`
   }
 `;
 
+// User search autocomplete styles
+const AutocompleteWrapper = styled.div`
+  position: relative;
+  flex: 1;
+`;
+
+const AutocompleteDropdown = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: ${({ theme }) => theme.surface};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 100;
+`;
+
+const AutocompleteItem = styled.button`
+  width: 100%;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: ${({ theme }) => theme.backgroundAlt};
+  }
+
+  &:not(:last-child) {
+    border-bottom: 1px solid ${({ theme }) => theme.border};
+  }
+`;
+
+const AutocompleteAvatar = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.backgroundAlt};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+`;
+
+const AutocompleteAvatarImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const AutocompleteAvatarInitial = styled.span`
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const AutocompleteInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+`;
+
+const AutocompleteName = styled.span`
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.text};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const AutocompleteUsername = styled.span`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const AutocompleteEmpty = styled.div`
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
   registration: 'Open',
@@ -520,6 +660,13 @@ export default function EditTournamentPage() {
   const [primaryOrganizer, setPrimaryOrganizer] = useState<{ id: string; username: string | null; displayName: string | null } | null>(null);
   const [newOrganizerUsername, setNewOrganizerUsername] = useState('');
   const [isAddingOrganizer, setIsAddingOrganizer] = useState(false);
+
+  // User search autocomplete state
+  const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -579,6 +726,73 @@ export default function EditTournamentPage() {
     user.role === 'admin' ||
     isAdditionalOrganizer
   );
+
+  // Search for users with debouncing
+  const searchUsers = useCallback(async (query: string) => {
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data.users || []);
+        setShowDropdown(true);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  // Handle username input change with debounce
+  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setNewOrganizerUsername(value);
+
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Debounce search
+    searchTimeoutRef.current = setTimeout(() => {
+      searchUsers(value);
+    }, 300);
+  };
+
+  // Select a user from the dropdown
+  const selectUser = (user: UserSearchResult) => {
+    setNewOrganizerUsername(user.username || '');
+    setShowDropdown(false);
+    setSearchResults([]);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const fetchTournament = useCallback(async () => {
     if (!id) return;
@@ -971,7 +1185,7 @@ export default function EditTournamentPage() {
 
               <FormGroup>
                 <Label>Registration Deadline</Label>
-                <InputRow>
+                <DateTimeRow>
                   <Input
                     id="registrationDate"
                     name="registrationDate"
@@ -990,12 +1204,12 @@ export default function EditTournamentPage() {
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </Select>
-                </InputRow>
+                </DateTimeRow>
               </FormGroup>
 
               <FormGroup>
                 <Label>Start Date & Time</Label>
-                <InputRow>
+                <DateTimeRow>
                   <Input
                     id="startDate"
                     name="startDate"
@@ -1014,7 +1228,7 @@ export default function EditTournamentPage() {
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </Select>
-                </InputRow>
+                </DateTimeRow>
               </FormGroup>
               <HelpText>All times are in Eastern Time (EST/EDT)</HelpText>
             </FormSection>
@@ -1064,13 +1278,70 @@ export default function EditTournamentPage() {
               <FormGroup>
                 <Label>Add Organizer</Label>
                 <AddOrganizerRow>
-                  <Input
-                    type="text"
-                    placeholder="Enter username..."
-                    value={newOrganizerUsername}
-                    onChange={(e) => setNewOrganizerUsername(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddOrganizer())}
-                  />
+                  <AutocompleteWrapper ref={dropdownRef}>
+                    <Input
+                      type="text"
+                      placeholder="Search by username..."
+                      value={newOrganizerUsername}
+                      onChange={handleUsernameChange}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          if (searchResults.length > 0 && showDropdown) {
+                            selectUser(searchResults[0]);
+                          } else {
+                            handleAddOrganizer();
+                          }
+                        }
+                        if (e.key === 'Escape') {
+                          setShowDropdown(false);
+                        }
+                      }}
+                      onFocus={() => {
+                        if (searchResults.length > 0) {
+                          setShowDropdown(true);
+                        }
+                      }}
+                    />
+                    {showDropdown && (
+                      <AutocompleteDropdown>
+                        {isSearching ? (
+                          <AutocompleteEmpty>Searching...</AutocompleteEmpty>
+                        ) : searchResults.length === 0 ? (
+                          <AutocompleteEmpty>No users found</AutocompleteEmpty>
+                        ) : (
+                          searchResults.map((searchUser) => (
+                            <AutocompleteItem
+                              key={searchUser.id}
+                              type="button"
+                              onClick={() => selectUser(searchUser)}
+                            >
+                              <AutocompleteAvatar>
+                                {searchUser.pfpUrl ? (
+                                  <AutocompleteAvatarImg 
+                                    src={searchUser.pfpUrl} 
+                                    alt={searchUser.displayName || searchUser.username || ''} 
+                                  />
+                                ) : (
+                                  <AutocompleteAvatarInitial>
+                                    {(searchUser.displayName || searchUser.username || '?')[0].toUpperCase()}
+                                  </AutocompleteAvatarInitial>
+                                )}
+                              </AutocompleteAvatar>
+                              <AutocompleteInfo>
+                                <AutocompleteName>
+                                  {searchUser.displayName || searchUser.username || 'Unknown'}
+                                </AutocompleteName>
+                                {searchUser.username && (
+                                  <AutocompleteUsername>@{searchUser.username}</AutocompleteUsername>
+                                )}
+                              </AutocompleteInfo>
+                            </AutocompleteItem>
+                          ))
+                        )}
+                      </AutocompleteDropdown>
+                    )}
+                  </AutocompleteWrapper>
                   <AddButton 
                     type="button"
                     onClick={handleAddOrganizer}
@@ -1079,7 +1350,7 @@ export default function EditTournamentPage() {
                     {isAddingOrganizer ? 'Adding...' : 'Add'}
                   </AddButton>
                 </AddOrganizerRow>
-                <HelpText>Added organizers can view and manage this tournament.</HelpText>
+                <HelpText>Search for users to add as tournament organizers.</HelpText>
               </FormGroup>
             </FormSection>
 

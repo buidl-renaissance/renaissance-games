@@ -6,6 +6,7 @@ import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
 import { UserHeader } from '@/components/UserHeader';
+import { estInputToUtc } from '@/lib/timezone';
 
 interface Game {
   id: string;
@@ -393,7 +394,10 @@ export default function CreateTournamentPage() {
     setIsSubmitting(true);
 
     try {
-      const body = {
+      const startDateTime = combineDateAndTime(formData.startDate, formData.startTime);
+      const regDateTime = combineDateAndTime(formData.registrationDate, formData.registrationTime);
+
+      const body: Record<string, unknown> = {
         gameId: formData.gameId,
         name: formData.name,
         description: formData.description || undefined,
@@ -403,9 +407,15 @@ export default function CreateTournamentPage() {
         prizePool: formData.prizePool ? parseInt(formData.prizePool, 10) * 100 : undefined,
         bestOf: parseInt(formData.bestOf, 10),
         location: formData.location || undefined,
-        startTime: combineDateAndTime(formData.startDate, formData.startTime),
-        registrationDeadline: combineDateAndTime(formData.registrationDate, formData.registrationTime),
       };
+
+      // Convert EST times to UTC for storage
+      if (startDateTime) {
+        body.startTime = estInputToUtc(startDateTime).toISOString();
+      }
+      if (regDateTime) {
+        body.registrationDeadline = estInputToUtc(regDateTime).toISOString();
+      }
 
       const res = await fetch('/api/tournaments', {
         method: 'POST',
