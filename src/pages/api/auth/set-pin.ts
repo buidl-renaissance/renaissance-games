@@ -14,7 +14,7 @@ interface PendingUserData {
  * POST /api/auth/set-pin
  * Body: { phone, pin, pendingUserData? }
  * 
- * This is used during login flow for legacy/miniapp users who don't have a PIN.
+ * This is used during login flow for users who don't have a PIN set.
  * After setting PIN, the user is logged in.
  * If pendingUserData is provided, links accountAddress to user.
  */

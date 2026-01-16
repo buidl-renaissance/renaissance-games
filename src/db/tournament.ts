@@ -1,6 +1,6 @@
 // Tournament database operations
 import { v4 as uuidv4 } from 'uuid';
-import { eq, desc, and, or, ne } from 'drizzle-orm';
+import { eq, desc, asc, and, or, ne } from 'drizzle-orm';
 import { db } from './drizzle';
 import {
   tournaments,
@@ -153,7 +153,7 @@ export async function getTournamentsByStatus(status: TournamentStatus): Promise<
     .select()
     .from(tournaments)
     .where(eq(tournaments.status, status))
-    .orderBy(desc(tournaments.createdAt));
+    .orderBy(asc(tournaments.startTime), asc(tournaments.createdAt));
   
   return results.map(parseTournamentRow);
 }
@@ -179,7 +179,7 @@ export async function getActiveTournaments(): Promise<Tournament[]> {
         eq(tournaments.status, 'in_progress')
       )
     )
-    .orderBy(desc(tournaments.createdAt));
+    .orderBy(asc(tournaments.startTime), asc(tournaments.createdAt));
   
   return results.map(parseTournamentRow);
 }

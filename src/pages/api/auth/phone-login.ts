@@ -73,7 +73,7 @@ export default async function handler(
     if (!pin) {
       const userHasPin = hasPin(user);
       
-      // If user doesn't have a PIN (legacy/miniapp user), prompt them to set one
+      // If user doesn't have a PIN yet, prompt them to set one
       if (!userHasPin) {
         return res.status(200).json({ 
           needsSetPin: true,

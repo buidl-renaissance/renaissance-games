@@ -16,16 +16,18 @@ function getTursoClient() {
     return tursoClient;
   }
 
+  const useLocal = process.env.USE_LOCAL === 'true';
   const url = process.env.TURSO_DATABASE_URL || 'file:./dev.sqlite3';
   const authToken = process.env.TURSO_AUTH_TOKEN;
 
-  // For local development, use file-based SQLite if no auth token
-  if (authToken) {
-    tursoClient = createClient({ url, authToken });
+  // Use local file-based SQLite if USE_LOCAL is set or no auth token
+  if (useLocal || !authToken) {
+    const localUrl = 'file:./dev.sqlite3';
+    console.log('📁 Using local SQLite database:', localUrl);
+    tursoClient = createClient({ url: localUrl });
   } else {
-    // Local file-based SQLite (for dev)
-    const fileUrl = url.startsWith('file:') ? url : `file:${url}`;
-    tursoClient = createClient({ url: fileUrl });
+    console.log('☁️ Using remote Turso database');
+    tursoClient = createClient({ url, authToken });
   }
 
   return tursoClient;

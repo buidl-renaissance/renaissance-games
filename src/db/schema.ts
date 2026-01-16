@@ -11,25 +11,25 @@ export type UserStatus = typeof USER_STATUSES[number];
 // Users table
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
-  fid: text('fid').unique(), // Optional - only for Farcaster users
-  phone: text('phone').unique(), // For direct registration/login
+  fid: text('fid').unique(), // Legacy field - kept for backwards compatibility
+  phone: text('phone').unique(), // Primary login method
   email: text('email'), // Optional
   username: text('username'),
-  name: text('name'), // Synced from Farcaster/Renaissance
-  pfpUrl: text('pfpUrl'), // Synced from Farcaster/Renaissance
+  name: text('name'), // Display name
+  pfpUrl: text('pfpUrl'), // Profile picture URL
   displayName: text('displayName'), // App-specific name (editable)
   profilePicture: text('profilePicture'), // App-specific profile picture (editable)
-  accountAddress: text('accountAddress'), // Wallet address from Renaissance auth
-  pinHash: text('pinHash'), // bcrypt hash of 4-digit PIN (nullable for existing/miniapp users)
-  failedPinAttempts: integer('failedPinAttempts').default(0), // Failed PIN attempts counter (default 0)
-  lockedAt: integer('lockedAt', { mode: 'timestamp' }), // Timestamp when account was locked (null = not locked)
+  accountAddress: text('accountAddress'), // Wallet address
+  pinHash: text('pinHash'), // bcrypt hash of 4-digit PIN
+  failedPinAttempts: integer('failedPinAttempts').default(0), // Failed PIN attempts counter
+  lockedAt: integer('lockedAt', { mode: 'timestamp' }), // Timestamp when account was locked
   status: text('status').$type<UserStatus>().default('active'), // User status: active, inactive, banned
   role: text('role').$type<UserRole>().default('user').notNull(),
   createdAt: integer('createdAt', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`).notNull(),
 });
 
-// Farcaster Accounts table
+// Legacy accounts table - kept for backwards compatibility
 export const farcasterAccounts = sqliteTable('farcaster_accounts', {
   id: text('id').primaryKey(),
   userId: text('userId').notNull(),

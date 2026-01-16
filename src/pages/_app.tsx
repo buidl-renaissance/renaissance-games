@@ -14,16 +14,16 @@ export default function App({ Component, pageProps }: AppProps) {
         <StyleSheetManager shouldForwardProp={(prop) => !prop.startsWith('$')}>
           <GlobalStyle />
           <DefaultSeo
-            titleTemplate="%s | Renaissance App"
-            defaultTitle="Renaissance App"
-            description="A Renaissance mini app"
+            titleTemplate="%s | Renaissance City"
+            defaultTitle="Renaissance City"
+            description="In-person tournaments. Real stakes."
             openGraph={{
               images: [
                 {
                   url: '/thumbnail.jpg',
                   width: 1200,
                   height: 630,
-                  alt: 'Renaissance App',
+                  alt: 'Renaissance City',
                 },
               ],
             }}

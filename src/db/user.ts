@@ -12,15 +12,15 @@ export type { UserStatus };
 
 export interface User {
   id: string;
-  fid?: string | null; // Optional - only for Farcaster users
-  phone?: string | null; // For direct registration/login
+  fid?: string | null; // Legacy field - kept for backwards compatibility
+  phone?: string | null; // Primary login method
   email?: string | null; // Optional
   username?: string | null;
-  name?: string | null; // Synced from Farcaster/Renaissance
-  pfpUrl?: string | null; // Synced from Farcaster/Renaissance
+  name?: string | null; // Display name
+  pfpUrl?: string | null; // Profile picture URL
   displayName?: string | null; // App-specific name (editable)
   profilePicture?: string | null; // App-specific profile picture (editable)
-  accountAddress?: string | null; // Wallet address from Renaissance auth
+  accountAddress?: string | null; // Wallet address
   pinHash?: string | null; // bcrypt hash of 4-digit PIN
   failedPinAttempts: number; // Failed PIN attempts counter (defaults to 0)
   lockedAt?: Date | null; // Timestamp when account was locked
@@ -36,6 +36,7 @@ function getFailedAttempts(value: number | null | undefined): number {
   return value ?? 0;
 }
 
+// Legacy types - kept for backwards compatibility
 export interface FarcasterAccount {
   id: string;
   userId: string;
@@ -48,10 +49,10 @@ export interface FarcasterAccount {
 export interface FarcasterUserData {
   fid: string;
   username?: string;
-  name?: string; // Will be stored in 'name' field (synced)
-  displayName?: string; // For backwards compatibility
-  pfpUrl?: string; // Will be stored in 'pfpUrl' field (synced)
-  accountAddress?: string; // Wallet address from Renaissance auth
+  name?: string;
+  displayName?: string;
+  pfpUrl?: string;
+  accountAddress?: string;
 }
 
 // ============================================
@@ -902,4 +903,145 @@ export function isOrganizer(user: User): boolean {
 
 export function isAdmin(user: User): boolean {
   return user.role === 'admin';
+}
+
+// ============================================
+// RENAISSANCE ID FUNCTIONS
+// ============================================
+
+export async function getUserByRenaissanceId(renaissanceId: string): Promise<User | null> {
+  // Use fid field to store renaissanceUserId
+  const results = await db
+    .select()
+    .from(users)
+    .where(eq(users.fid, renaissanceId))
+    .limit(1);
+  
+  if (results.length === 0) return null;
+  
+  const row = results[0];
+  return {
+    id: row.id,
+    fid: row.fid,
+    phone: row.phone,
+    email: row.email,
+    username: row.username,
+    name: row.name,
+    pfpUrl: row.pfpUrl,
+    displayName: row.displayName,
+    profilePicture: row.profilePicture,
+    accountAddress: row.accountAddress,
+    pinHash: row.pinHash,
+    failedPinAttempts: getFailedAttempts(row.failedPinAttempts),
+    lockedAt: row.lockedAt || null,
+    status: (row.status as UserStatus | null),
+    role: row.role,
+    createdAt: row.createdAt || new Date(),
+    updatedAt: row.updatedAt || new Date(),
+  } as User;
+}
+
+export interface RenaissanceUserData {
+  renaissanceUserId: string;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
+  publicAddress?: string;
+}
+
+export async function getOrCreateUserByRenaissanceId(
+  renaissanceUserId: string,
+  userData?: RenaissanceUserData
+): Promise<User> {
+  // First try to find existing user by renaissanceUserId (stored in fid)
+  const existing = await getUserByRenaissanceId(renaissanceUserId);
+  
+  if (existing) {
+    // Update user with any new data
+    if (userData) {
+      const now = new Date();
+      const updateData: Record<string, unknown> = { updatedAt: now };
+      
+      if (userData.username) updateData.username = userData.username;
+      if (userData.displayName) updateData.name = userData.displayName;
+      if (userData.pfpUrl) updateData.pfpUrl = userData.pfpUrl;
+      if (userData.publicAddress) updateData.accountAddress = userData.publicAddress;
+      
+      await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, existing.id));
+      
+      return { ...existing, ...updateData, updatedAt: now } as User;
+    }
+    return existing;
+  }
+  
+  // Try to find by username if provided
+  if (userData?.username) {
+    const existingByUsername = await getUserByUsername(userData.username);
+    if (existingByUsername) {
+      // Link renaissanceUserId to existing user
+      const now = new Date();
+      const updateData: Record<string, unknown> = {
+        fid: renaissanceUserId,
+        updatedAt: now,
+      };
+      
+      if (userData.displayName) updateData.name = userData.displayName;
+      if (userData.pfpUrl) updateData.pfpUrl = userData.pfpUrl;
+      if (userData.publicAddress) updateData.accountAddress = userData.publicAddress;
+      
+      await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, existingByUsername.id));
+      
+      console.log('🔗 [RENAISSANCE] Linked renaissanceUserId to existing user:', {
+        userId: existingByUsername.id,
+        renaissanceUserId,
+        username: userData.username,
+      });
+      
+      return { ...existingByUsername, ...updateData, updatedAt: now } as User;
+    }
+  }
+  
+  // Create new user
+  const shouldBeAdmin = userData?.username && 
+    ADMIN_USERNAMES.some(admin => admin.toLowerCase() === userData.username?.toLowerCase());
+  
+  // Check if this is the first user - if so, make them admin
+  const userCount = await db.select({ count: count() }).from(users);
+  const isFirstUser = userCount[0].count === 0;
+  
+  const role: UserRole = (shouldBeAdmin || isFirstUser) ? 'admin' : 'user';
+  const id = uuidv4();
+  const now = new Date();
+  
+  const newUser = {
+    id,
+    fid: renaissanceUserId,
+    username: userData?.username || null,
+    name: userData?.displayName || null,
+    displayName: userData?.displayName || null,
+    pfpUrl: userData?.pfpUrl || null,
+    profilePicture: userData?.pfpUrl || null,
+    accountAddress: userData?.publicAddress || null,
+    status: 'active' as UserStatus,
+    role,
+    createdAt: now,
+    updatedAt: now,
+  };
+  
+  await db.insert(users).values(newUser);
+  
+  console.log('🆕 [RENAISSANCE] Created new user from context:', {
+    userId: id,
+    renaissanceUserId,
+    username: userData?.username,
+    role,
+  });
+  
+  return newUser as User;
 }
