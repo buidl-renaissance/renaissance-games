@@ -94,6 +94,8 @@ export const tournaments = sqliteTable('tournaments', {
   endTime: integer('endTime', { mode: 'timestamp' }),
   // Location (in-person events)
   location: text('location'),
+  // Cross-app publishing to renaissance-events
+  publishedEventId: integer('publishedEventId'), // ID of the event in renaissance-events
   // Timestamps
   createdAt: integer('createdAt', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`).notNull(),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).default(sql`(strftime('%s', 'now'))`).notNull(),

@@ -40,6 +40,7 @@ export interface Tournament {
   startTime: Date | null;
   endTime: Date | null;
   location: string | null;
+  publishedEventId: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -210,6 +211,7 @@ export async function updateTournament(
   if (updates.startTime !== undefined) updateData.startTime = updates.startTime;
   if (updates.endTime !== undefined) updateData.endTime = updates.endTime;
   if (updates.location !== undefined) updateData.location = updates.location;
+  if (updates.publishedEventId !== undefined) updateData.publishedEventId = updates.publishedEventId;
   
   await db.update(tournaments).set(updateData).where(eq(tournaments.id, id));
   
@@ -678,6 +680,7 @@ function parseTournamentRow(row: typeof tournaments.$inferSelect | Record<string
     startTime: row.startTime as Date | null,
     endTime: row.endTime as Date | null,
     location: row.location as string | null,
+    publishedEventId: row.publishedEventId as number | null,
     createdAt: (row.createdAt as Date) || new Date(),
     updatedAt: (row.updatedAt as Date) || new Date(),
   };
