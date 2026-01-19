@@ -4,6 +4,7 @@ import { getGameById } from '@/db/game';
 import {
   getTournamentById,
   updateTournamentStatus,
+  updateTournament,
   openRegistration,
   cancelTournament,
   startTournament,
@@ -12,6 +13,8 @@ import {
   isUserTournamentOrganizer,
   TournamentStatus,
 } from '@/db/tournament';
+
+const RENAISSANCE_EVENTS_API_URL = process.env.RENAISSANCE_EVENTS_API_URL || 'http://localhost:3002';
 
 /**
  * PATCH /api/tournaments/[id]/status - Update tournament status
@@ -87,6 +90,57 @@ export default async function handler(
     switch (status) {
       case 'registration':
         updatedTournament = await openRegistration(id);
+        
+        // Publish to Renaissance Events when registration opens
+        try {
+          const eventData = {
+            name: tournament.name,
+            location: tournament.location || 'TBD',
+            startTime: tournament.startTime?.toISOString() || new Date().toISOString(),
+            endTime: tournament.endTime?.toISOString() || tournament.startTime?.toISOString() || new Date().toISOString(),
+            imageUrl: '',
+            metadata: {
+              description: tournament.description || `${game.name} tournament`,
+              tournamentId: tournament.id,
+              gameType: game.type,
+              gameName: game.name,
+              entryFee: tournament.entryFee,
+              prizePool: tournament.prizePool,
+              maxParticipants: tournament.maxParticipants,
+              status: 'registration',
+            },
+            tags: [game.type, 'tournament', 'games'],
+            eventType: 'renaissance',
+            source: 'renaissance-games',
+            sourceId: tournament.id,
+          };
+
+          if (tournament.publishedEventId) {
+            // Update existing event
+            await fetch(`${RENAISSANCE_EVENTS_API_URL}/api/events/${tournament.publishedEventId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(eventData),
+            });
+          } else {
+            // Create new event
+            const response = await fetch(`${RENAISSANCE_EVENTS_API_URL}/api/events`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(eventData),
+            });
+
+            if (response.ok) {
+              const newEvent = await response.json();
+              await updateTournament(id, { publishedEventId: newEvent.id });
+              updatedTournament = await getTournamentById(id);
+            }
+          }
+          console.log('✅ Published tournament to Renaissance Events');
+        } catch (publishError) {
+          console.error('Failed to publish to Renaissance Events:', publishError);
+          // Don't fail the status update if publishing fails
+        }
         break;
 
       case 'in_progress':

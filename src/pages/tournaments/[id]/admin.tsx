@@ -1134,28 +1134,27 @@ export default function TournamentAdminPage() {
                 </CardBody>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Renaissance Events</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  <InfoBox>
-                    {tournament.publishedEventId 
-                      ? `This tournament is published to Renaissance Events (ID: ${tournament.publishedEventId})`
-                      : 'Publish this tournament to the Renaissance Events calendar to increase visibility.'
-                    }
-                  </InfoBox>
-                  <ActionButtons>
-                    <ActionButton 
-                      $variant="primary" 
-                      onClick={publishToRenaissanceEvents} 
-                      disabled={actionLoading}
-                    >
-                      {tournament.publishedEventId ? 'Update in Renaissance Events' : 'Publish to Renaissance Events'}
-                    </ActionButton>
-                  </ActionButtons>
-                </CardBody>
-              </Card>
+              {tournament.publishedEventId && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Renaissance Events</CardTitle>
+                  </CardHeader>
+                  <CardBody>
+                    <InfoBox>
+                      This tournament is published to Renaissance Events (ID: {tournament.publishedEventId}).
+                      Events are automatically published when registration opens.
+                    </InfoBox>
+                    <ActionButtons>
+                      <ActionButton 
+                        onClick={publishToRenaissanceEvents} 
+                        disabled={actionLoading}
+                      >
+                        Sync Changes to Renaissance Events
+                      </ActionButton>
+                    </ActionButtons>
+                  </CardBody>
+                </Card>
+              )}
 
               <Card>
                 <CardHeader>

@@ -12,6 +12,8 @@ import {
   isUserTournamentOrganizer,
 } from '@/db/tournament';
 
+const RENAISSANCE_EVENTS_API_URL = process.env.RENAISSANCE_EVENTS_API_URL || 'http://localhost:3002';
+
 /**
  * GET /api/tournaments/[id] - Get tournament details
  * PATCH /api/tournaments/[id] - Update tournament (organizer only)
@@ -211,6 +213,47 @@ async function handlePatch(
       id: tournamentId,
       updates: Object.keys(updates),
     });
+
+    // Sync changes to Renaissance Events if tournament is published and open/live
+    const liveStatuses = ['registration', 'ready', 'in_progress'];
+    if (updatedTournament?.publishedEventId && liveStatuses.includes(updatedTournament.status)) {
+      try {
+        const game = await getGameById(updatedTournament.gameId);
+        
+        const eventData = {
+          name: updatedTournament.name,
+          location: updatedTournament.location || 'TBD',
+          startTime: updatedTournament.startTime?.toISOString() || new Date().toISOString(),
+          endTime: updatedTournament.endTime?.toISOString() || updatedTournament.startTime?.toISOString() || new Date().toISOString(),
+          imageUrl: '',
+          metadata: {
+            description: updatedTournament.description || `${game?.name || 'Game'} tournament`,
+            tournamentId: updatedTournament.id,
+            gameType: game?.type,
+            gameName: game?.name,
+            entryFee: updatedTournament.entryFee,
+            prizePool: updatedTournament.prizePool,
+            maxParticipants: updatedTournament.maxParticipants,
+            status: updatedTournament.status,
+          },
+          tags: game ? [game.type, 'tournament', 'games'] : ['tournament', 'games'],
+          eventType: 'renaissance',
+          source: 'renaissance-games',
+          sourceId: updatedTournament.id,
+        };
+
+        await fetch(`${RENAISSANCE_EVENTS_API_URL}/api/events/${updatedTournament.publishedEventId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData),
+        });
+        
+        console.log('✅ Synced tournament changes to Renaissance Events');
+      } catch (syncError) {
+        console.error('Failed to sync to Renaissance Events:', syncError);
+        // Don't fail the update if sync fails
+      }
+    }
 
     return res.status(200).json({
       success: true,
