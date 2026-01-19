@@ -24,6 +24,7 @@ interface Tournament {
   location: string | null;
   startTime: string | null;
   registrationDeadline: string | null;
+  publishedEventId: number | null;
 }
 
 interface Game {
@@ -751,6 +752,30 @@ export default function TournamentAdminPage() {
     });
   };
 
+  const publishToRenaissanceEvents = async () => {
+    setActionLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/tournaments/${id}/publish-event`, {
+        method: 'POST',
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to publish event');
+
+      setMessage({ 
+        type: 'success', 
+        text: data.message || 'Published to Renaissance Events' 
+      });
+      fetchData();
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to publish' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '—';
     return utcToEstDisplay(dateString) || '—';
@@ -1105,6 +1130,29 @@ export default function TournamentAdminPage() {
                         Complete Tournament
                       </ActionButton>
                     )}
+                  </ActionButtons>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Renaissance Events</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  <InfoBox>
+                    {tournament.publishedEventId 
+                      ? `This tournament is published to Renaissance Events (ID: ${tournament.publishedEventId})`
+                      : 'Publish this tournament to the Renaissance Events calendar to increase visibility.'
+                    }
+                  </InfoBox>
+                  <ActionButtons>
+                    <ActionButton 
+                      $variant="primary" 
+                      onClick={publishToRenaissanceEvents} 
+                      disabled={actionLoading}
+                    >
+                      {tournament.publishedEventId ? 'Update in Renaissance Events' : 'Publish to Renaissance Events'}
+                    </ActionButton>
                   </ActionButtons>
                 </CardBody>
               </Card>
