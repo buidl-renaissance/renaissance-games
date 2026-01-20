@@ -1207,31 +1207,53 @@ export default function TournamentDetailPage() {
       lines.push(`📍 ${tournament.location}`);
     }
     
-    // Schedule section
-    lines.push('');
+    // Schedule section - collect and sort times chronologically
+    const scheduleItems: { date: Date; emoji: string; label: string; display: string }[] = [];
     
-    // Registration deadline
     if (tournament?.registrationDeadline) {
-      const regDeadline = utcToEstDisplay(tournament.registrationDeadline);
-      if (regDeadline) {
-        lines.push(`📝 Registration closes: ${regDeadline}`);
+      const display = utcToEstDisplay(tournament.registrationDeadline);
+      if (display) {
+        scheduleItems.push({
+          date: new Date(tournament.registrationDeadline),
+          emoji: '📝',
+          label: 'Registration closes',
+          display,
+        });
       }
     }
     
-    // Doors open time
     if (tournament?.doorsOpenTime) {
-      const doorsOpen = utcToEstDisplay(tournament.doorsOpenTime);
-      if (doorsOpen) {
-        lines.push(`🚪 Doors open: ${doorsOpen}`);
+      const display = utcToEstDisplay(tournament.doorsOpenTime);
+      if (display) {
+        scheduleItems.push({
+          date: new Date(tournament.doorsOpenTime),
+          emoji: '🚪',
+          label: 'Doors open',
+          display,
+        });
       }
     }
     
-    // Tournament start time
     if (tournament?.startTime) {
-      const startTime = utcToEstDisplay(tournament.startTime);
-      if (startTime) {
-        lines.push(`🏆 Tournament starts: ${startTime}`);
+      const display = utcToEstDisplay(tournament.startTime);
+      if (display) {
+        scheduleItems.push({
+          date: new Date(tournament.startTime),
+          emoji: '🏆',
+          label: 'Tournament starts',
+          display,
+        });
       }
+    }
+    
+    // Sort by date and add to lines
+    if (scheduleItems.length > 0) {
+      lines.push('');
+      scheduleItems
+        .sort((a, b) => a.date.getTime() - b.date.getTime())
+        .forEach(item => {
+          lines.push(`${item.emoji} ${item.label}: ${item.display}`);
+        });
     }
     
     // Entry fee and prize
