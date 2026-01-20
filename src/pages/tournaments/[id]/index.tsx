@@ -1202,21 +1202,41 @@ export default function TournamentDetailPage() {
       lines.push(`🎯 ${title}`);
     }
     
-    // Date and time
-    if (tournament?.startTime) {
-      const dateStr = utcToEstDisplay(tournament.startTime);
-      if (dateStr) {
-        lines.push(`📅 ${dateStr}`);
-      }
-    }
-    
     // Location
     if (tournament?.location) {
       lines.push(`📍 ${tournament.location}`);
     }
     
+    // Schedule section
+    lines.push('');
+    
+    // Registration deadline
+    if (tournament?.registrationDeadline) {
+      const regDeadline = utcToEstDisplay(tournament.registrationDeadline);
+      if (regDeadline) {
+        lines.push(`📝 Registration closes: ${regDeadline}`);
+      }
+    }
+    
+    // Doors open time
+    if (tournament?.doorsOpenTime) {
+      const doorsOpen = utcToEstDisplay(tournament.doorsOpenTime);
+      if (doorsOpen) {
+        lines.push(`🚪 Doors open: ${doorsOpen}`);
+      }
+    }
+    
+    // Tournament start time
+    if (tournament?.startTime) {
+      const startTime = utcToEstDisplay(tournament.startTime);
+      if (startTime) {
+        lines.push(`🏆 Tournament starts: ${startTime}`);
+      }
+    }
+    
     // Entry fee and prize
     if (tournament?.entryFee || tournament?.prizePool) {
+      lines.push('');
       const entry = tournament.entryFee ? `$${(tournament.entryFee / 100).toFixed(0)} entry` : 'Free entry';
       const prize = tournament.prizePool ? `$${(tournament.prizePool / 100).toFixed(0)} prize pool` : '';
       lines.push(`💰 ${entry}${prize ? ` · ${prize}` : ''}`);
