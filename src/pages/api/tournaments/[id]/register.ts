@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { getUserById } from '@/db/user';
+import { getUserById, isOrganizer } from '@/db/user';
 import { getGameById } from '@/db/game';
 import {
   getTournamentById,
@@ -7,6 +7,7 @@ import {
   isUserRegistered,
   getParticipantCount,
   getUserParticipant,
+  getParticipantById,
   withdrawParticipant,
   createTeam,
   addTeamMember,
@@ -14,6 +15,8 @@ import {
   updateTeamComplete,
   getUserTeamInTournament,
   withdrawTeamMember,
+  isUserTournamentOrganizer,
+  deleteTeamAndRegistration,
 } from '@/db/tournament';
 
 /**
@@ -23,6 +26,9 @@ import {
  * Body for team games (join team): { teamId: string }
  * 
  * DELETE /api/tournaments/[id]/register - Withdraw from tournament
+ * Query params for admin/organizer deletion:
+ *   ?participantId=xxx - Delete a specific participant
+ *   ?teamId=xxx - Delete an entire team and its registration
  */
 export default async function handler(
   req: NextApiRequest,
@@ -67,8 +73,13 @@ async function handlePost(
       return res.status(404).json({ error: 'Tournament not found' });
     }
 
-    // Check if registration is open
-    if (tournament.status !== 'registration' && tournament.status !== 'ready') {
+    // Check if registration is open (allow organizers to register for draft tournaments)
+    const canUserRegister = tournament.status === 'registration' || tournament.status === 'ready' ||
+      (tournament.status === 'draft' && (
+        await isUserTournamentOrganizer(tournamentId, user.id) || isOrganizer(user)
+      ));
+    
+    if (!canUserRegister) {
       return res.status(400).json({
         error: 'Registration is not currently open for this tournament',
       });
@@ -247,16 +258,77 @@ async function handleDelete(
       return res.status(404).json({ error: 'Tournament not found' });
     }
 
-    // Check if tournament is in a state where withdrawal is allowed
-    if (tournament.status === 'in_progress') {
-      return res.status(400).json({
-        error: 'Cannot withdraw from a tournament that has already started',
-      });
-    }
-
+    // Check if tournament is in a state where deletion/withdrawal is allowed
     if (tournament.status === 'completed' || tournament.status === 'cancelled') {
       return res.status(400).json({
         error: 'Tournament is already finished',
+      });
+    }
+
+    // Check for admin deletion query params
+    const { participantId, teamId } = req.query;
+
+    // If admin params provided, verify organizer permissions
+    if (participantId || teamId) {
+      const isAuthorized = user.role === 'admin' || 
+        user.id === tournament.organizerId ||
+        await isUserTournamentOrganizer(tournamentId, user.id);
+      
+      if (!isAuthorized) {
+        return res.status(403).json({ error: 'Not authorized to remove participants' });
+      }
+
+      // Handle admin team deletion
+      if (teamId && typeof teamId === 'string') {
+        const result = await deleteTeamAndRegistration(tournamentId, teamId);
+        
+        if (!result.success) {
+          return res.status(400).json({ error: result.message });
+        }
+
+        console.log('✅ Team deleted by admin:', {
+          tournamentId,
+          teamId,
+          deletedBy: user.id,
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: result.message,
+        });
+      }
+
+      // Handle admin participant deletion
+      if (participantId && typeof participantId === 'string') {
+        const participant = await getParticipantById(participantId);
+        
+        if (!participant) {
+          return res.status(404).json({ error: 'Participant not found' });
+        }
+
+        if (participant.tournamentId !== tournamentId) {
+          return res.status(400).json({ error: 'Participant is not in this tournament' });
+        }
+
+        await withdrawParticipant(participantId);
+
+        console.log('✅ Participant removed by admin:', {
+          tournamentId,
+          participantId,
+          removedBy: user.id,
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: 'Participant removed from tournament',
+        });
+      }
+    }
+
+    // Self-withdrawal: Check if tournament has started (admins can remove during in_progress)
+    if (tournament.status === 'in_progress') {
+      return res.status(400).json({
+        error: 'Cannot withdraw from a tournament that has already started',
       });
     }
 

@@ -599,6 +599,37 @@ const EmptyText = styled.p`
   font-style: italic;
 `;
 
+// Remove Button for admin actions
+const RemoveButton = styled.button`
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  border-radius: 4px;
+  background: transparent;
+  color: ${({ theme }) => theme.textMuted};
+  border: 1px solid ${({ theme }) => theme.border};
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: 0.5rem;
+  
+  &:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.1);
+    color: ${({ theme }) => theme.danger};
+    border-color: ${({ theme }) => theme.danger};
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const ParticipantActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
 // Access Denied
 const AccessDenied = styled.div`
   text-align: center;
@@ -808,6 +839,56 @@ export default function TournamentAdminPage() {
       if (prev.length < (game?.playersPerTeam || 2)) return [...prev, participantId];
       return prev;
     });
+  };
+
+  const handleDeleteTeam = async (teamId: string, teamName: string) => {
+    if (!confirm(`Remove team "${teamName}" from the tournament? This cannot be undone.`)) {
+      return;
+    }
+
+    setActionLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/tournaments/${id}/register?teamId=${teamId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to remove team');
+
+      setMessage({ type: 'success', text: data.message || 'Team removed' });
+      fetchData();
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to remove team' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteParticipant = async (participantId: string, displayName: string) => {
+    if (!confirm(`Remove "${displayName}" from the tournament? This cannot be undone.`)) {
+      return;
+    }
+
+    setActionLoading(true);
+    setMessage(null);
+
+    try {
+      const res = await fetch(`/api/tournaments/${id}/register?participantId=${participantId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to remove participant');
+
+      setMessage({ type: 'success', text: data.message || 'Participant removed' });
+      fetchData();
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to remove participant' });
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const publishToRenaissanceEvents = async () => {
@@ -1043,9 +1124,20 @@ export default function TournamentAdminPage() {
                                 <ParticipantRank>{index + 1}</ParticipantRank>
                                 <ParticipantName>{team.name}</ParticipantName>
                               </ParticipantInfo>
-                              <ParticipantBadge $status={team.isComplete ? 'registered' : 'forming'}>
-                                {team.isComplete ? 'Ready' : 'Forming'}
-                              </ParticipantBadge>
+                              <ParticipantActions>
+                                <ParticipantBadge $status={team.isComplete ? 'registered' : 'forming'}>
+                                  {team.isComplete ? 'Ready' : 'Forming'}
+                                </ParticipantBadge>
+                                {!isLocked && (
+                                  <RemoveButton
+                                    onClick={() => handleDeleteTeam(team.id, team.name)}
+                                    disabled={actionLoading}
+                                    title="Remove team"
+                                  >
+                                    Remove
+                                  </RemoveButton>
+                                )}
+                              </ParticipantActions>
                             </TeamHeader>
                             {team.members && team.members.length > 0 && (
                               <TeamMembersList>
@@ -1073,7 +1165,21 @@ export default function TournamentAdminPage() {
                                 {p.user?.displayName || p.user?.username || `Player ${p.userId?.slice(0, 6)}`}
                               </ParticipantName>
                             </ParticipantInfo>
-                            <ParticipantBadge $status={p.status}>Entered</ParticipantBadge>
+                            <ParticipantActions>
+                              <ParticipantBadge $status={p.status}>Entered</ParticipantBadge>
+                              {!isLocked && (
+                                <RemoveButton
+                                  onClick={() => handleDeleteParticipant(
+                                    p.id,
+                                    p.user?.displayName || p.user?.username || `Player ${p.userId?.slice(0, 6)}`
+                                  )}
+                                  disabled={actionLoading}
+                                  title="Remove participant"
+                                >
+                                  Remove
+                                </RemoveButton>
+                              )}
+                            </ParticipantActions>
                           </ParticipantRow>
                         ))}
                       </ParticipantList>
@@ -1142,7 +1248,21 @@ export default function TournamentAdminPage() {
                               {p.user?.displayName || p.user?.username || `Player ${p.userId?.slice(0, 6)}`}
                             </ParticipantName>
                           </ParticipantInfo>
-                          <ParticipantBadge $status="waitlist">Waitlist</ParticipantBadge>
+                          <ParticipantActions>
+                            <ParticipantBadge $status="waitlist">Waitlist</ParticipantBadge>
+                            {!isLocked && (
+                              <RemoveButton
+                                onClick={() => handleDeleteParticipant(
+                                  p.id,
+                                  p.user?.displayName || p.user?.username || `Player ${p.userId?.slice(0, 6)}`
+                                )}
+                                disabled={actionLoading}
+                                title="Remove from waitlist"
+                              >
+                                Remove
+                              </RemoveButton>
+                            )}
+                          </ParticipantActions>
                         </ParticipantRow>
                       ))}
                     </ParticipantList>

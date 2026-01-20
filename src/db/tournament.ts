@@ -387,12 +387,40 @@ export async function withdrawTeamMember(
     return { success: false, message: 'User is not on a team in this tournament' };
   }
 
-  // Get all team members
-  const members = await getTeamMembers(team.id);
   const isCaptain = team.captainId === userId;
-  const memberCount = members.length;
 
-  // Remove the user from the team
+  // If the captain withdraws, disband the entire team
+  // This handles the case where the captain registered their partner -
+  // the partner didn't explicitly join, so they should be withdrawn too
+  if (isCaptain) {
+    // Find and withdraw any participant record for this team
+    const participantResults = await db
+      .select()
+      .from(tournamentParticipants)
+      .where(
+        and(
+          eq(tournamentParticipants.tournamentId, tournamentId),
+          eq(tournamentParticipants.teamId, team.id)
+        )
+      )
+      .limit(1);
+    
+    if (participantResults.length > 0) {
+      await withdrawParticipant(participantResults[0].id);
+    }
+    
+    // Delete all team members
+    await db
+      .delete(teamMembers)
+      .where(eq(teamMembers.teamId, team.id));
+    
+    // Delete the team
+    await db.delete(teams).where(eq(teams.id, team.id));
+    
+    return { success: true, message: 'Team disbanded' };
+  }
+
+  // Non-captain withdrawing: only remove themselves from the team
   await db
     .delete(teamMembers)
     .where(
@@ -402,29 +430,31 @@ export async function withdrawTeamMember(
       )
     );
 
-  // If user was the only member, or was captain and team is now empty, delete the team
-  if (memberCount <= 1) {
-    // If team had a participant record, withdraw it
-    const participant = await getUserTeamParticipant(tournamentId, userId);
-    if (participant) {
-      await withdrawParticipant(participant.id);
+  // Check remaining members AFTER the deletion
+  const remainingMembers = await getTeamMembers(team.id);
+
+  // If no members remain, delete the team entirely
+  if (remainingMembers.length === 0) {
+    // Find and withdraw any participant record for this team
+    const participantResults = await db
+      .select()
+      .from(tournamentParticipants)
+      .where(
+        and(
+          eq(tournamentParticipants.tournamentId, tournamentId),
+          eq(tournamentParticipants.teamId, team.id)
+        )
+      )
+      .limit(1);
+    
+    if (participantResults.length > 0) {
+      await withdrawParticipant(participantResults[0].id);
     }
     
     // Delete the team
     await db.delete(teams).where(eq(teams.id, team.id));
     
     return { success: true, message: 'Team disbanded' };
-  }
-
-  // If user was captain, transfer captaincy to another member
-  if (isCaptain) {
-    const remainingMembers = members.filter(m => m.userId !== userId);
-    if (remainingMembers.length > 0) {
-      await db
-        .update(teams)
-        .set({ captainId: remainingMembers[0].userId, updatedAt: new Date() })
-        .where(eq(teams.id, team.id));
-    }
   }
 
   // If team was complete, it's no longer complete and we need to withdraw the participant
@@ -449,6 +479,50 @@ export async function withdrawTeamMember(
   }
 
   return { success: true, message: 'Withdrawn from team' };
+}
+
+/**
+ * Delete an entire team and its registration (for admin/organizer use)
+ */
+export async function deleteTeamAndRegistration(
+  tournamentId: string,
+  teamId: string
+): Promise<{ success: boolean; message: string }> {
+  // Verify the team exists and belongs to this tournament
+  const team = await getTeamById(teamId);
+  if (!team) {
+    return { success: false, message: 'Team not found' };
+  }
+
+  if (team.tournamentId !== tournamentId) {
+    return { success: false, message: 'Team is not in this tournament' };
+  }
+
+  // Find and withdraw any participant record for this team
+  const participantResults = await db
+    .select()
+    .from(tournamentParticipants)
+    .where(
+      and(
+        eq(tournamentParticipants.tournamentId, tournamentId),
+        eq(tournamentParticipants.teamId, teamId)
+      )
+    )
+    .limit(1);
+  
+  if (participantResults.length > 0) {
+    await withdrawParticipant(participantResults[0].id);
+  }
+  
+  // Delete all team members
+  await db
+    .delete(teamMembers)
+    .where(eq(teamMembers.teamId, teamId));
+  
+  // Delete the team
+  await db.delete(teams).where(eq(teams.id, teamId));
+  
+  return { success: true, message: `Team "${team.name}" has been removed` };
 }
 
 // ============================================

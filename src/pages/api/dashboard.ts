@@ -34,26 +34,36 @@ async function getUserTournamentIds(userId: string): Promise<string[]> {
     .from(teamMembers)
     .where(eq(teamMembers.userId, userId));
 
-  // Get tournament IDs from teams (excluding withdrawn teams)
+  // Get tournament IDs from teams
   const teamIds = teamMemberships.map(tm => tm.teamId);
   const teamTournamentIds: string[] = [];
   
   if (teamIds.length > 0) {
     for (const teamId of teamIds) {
-      // Check if team's tournament participant record exists and is not withdrawn
-      const participantRecord = await db
-        .select({ tournamentId: tournamentParticipants.tournamentId })
-        .from(tournamentParticipants)
-        .where(
-          and(
-            eq(tournamentParticipants.teamId, teamId),
-            ne(tournamentParticipants.status, 'withdrawn' as ParticipantStatus)
-          )
-        )
+      // First, get the team's tournament ID directly from the teams table
+      const teamRecord = await db
+        .select({ tournamentId: teams.tournamentId })
+        .from(teams)
+        .where(eq(teams.id, teamId))
         .limit(1);
       
-      if (participantRecord.length > 0) {
-        teamTournamentIds.push(participantRecord[0].tournamentId);
+      if (teamRecord.length > 0) {
+        // Check if team has a withdrawn participant record
+        const withdrawnRecord = await db
+          .select({ id: tournamentParticipants.id })
+          .from(tournamentParticipants)
+          .where(
+            and(
+              eq(tournamentParticipants.teamId, teamId),
+              eq(tournamentParticipants.status, 'withdrawn' as ParticipantStatus)
+            )
+          )
+          .limit(1);
+        
+        // Only include if not withdrawn (or if no participant record exists yet - incomplete team)
+        if (withdrawnRecord.length === 0) {
+          teamTournamentIds.push(teamRecord[0].tournamentId);
+        }
       }
     }
   }

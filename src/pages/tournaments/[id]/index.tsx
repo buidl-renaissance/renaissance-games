@@ -118,12 +118,6 @@ const RegDeadline = styled.div`
   margin-top: 0.5rem;
 `;
 
-const StartTime = styled.div`
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.textSecondary};
-  margin-top: 0.25rem;
-`;
-
 const EventDetails = styled.div`
   display: flex;
   flex-direction: column;
@@ -165,6 +159,13 @@ const HeroMeta = styled.div`
   border-top: 1px solid ${({ theme }) => theme.border};
 `;
 
+const HeroHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+`;
+
 const GameChip = styled.span`
   display: inline-flex;
   align-items: center;
@@ -176,6 +177,156 @@ const GameChip = styled.span`
   color: ${({ theme }) => theme.accent};
   border-radius: 4px;
   text-transform: capitalize;
+`;
+
+const HeroHeaderRight = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const ShareIconButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 4px;
+  color: ${({ theme }) => theme.textMuted};
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    color: ${({ theme }) => theme.text};
+    border-color: ${({ theme }) => theme.textMuted};
+    background: ${({ theme }) => theme.backgroundAlt};
+  }
+  
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+`;
+
+const EditLink = styled(Link)`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.textMuted};
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    color: ${({ theme }) => theme.text};
+    background: ${({ theme }) => theme.backgroundAlt};
+  }
+`;
+
+const HeroActionsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid ${({ theme }) => theme.border};
+`;
+
+const HeroActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+`;
+
+const HeroMessage = styled.div<{ $type: 'success' | 'error' }>`
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  text-align: center;
+  box-sizing: border-box;
+  
+  ${({ $type, theme }) => $type === 'success' ? `
+    background: rgba(34, 197, 94, 0.1);
+    color: ${theme.success};
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  ` : `
+    background: rgba(239, 68, 68, 0.1);
+    color: ${theme.danger};
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  `}
+`;
+
+const HeroRegisterButton = styled.button`
+  flex: 1;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.875rem 1.5rem;
+  background: ${({ theme }) => theme.accent};
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.accentHover};
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const HeroWithdrawButton = styled.button`
+  flex: 1;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.875rem 1.5rem;
+  background: transparent;
+  color: ${({ theme }) => theme.textSecondary};
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover:not(:disabled) {
+    border-color: ${({ theme }) => theme.danger};
+    color: ${({ theme }) => theme.danger};
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const HeroRegisteredBadge = styled.div`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.success};
+  box-sizing: border-box;
+`;
+
+const HeroLoginPrompt = styled.div`
+  flex: 1;
+  font-size: 0.9rem;
+  color: ${({ theme }) => theme.textMuted};
+  text-align: center;
+  padding: 0.875rem;
 `;
 
 const HeroMetaItem = styled.div`
@@ -202,8 +353,12 @@ const HeroMetaValue = styled.span`
 // Content Grid
 const ContentGrid = styled.div`
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr;
   gap: 2rem;
+  
+  &:has(> :nth-child(2)) {
+    grid-template-columns: 1fr 280px;
+  }
   
   @media (max-width: 800px) {
     grid-template-columns: 1fr;
@@ -385,67 +540,6 @@ const ActionCard = styled(Card)<{ $accent?: boolean }>`
   `}
 `;
 
-const EnterButton = styled.button`
-  width: 100%;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.95rem;
-  font-weight: 500;
-  padding: 0.875rem 1.5rem;
-  background: ${({ theme }) => theme.accent};
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  
-  &:hover:not(:disabled) {
-    background: ${({ theme }) => theme.accentHover};
-    transform: translateY(-1px);
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const WithdrawButton = styled.button`
-  width: 100%;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 0.75rem 1.25rem;
-  background: transparent;
-  color: ${({ theme }) => theme.textSecondary};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  
-  &:hover:not(:disabled) {
-    border-color: ${({ theme }) => theme.danger};
-    color: ${({ theme }) => theme.danger};
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const RegisteredBadge = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  border-radius: 6px;
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.success};
-  margin-bottom: 1rem;
-`;
-
 const AdminButton = styled(Link)`
   display: block;
   text-align: center;
@@ -467,30 +561,6 @@ const AdminButton = styled(Link)`
   }
 `;
 
-const ShareButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: ${({ theme }) => theme.textSecondary};
-  padding: 0.75rem 1rem;
-  background: ${({ theme }) => theme.backgroundAlt};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 6px;
-  margin-top: 0.75rem;
-  cursor: pointer;
-  transition: all 0.15s ease;
-
-  &:hover {
-    background: ${({ theme }) => theme.surfaceHover};
-    color: ${({ theme }) => theme.text};
-    border-color: ${({ theme }) => theme.textMuted};
-  }
-`;
 
 // Team Creation/Join Components
 const TeamSection = styled.div`
@@ -521,29 +591,6 @@ const TeamInput = styled.input`
   
   &::placeholder {
     color: ${({ theme }) => theme.textMuted};
-  }
-`;
-
-const TeamToggle = styled.div`
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-`;
-
-const ToggleButton = styled.button<{ $active: boolean }>`
-  flex: 1;
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 0.5rem;
-  background: ${({ theme, $active }) => $active ? theme.accentMuted : 'transparent'};
-  color: ${({ theme, $active }) => $active ? theme.accent : theme.textSecondary};
-  border: 1px solid ${({ theme, $active }) => $active ? theme.accent : theme.border};
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  
-  &:hover {
-    background: ${({ theme }) => theme.surfaceHover};
   }
 `;
 
@@ -603,6 +650,104 @@ const NoTeamsText = styled.p`
   font-style: italic;
 `;
 
+// Team Registration Modal
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+`;
+
+const Modal = styled.div`
+  background: ${({ theme }) => theme.background};
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid ${({ theme }) => theme.border};
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid ${({ theme }) => theme.border};
+`;
+
+const ModalTitle = styled.h3`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.text};
+  margin: 0;
+`;
+
+const ModalClose = styled.button`
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: ${({ theme }) => theme.textMuted};
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  
+  &:hover {
+    color: ${({ theme }) => theme.text};
+  }
+`;
+
+const ModalBody = styled.div`
+  padding: 1.25rem;
+`;
+
+const ModalButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+  width: 100%;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.875rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 0.75rem;
+  
+  ${({ $variant, theme }) => $variant === 'primary' ? `
+    background: ${theme.accent};
+    color: white;
+    border: none;
+    
+    &:hover:not(:disabled) {
+      background: ${theme.accentHover};
+    }
+  ` : `
+    background: transparent;
+    color: ${theme.text};
+    border: 1px solid ${theme.border};
+    
+    &:hover:not(:disabled) {
+      background: ${theme.surfaceHover};
+      border-color: ${theme.textMuted};
+    }
+  `}
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+`;
+
 const BracketLink = styled(Link)`
   display: flex;
   align-items: center;
@@ -657,7 +802,8 @@ export default function TournamentDetailPage() {
   const [success, setSuccess] = useState<string | null>(null);
   
   // Team registration state
-  const [teamMode, setTeamMode] = useState<'create' | 'join'>('create');
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [teamMode, setTeamMode] = useState<'select' | 'create' | 'join'>('select');
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   
@@ -687,7 +833,9 @@ export default function TournamentDetailPage() {
     participants.some(p => p.userId === user.id) || 
     userTeam !== undefined
   );
-  const canRegister = tournament?.status === 'registration' || tournament?.status === 'ready';
+  // Allow organizers to register even when tournament is in draft (for testing)
+  const canRegister = tournament?.status === 'registration' || tournament?.status === 'ready' || 
+    (tournament?.status === 'draft' && isOrganizer);
   const isLive = tournament?.status === 'in_progress';
   
   // Teams that are looking for members (not complete)
@@ -779,6 +927,9 @@ export default function TournamentDetailPage() {
           setSuccess(data.message || 'Joined team successfully!');
           setSelectedTeamId(null);
         }
+        // Close modal and reset state
+        setShowTeamModal(false);
+        setTeamMode('select');
       } else {
         setSuccess(data.isWaitlisted 
           ? 'Added to waitlist. Awaiting confirmation.'
@@ -887,7 +1038,21 @@ export default function TournamentDetailPage() {
             <TournamentImage src={tournament.imageUrl} alt={tournament.name} />
           )}
           
-          <GameChip>{game?.name || 'Tournament'}</GameChip>
+          <HeroHeader>
+            <GameChip>{game?.name || 'Tournament'}</GameChip>
+            <HeroHeaderRight>
+              <ShareIconButton onClick={handleShare} title="Share">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                  <polyline points="16 6 12 2 8 6" />
+                  <line x1="12" y1="2" x2="12" y2="15" />
+                </svg>
+              </ShareIconButton>
+              {isOrganizer && (
+                <EditLink href={`/tournaments/${id}/edit`}>Edit</EditLink>
+              )}
+            </HeroHeaderRight>
+          </HeroHeader>
           
           <Title>{tournament.name}</Title>
           
@@ -939,6 +1104,64 @@ export default function TournamentDetailPage() {
               </HeroMetaValue>
             </HeroMetaItem>
           </HeroMeta>
+
+          {/* Action buttons */}
+          <HeroActionsContainer>
+            <HeroActions>
+              {!user ? (
+                canRegister ? (
+                  <HeroRegisterButton onClick={() => setShowRegistrationModal(true)}>
+                    Register
+                  </HeroRegisterButton>
+                ) : (
+                  <HeroLoginPrompt>Registration closed</HeroLoginPrompt>
+                )
+              ) : isRegistered ? (
+                canRegister && (
+                  <HeroWithdrawButton 
+                    onClick={handleWithdraw} 
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? '...' : 'Withdraw'}
+                  </HeroWithdrawButton>
+                )
+              ) : canRegister ? (
+                game?.isTeamGame ? (
+                  <HeroRegisterButton 
+                    onClick={() => {
+                      setShowTeamModal(true);
+                      setTeamMode('select');
+                    }}
+                    disabled={actionLoading}
+                  >
+                    Register
+                  </HeroRegisterButton>
+                ) : (
+                  <HeroRegisterButton 
+                    onClick={handleRegister} 
+                    disabled={actionLoading}
+                  >
+                    {actionLoading 
+                      ? 'Processing...' 
+                      : participantCount >= tournament.maxParticipants 
+                        ? 'Join Waitlist' 
+                        : 'Enter Tournament'
+                    }
+                  </HeroRegisterButton>
+                )
+              ) : (
+                <HeroLoginPrompt>Registration closed</HeroLoginPrompt>
+              )}
+            </HeroActions>
+            
+            {isRegistered && (
+              <HeroRegisteredBadge>
+                ✓ {userTeam ? `Team: ${userTeam.name}${userTeam.isComplete ? '' : ' (waiting for partner)'}` : 'Registered'}
+              </HeroRegisteredBadge>
+            )}
+            {error && <HeroMessage $type="error">{error}</HeroMessage>}
+            {success && <HeroMessage $type="success">{success}</HeroMessage>}
+          </HeroActionsContainer>
         </HeroSection>
 
         <ContentGrid>
@@ -1047,131 +1270,113 @@ export default function TournamentDetailPage() {
 
           </MainColumn>
 
-          <Sidebar>
-            <ActionCard $accent={canRegister && !isRegistered}>
-              <CardBody>
-                {error && <Message $type="error">{error}</Message>}
-                {success && <Message $type="success">{success}</Message>}
-                
-                {!user ? (
-                  canRegister ? (
-                    <EnterButton onClick={() => setShowRegistrationModal(true)}>
-                      Register Now
-                    </EnterButton>
-                  ) : (
-                    <EmptyText style={{ padding: 0 }}>Registration closed</EmptyText>
-                  )
-                ) : isRegistered ? (
-                  <>
-                    <RegisteredBadge>
-                      ✓ {userTeam ? `Team: ${userTeam.name}${userTeam.isComplete ? '' : ' (waiting for partner)'}` : 'You have entered this tournament'}
-                    </RegisteredBadge>
-                    {canRegister && (
-                      <WithdrawButton 
-                        onClick={handleWithdraw} 
-                        disabled={actionLoading}
-                      >
-                        {actionLoading ? 'Processing...' : 'Withdraw'}
-                      </WithdrawButton>
-                    )}
-                  </>
-                ) : canRegister ? (
-                  <>
-                    {/* Team game registration */}
-                    {game?.isTeamGame && (
-                      <>
-                        <TeamToggle>
-                          <ToggleButton 
-                            $active={teamMode === 'create'}
-                            onClick={() => setTeamMode('create')}
-                          >
-                            Create Team
-                          </ToggleButton>
-                          <ToggleButton 
-                            $active={teamMode === 'join'}
-                            onClick={() => setTeamMode('join')}
-                          >
-                            Join Team
-                          </ToggleButton>
-                        </TeamToggle>
-                        
-                        {teamMode === 'create' ? (
-                          <TeamSection>
-                            <TeamLabel>Team Name</TeamLabel>
-                            <TeamInput
-                              type="text"
-                              placeholder="Enter team name..."
-                              value={newTeamName}
-                              onChange={(e) => setNewTeamName(e.target.value)}
-                              maxLength={30}
-                            />
-                          </TeamSection>
-                        ) : (
-                          <TeamSection>
-                            <TeamLabel>Join an open team</TeamLabel>
-                            {openTeams.length > 0 ? (
-                              <OpenTeamList>
-                                {openTeams.map((team) => (
-                                  <OpenTeamItem
-                                    key={team.id}
-                                    $selected={selectedTeamId === team.id}
-                                    onClick={() => setSelectedTeamId(selectedTeamId === team.id ? null : team.id)}
-                                  >
-                                    <TeamInfo>
-                                    <TeamName>{team.name}</TeamName>
-                                      <TeamMembers>
-                                        {team.members?.map((m) => 
-                                          m.user?.displayName || m.user?.username || 'Unknown'
-                                        ).join(', ') || 'No members yet'}
-                                      </TeamMembers>
-                                    </TeamInfo>
-                                    <TeamMeta>
-                                      {team.members?.length || 1}/{game.playersPerTeam}
-                                    </TeamMeta>
-                                  </OpenTeamItem>
-                                ))}
-                              </OpenTeamList>
-                            ) : (
-                              <NoTeamsText>No teams looking for members</NoTeamsText>
-                            )}
-                          </TeamSection>
-                        )}
-                      </>
-                    )}
-                    
-                    <EnterButton 
-                      onClick={handleRegister} 
-                      disabled={actionLoading || (game?.isTeamGame && teamMode === 'create' && !newTeamName.trim()) || (game?.isTeamGame && teamMode === 'join' && !selectedTeamId)}
-                    >
-                      {actionLoading 
-                        ? 'Processing...' 
-                        : game?.isTeamGame 
-                          ? (teamMode === 'create' ? 'Create Team' : 'Join Team')
-                          : (participantCount >= tournament.maxParticipants 
-                              ? 'Join Waitlist' 
-                              : 'Enter Tournament')
-                      }
-                    </EnterButton>
-                  </>
-                ) : (
-                  <EmptyText style={{ padding: 0 }}>Registration closed</EmptyText>
-                )}
-
-                <ShareButton onClick={handleShare}>
-                  Share Tournament
-                </ShareButton>
-
-                {isOrganizer && (
+          {isOrganizer && (
+            <Sidebar>
+              <ActionCard>
+                <CardBody>
                   <AdminButton href={`/tournaments/${id}/admin`}>
                     Manage Tournament
                   </AdminButton>
-                )}
-              </CardBody>
-            </ActionCard>
-
-          </Sidebar>
+                </CardBody>
+              </ActionCard>
+            </Sidebar>
+          )}
         </ContentGrid>
       </Main>
+
+      {/* Team Registration Modal */}
+      {showTeamModal && game?.isTeamGame && (
+        <ModalOverlay onClick={() => { setShowTeamModal(false); setTeamMode('select'); }}>
+          <Modal onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>
+                {teamMode === 'select' ? 'Register for Tournament' : 
+                 teamMode === 'create' ? 'Create a Team' : 'Join a Team'}
+              </ModalTitle>
+              <ModalClose onClick={() => { setShowTeamModal(false); setTeamMode('select'); }}>×</ModalClose>
+            </ModalHeader>
+            <ModalBody>
+              {error && <Message $type="error">{error}</Message>}
+              
+              {teamMode === 'select' ? (
+                <>
+                  <ModalButton $variant="primary" onClick={() => setTeamMode('create')}>
+                    Create a New Team
+                  </ModalButton>
+                  <ModalButton onClick={() => setTeamMode('join')}>
+                    Join an Existing Team
+                  </ModalButton>
+                </>
+              ) : teamMode === 'create' ? (
+                <>
+                  <TeamSection>
+                    <TeamLabel>Team Name</TeamLabel>
+                    <TeamInput
+                      type="text"
+                      placeholder="Enter your team name..."
+                      value={newTeamName}
+                      onChange={(e) => setNewTeamName(e.target.value)}
+                      maxLength={30}
+                      autoFocus
+                    />
+                  </TeamSection>
+                  <ModalButton 
+                    $variant="primary" 
+                    onClick={handleRegister}
+                    disabled={actionLoading || !newTeamName.trim()}
+                  >
+                    {actionLoading ? 'Creating...' : 'Create Team'}
+                  </ModalButton>
+                  <ModalButton onClick={() => setTeamMode('select')}>
+                    Back
+                  </ModalButton>
+                </>
+              ) : (
+                <>
+                  <TeamSection>
+                    <TeamLabel>Select a team to join</TeamLabel>
+                    {openTeams.length > 0 ? (
+                      <OpenTeamList>
+                        {openTeams.map((team) => (
+                          <OpenTeamItem
+                            key={team.id}
+                            $selected={selectedTeamId === team.id}
+                            onClick={() => setSelectedTeamId(selectedTeamId === team.id ? null : team.id)}
+                          >
+                            <TeamInfo>
+                              <TeamName>{team.name}</TeamName>
+                              <TeamMembers>
+                                {team.members?.map((m) => 
+                                  m.user?.displayName || m.user?.username || 'Unknown'
+                                ).join(', ') || 'No members yet'}
+                              </TeamMembers>
+                            </TeamInfo>
+                            <TeamMeta>
+                              {team.members?.length || 1}/{game.playersPerTeam}
+                            </TeamMeta>
+                          </OpenTeamItem>
+                        ))}
+                      </OpenTeamList>
+                    ) : (
+                      <NoTeamsText>No teams looking for members yet</NoTeamsText>
+                    )}
+                  </TeamSection>
+                  <ModalButton 
+                    $variant="primary" 
+                    onClick={handleRegister}
+                    disabled={actionLoading || !selectedTeamId}
+                  >
+                    {actionLoading ? 'Joining...' : 'Join Team'}
+                  </ModalButton>
+                  <ModalButton onClick={() => setTeamMode('select')}>
+                    Back
+                  </ModalButton>
+                </>
+              )}
+            </ModalBody>
+          </Modal>
+        </ModalOverlay>
+      )}
 
       {/* Registration Modal for non-logged-in users */}
       {tournament && (
