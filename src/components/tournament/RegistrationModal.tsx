@@ -21,6 +21,7 @@ interface SearchedUser {
   username: string | null;
   displayName: string | null;
   pfpUrl: string | null;
+  existingTeam?: { id: string; name: string } | null;
 }
 
 interface RegistrationModalProps {
@@ -269,21 +270,36 @@ const SearchResults = styled.div`
   margin-top: 0.75rem;
 `;
 
-const SearchResultItem = styled.button<{ $selected: boolean }>`
+const SearchResultItem = styled.button<{ $selected: boolean; $disabled?: boolean }>`
   display: flex;
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem;
-  background: ${({ theme, $selected }) => $selected ? theme.accentMuted : theme.backgroundAlt};
-  border: 1px solid ${({ theme, $selected }) => $selected ? theme.accent : theme.border};
+  background: ${({ theme, $selected, $disabled }) => 
+    $disabled ? theme.backgroundAlt : 
+    $selected ? theme.accentMuted : theme.backgroundAlt};
+  border: 1px solid ${({ theme, $selected, $disabled }) => 
+    $disabled ? theme.border : 
+    $selected ? theme.accent : theme.border};
   border-radius: 8px;
-  cursor: pointer;
+  cursor: ${({ $disabled }) => $disabled ? 'not-allowed' : 'pointer'};
   text-align: left;
   transition: all 0.15s ease;
+  opacity: ${({ $disabled }) => $disabled ? 0.6 : 1};
   
   &:hover {
-    border-color: ${({ theme }) => theme.textMuted};
+    border-color: ${({ theme, $disabled }) => $disabled ? theme.border : theme.textMuted};
   }
+`;
+
+const AlreadyRegisteredBadge = styled.span`
+  font-size: 0.65rem;
+  color: #ca8a04;
+  background: rgba(234, 179, 8, 0.15);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-left: auto;
 `;
 
 const Avatar = styled.div<{ $url?: string | null }>`
@@ -439,7 +455,7 @@ export function RegistrationModal({
     }
   }, [isOpen]);
 
-  // Search for users
+  // Search for users (filters out users already on a team in this tournament)
   const searchUsers = useCallback(async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
@@ -448,7 +464,8 @@ export function RegistrationModal({
     
     setSearching(true);
     try {
-      const res = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`);
+      const url = `/api/user/search?q=${encodeURIComponent(query)}&tournamentId=${tournament.id}`;
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         // Filter out the current user
@@ -460,7 +477,7 @@ export function RegistrationModal({
     } finally {
       setSearching(false);
     }
-  }, [userId]);
+  }, [userId, tournament.id]);
 
   // Debounced search
   useEffect(() => {
@@ -961,24 +978,35 @@ export function RegistrationModal({
                     
                     {searchResults.length > 0 && (
                       <SearchResults>
-                        {searchResults.map((user) => (
-                          <SearchResultItem
-                            key={user.id}
-                            type="button"
-                            $selected={selectedPartner?.id === user.id}
-                            onClick={() => setSelectedPartner(
-                              selectedPartner?.id === user.id ? null : user
-                            )}
-                          >
-                            <Avatar $url={user.pfpUrl}>
-                              {!user.pfpUrl && getInitials(user.displayName || user.username)}
-                            </Avatar>
-                            <UserInfo>
-                              <UserName>{user.displayName || user.username}</UserName>
-                              {user.username && <UserHandle>@{user.username}</UserHandle>}
-                            </UserInfo>
-                          </SearchResultItem>
-                        ))}
+                        {searchResults.map((user) => {
+                          const isOnTeam = !!user.existingTeam;
+                          return (
+                            <SearchResultItem
+                              key={user.id}
+                              type="button"
+                              $selected={selectedPartner?.id === user.id}
+                              $disabled={isOnTeam}
+                              onClick={() => {
+                                if (!isOnTeam) {
+                                  setSelectedPartner(selectedPartner?.id === user.id ? null : user);
+                                }
+                              }}
+                            >
+                              <Avatar $url={user.pfpUrl}>
+                                {!user.pfpUrl && getInitials(user.displayName || user.username)}
+                              </Avatar>
+                              <UserInfo>
+                                <UserName>{user.displayName || user.username}</UserName>
+                                {user.username && <UserHandle>@{user.username}</UserHandle>}
+                              </UserInfo>
+                              {isOnTeam && (
+                                <AlreadyRegisteredBadge>
+                                  On &quot;{user.existingTeam?.name}&quot;
+                                </AlreadyRegisteredBadge>
+                              )}
+                            </SearchResultItem>
+                          );
+                        })}
                       </SearchResults>
                     )}
                     

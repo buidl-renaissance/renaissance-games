@@ -605,20 +605,25 @@ const OpenTeamList = styled.div`
   margin-bottom: 1rem;
 `;
 
-const OpenTeamItem = styled.button<{ $selected: boolean }>`
+const OpenTeamItem = styled.button<{ $selected: boolean; $disabled?: boolean }>`
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
   padding: 0.75rem;
-  background: ${({ theme, $selected }) => $selected ? theme.accentMuted : theme.backgroundAlt};
-  border: 1px solid ${({ theme, $selected }) => $selected ? theme.accent : theme.border};
+  background: ${({ theme, $selected, $disabled }) => 
+    $disabled ? theme.backgroundAlt : 
+    $selected ? theme.accentMuted : theme.backgroundAlt};
+  border: 1px solid ${({ theme, $selected, $disabled }) => 
+    $disabled ? theme.border : 
+    $selected ? theme.accent : theme.border};
   border-radius: 6px;
-  cursor: pointer;
+  cursor: ${({ $disabled }) => $disabled ? 'not-allowed' : 'pointer'};
   transition: all 0.15s ease;
   text-align: left;
+  opacity: ${({ $disabled }) => $disabled ? 0.6 : 1};
   
   &:hover {
-    border-color: ${({ theme }) => theme.textSecondary};
+    border-color: ${({ theme, $disabled }) => $disabled ? theme.border : theme.textSecondary};
   }
 `;
 
@@ -626,6 +631,9 @@ const TeamInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
 `;
 
 const TeamName = styled.span`
@@ -642,6 +650,15 @@ const TeamMembers = styled.span`
 const TeamMeta = styled.span`
   font-size: 0.75rem;
   color: ${({ theme }) => theme.textMuted};
+`;
+
+const AlreadyRegisteredBadge = styled.span`
+  font-size: 0.7rem;
+  color: #ca8a04;
+  background: rgba(234, 179, 8, 0.15);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  white-space: nowrap;
 `;
 
 const NoTeamsText = styled.p`
@@ -688,7 +705,6 @@ const PartnerAvatar = styled.div<{ $url?: string | null }>`
   font-weight: 600;
   color: ${({ theme }) => theme.accent};
   flex-shrink: 0;
-  margin-right: 0.75rem;
 `;
 
 // Team Registration Modal
@@ -856,12 +872,14 @@ export default function TournamentDetailPage() {
     username: string | null;
     displayName: string | null;
     pfpUrl: string | null;
+    existingTeam?: { id: string; name: string } | null;
   }>>([]);
   const [selectedPartner, setSelectedPartner] = useState<{
     id: string;
     username: string | null;
     displayName: string | null;
     pfpUrl: string | null;
+    existingTeam?: { id: string; name: string } | null;
   } | null>(null);
   const [partnerPhone, setPartnerPhone] = useState('');
   const [partnerName, setPartnerName] = useState('');
@@ -909,7 +927,7 @@ export default function TournamentDetailPage() {
     return formatted;
   };
 
-  // Search for partners
+  // Search for partners (includes team info if already registered)
   const searchPartners = useCallback(async (query: string) => {
     if (query.length < 2) {
       setPartnerSearchResults([]);
@@ -918,7 +936,8 @@ export default function TournamentDetailPage() {
     
     setSearchingPartners(true);
     try {
-      const res = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`);
+      const url = `/api/user/search?q=${encodeURIComponent(query)}${id ? `&tournamentId=${id}` : ''}`;
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         // Filter out the current user
@@ -930,7 +949,7 @@ export default function TournamentDetailPage() {
     } finally {
       setSearchingPartners(false);
     }
-  }, [user?.id]);
+  }, [user?.id, id]);
 
   // Debounced partner search
   useEffect(() => {
@@ -1172,7 +1191,53 @@ export default function TournamentDetailPage() {
   const handleShare = async () => {
     const url = window.location.href;
     const title = tournament?.name || 'Tournament';
-    const text = `Join ${title}!`;
+    
+    // Build a compelling share message
+    const lines: string[] = [];
+    
+    // Game and tournament name
+    if (game) {
+      lines.push(`🎯 ${game.name} Tournament: ${title}`);
+    } else {
+      lines.push(`🎯 ${title}`);
+    }
+    
+    // Date and time
+    if (tournament?.startTime) {
+      const dateStr = utcToEstDisplay(tournament.startTime);
+      if (dateStr) {
+        lines.push(`📅 ${dateStr}`);
+      }
+    }
+    
+    // Location
+    if (tournament?.location) {
+      lines.push(`📍 ${tournament.location}`);
+    }
+    
+    // Entry fee and prize
+    if (tournament?.entryFee || tournament?.prizePool) {
+      const entry = tournament.entryFee ? `$${(tournament.entryFee / 100).toFixed(0)} entry` : 'Free entry';
+      const prize = tournament.prizePool ? `$${(tournament.prizePool / 100).toFixed(0)} prize pool` : '';
+      lines.push(`💰 ${entry}${prize ? ` · ${prize}` : ''}`);
+    }
+    
+    // Spots info
+    if (tournament && participantCount !== undefined) {
+      const spotsLeft = tournament.maxParticipants - participantCount;
+      if (spotsLeft > 0) {
+        lines.push(`✅ ${spotsLeft} spot${spotsLeft !== 1 ? 's' : ''} left!`);
+      } else {
+        lines.push(`⏳ Waitlist open`);
+      }
+    }
+    
+    // Call to action
+    lines.push('');
+    lines.push('Register now:');
+    lines.push(url);
+    
+    const text = lines.join('\n');
 
     // Try native share first (works on mobile)
     if (navigator.share) {
@@ -1184,10 +1249,10 @@ export default function TournamentDetailPage() {
       }
     }
 
-    // Fall back to clipboard
+    // Fall back to clipboard - copy the full message
     try {
-      await navigator.clipboard.writeText(url);
-      setSuccess('Link copied to clipboard!');
+      await navigator.clipboard.writeText(text);
+      setSuccess('Invite message copied to clipboard!');
       setTimeout(() => setSuccess(null), 3000);
     } catch {
       setError('Failed to copy link');
@@ -1562,23 +1627,34 @@ export default function TournamentDetailPage() {
                         
                         {partnerSearchResults.length > 0 && (
                           <OpenTeamList>
-                            {partnerSearchResults.map((u) => (
-                              <OpenTeamItem
-                                key={u.id}
-                                $selected={selectedPartner?.id === u.id}
-                                onClick={() => setSelectedPartner(
-                                  selectedPartner?.id === u.id ? null : u
-                                )}
-                              >
-                                <PartnerAvatar $url={u.pfpUrl}>
-                                  {!u.pfpUrl && getInitials(u.displayName || u.username)}
-                                </PartnerAvatar>
-                                <TeamInfo>
-                                  <TeamName>{u.displayName || u.username}</TeamName>
-                                  {u.username && <TeamMembers>@{u.username}</TeamMembers>}
-                                </TeamInfo>
-                              </OpenTeamItem>
-                            ))}
+                            {partnerSearchResults.map((u) => {
+                              const isOnTeam = !!u.existingTeam;
+                              return (
+                                <OpenTeamItem
+                                  key={u.id}
+                                  $selected={selectedPartner?.id === u.id}
+                                  $disabled={isOnTeam}
+                                  onClick={() => {
+                                    if (!isOnTeam) {
+                                      setSelectedPartner(selectedPartner?.id === u.id ? null : u);
+                                    }
+                                  }}
+                                >
+                                  <PartnerAvatar $url={u.pfpUrl}>
+                                    {!u.pfpUrl && getInitials(u.displayName || u.username)}
+                                  </PartnerAvatar>
+                                  <TeamInfo>
+                                    <TeamName>{u.displayName || u.username}</TeamName>
+                                    {u.username && <TeamMembers>@{u.username}</TeamMembers>}
+                                  </TeamInfo>
+                                  {isOnTeam && (
+                                    <AlreadyRegisteredBadge>
+                                      On &quot;{u.existingTeam?.name}&quot;
+                                    </AlreadyRegisteredBadge>
+                                  )}
+                                </OpenTeamItem>
+                              );
+                            })}
                           </OpenTeamList>
                         )}
                       </>
