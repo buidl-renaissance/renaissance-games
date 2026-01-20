@@ -72,7 +72,7 @@ export default async function handler(
       eventType: 'renaissance',
       source: 'renaissance-games',
       sourceId: tournament.id,
-      sourceUrl: RENAISSANCE_GAMES_PUBLIC_URL ? `${RENAISSANCE_GAMES_PUBLIC_URL}/tournaments/${tournament.id}` : undefined,
+      sourceUrl: RENAISSANCE_GAMES_PUBLIC_URL ? `${RENAISSANCE_GAMES_PUBLIC_URL}/tournaments/${tournament.id}` : null,
     };
 
     let publishedEventId: number;
