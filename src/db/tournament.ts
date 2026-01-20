@@ -624,6 +624,20 @@ export async function getParticipantCount(tournamentId: string): Promise<number>
 }
 
 export async function getIndividualParticipantCount(tournamentId: string): Promise<number> {
+  // Get all teams in the tournament (including incomplete ones)
+  const tournamentTeams = await getTeamsByTournament(tournamentId);
+  
+  if (tournamentTeams.length > 0) {
+    // For team games, count all team members (including incomplete teams)
+    let count = 0;
+    for (const team of tournamentTeams) {
+      const members = await getTeamMembers(team.id);
+      count += members.length;
+    }
+    return count;
+  }
+  
+  // For solo games, count registered participants
   const participants = await getRegisteredParticipants(tournamentId);
   
   let count = 0;
