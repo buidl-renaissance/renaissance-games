@@ -96,8 +96,7 @@ const HeroSection = styled.div<{ $isLive?: boolean }>`
 
 const TournamentImage = styled.img`
   width: 100%;
-  max-height: 300px;
-  object-fit: cover;
+  height: auto;
   border-radius: 6px;
   margin-bottom: 1rem;
 `;
