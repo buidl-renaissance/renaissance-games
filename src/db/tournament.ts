@@ -40,6 +40,7 @@ export interface Tournament {
   startTime: Date | null;
   endTime: Date | null;
   location: string | null;
+  imageUrl: string | null;
   publishedEventId: number | null;
   createdAt: Date;
   updatedAt: Date;
@@ -211,6 +212,7 @@ export async function updateTournament(
   if (updates.startTime !== undefined) updateData.startTime = updates.startTime;
   if (updates.endTime !== undefined) updateData.endTime = updates.endTime;
   if (updates.location !== undefined) updateData.location = updates.location;
+  if (updates.imageUrl !== undefined) updateData.imageUrl = updates.imageUrl;
   if (updates.publishedEventId !== undefined) updateData.publishedEventId = updates.publishedEventId;
   
   await db.update(tournaments).set(updateData).where(eq(tournaments.id, id));
@@ -342,6 +344,105 @@ export async function getUserTeamInTournament(
   }
   
   return null;
+}
+
+export async function getUserTeamParticipant(
+  tournamentId: string,
+  userId: string
+): Promise<TournamentParticipant | null> {
+  // First find the user's team in this tournament
+  const team = await getUserTeamInTournament(tournamentId, userId);
+  if (!team) return null;
+
+  // Then find the participant record for that team
+  const results = await db
+    .select()
+    .from(tournamentParticipants)
+    .where(
+      and(
+        eq(tournamentParticipants.tournamentId, tournamentId),
+        eq(tournamentParticipants.teamId, team.id),
+        ne(tournamentParticipants.status, 'withdrawn')
+      )
+    )
+    .limit(1);
+
+  if (results.length === 0) return null;
+  return parseParticipantRow(results[0]);
+}
+
+export async function withdrawTeamMember(
+  tournamentId: string,
+  userId: string
+): Promise<{ success: boolean; message: string }> {
+  // Find the user's team
+  const team = await getUserTeamInTournament(tournamentId, userId);
+  if (!team) {
+    return { success: false, message: 'User is not on a team in this tournament' };
+  }
+
+  // Get all team members
+  const members = await getTeamMembers(team.id);
+  const isCaptain = team.captainId === userId;
+  const memberCount = members.length;
+
+  // Remove the user from the team
+  await db
+    .delete(teamMembers)
+    .where(
+      and(
+        eq(teamMembers.teamId, team.id),
+        eq(teamMembers.userId, userId)
+      )
+    );
+
+  // If user was the only member, or was captain and team is now empty, delete the team
+  if (memberCount <= 1) {
+    // If team had a participant record, withdraw it
+    const participant = await getUserTeamParticipant(tournamentId, userId);
+    if (participant) {
+      await withdrawParticipant(participant.id);
+    }
+    
+    // Delete the team
+    await db.delete(teams).where(eq(teams.id, team.id));
+    
+    return { success: true, message: 'Team disbanded' };
+  }
+
+  // If user was captain, transfer captaincy to another member
+  if (isCaptain) {
+    const remainingMembers = members.filter(m => m.userId !== userId);
+    if (remainingMembers.length > 0) {
+      await db
+        .update(teams)
+        .set({ captainId: remainingMembers[0].userId, updatedAt: new Date() })
+        .where(eq(teams.id, team.id));
+    }
+  }
+
+  // If team was complete, it's no longer complete and we need to withdraw the participant
+  if (team.isComplete) {
+    await updateTeamComplete(team.id, false);
+    
+    // Find and withdraw the team's participant record
+    const participantResults = await db
+      .select()
+      .from(tournamentParticipants)
+      .where(
+        and(
+          eq(tournamentParticipants.tournamentId, tournamentId),
+          eq(tournamentParticipants.teamId, team.id)
+        )
+      )
+      .limit(1);
+    
+    if (participantResults.length > 0) {
+      await withdrawParticipant(participantResults[0].id);
+    }
+  }
+
+  return { success: true, message: 'Withdrawn from team' };
 }
 
 // ============================================
@@ -680,6 +781,7 @@ function parseTournamentRow(row: typeof tournaments.$inferSelect | Record<string
     startTime: row.startTime as Date | null,
     endTime: row.endTime as Date | null,
     location: row.location as string | null,
+    imageUrl: row.imageUrl as string | null,
     publishedEventId: row.publishedEventId as number | null,
     createdAt: (row.createdAt as Date) || new Date(),
     updatedAt: (row.updatedAt as Date) || new Date(),

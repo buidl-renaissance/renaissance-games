@@ -1007,7 +1007,7 @@ export default function TournamentDetailPage() {
                     <RegisteredBadge>
                       ✓ {userTeam ? `Team: ${userTeam.name}${userTeam.isComplete ? '' : ' (waiting for partner)'}` : 'You have entered this tournament'}
                     </RegisteredBadge>
-                    {canRegister && !userTeam?.isComplete && (
+                    {canRegister && (
                       <WithdrawButton 
                         onClick={handleWithdraw} 
                         disabled={actionLoading}

@@ -22,6 +22,7 @@ interface Tournament {
   prizePool: number | null;
   bestOf: number;
   location: string | null;
+  imageUrl: string | null;
   startTime: string | null;
   registrationDeadline: string | null;
 }
@@ -625,6 +626,99 @@ const AutocompleteEmpty = styled.div`
   color: ${({ theme }) => theme.textMuted};
 `;
 
+// Image upload styles
+const ImageUploadContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const ImagePreview = styled.div`
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: ${({ theme }) => theme.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.border};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const PreviewImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const PlaceholderText = styled.span`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const ImageActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+`;
+
+const UploadButton = styled.label`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.625rem 1rem;
+  background: ${({ theme }) => theme.accent};
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.accentHover};
+  }
+  
+  input {
+    display: none;
+  }
+`;
+
+const RemoveImageButton = styled.button`
+  font-size: 0.85rem;
+  padding: 0.625rem 1rem;
+  background: transparent;
+  color: ${({ theme }) => theme.danger};
+  border: 1px solid ${({ theme }) => theme.danger};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
+`;
+
+const UploadingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+`;
+
+const ImagePreviewWrapper = styled.div`
+  position: relative;
+  width: fit-content;
+`;
+
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Draft',
   registration: 'Open',
@@ -654,6 +748,10 @@ export default function EditTournamentPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Image upload state
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Organizer state
   const [organizers, setOrganizers] = useState<Organizer[]>([]);
@@ -824,6 +922,9 @@ export default function EditTournamentPage() {
           registrationDate: regDateTime.date,
           registrationTime: regDateTime.time,
         });
+        
+        // Set image URL from tournament data
+        setImageUrl(t.imageUrl || null);
       }
     } catch (error) {
       console.error('Error fetching tournament:', error);
@@ -901,6 +1002,76 @@ export default function EditTournamentPage() {
       setMessage({ type: 'success', text: 'Organizer removed' });
     } catch (err) {
       setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to remove organizer' });
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !id) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setMessage({ type: 'error', text: 'Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.' });
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'File too large. Maximum size is 5MB.' });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setMessage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('tournamentId', id as string);
+
+      const res = await fetch('/api/tournaments/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to upload image');
+      }
+
+      setImageUrl(data.imageUrl);
+      setMessage({ type: 'success', text: 'Image uploaded successfully' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to upload image' });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!id) return;
+    
+    setIsUploadingImage(true);
+    try {
+      // Update tournament to remove image URL
+      const res = await fetch(`/api/tournaments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: null }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to remove image');
+      }
+
+      setImageUrl(null);
+      setMessage({ type: 'success', text: 'Image removed' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to remove image' });
+    } finally {
+      setIsUploadingImage(false);
     }
   };
 
@@ -1068,6 +1239,52 @@ export default function EditTournamentPage() {
                   onChange={handleChange}
                   placeholder="Describe the tournament, rules, and expectations..."
                 />
+              </FormGroup>
+            </FormSection>
+
+            <FormSection>
+              <SectionHeader>
+                <SectionIcon>🖼</SectionIcon>
+                <SectionTitle>Event Flyer</SectionTitle>
+              </SectionHeader>
+
+              <FormGroup>
+                <Label>Tournament Image</Label>
+                <ImageUploadContainer>
+                  <ImagePreviewWrapper>
+                    <ImagePreview>
+                      {imageUrl ? (
+                        <PreviewImage src={imageUrl} alt="Tournament flyer" />
+                      ) : (
+                        <PlaceholderText>No image uploaded</PlaceholderText>
+                      )}
+                    </ImagePreview>
+                    {isUploadingImage && (
+                      <UploadingOverlay>Uploading...</UploadingOverlay>
+                    )}
+                  </ImagePreviewWrapper>
+                  <ImageActions>
+                    <UploadButton>
+                      {imageUrl ? 'Change Image' : 'Upload Image'}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        onChange={handleImageUpload}
+                        disabled={isUploadingImage}
+                      />
+                    </UploadButton>
+                    {imageUrl && (
+                      <RemoveImageButton
+                        type="button"
+                        onClick={handleRemoveImage}
+                        disabled={isUploadingImage}
+                      >
+                        Remove
+                      </RemoveImageButton>
+                    )}
+                  </ImageActions>
+                </ImageUploadContainer>
+                <HelpText>Upload a flyer or promotional image for your tournament (max 5MB, JPG/PNG/GIF/WebP)</HelpText>
               </FormGroup>
             </FormSection>
 

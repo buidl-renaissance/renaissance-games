@@ -98,7 +98,7 @@ export default async function handler(
             location: tournament.location || 'TBD',
             startTime: tournament.startTime?.toISOString() || new Date().toISOString(),
             endTime: tournament.endTime?.toISOString() || tournament.startTime?.toISOString() || new Date().toISOString(),
-            imageUrl: '',
+            imageUrl: tournament.imageUrl || '',
             metadata: {
               description: tournament.description || `${game.name} tournament`,
               tournamentId: tournament.id,

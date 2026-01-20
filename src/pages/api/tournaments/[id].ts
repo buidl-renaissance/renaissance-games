@@ -225,7 +225,7 @@ async function handlePatch(
           location: updatedTournament.location || 'TBD',
           startTime: updatedTournament.startTime?.toISOString() || new Date().toISOString(),
           endTime: updatedTournament.endTime?.toISOString() || updatedTournament.startTime?.toISOString() || new Date().toISOString(),
-          imageUrl: '',
+          imageUrl: updatedTournament.imageUrl || '',
           metadata: {
             description: updatedTournament.description || `${game?.name || 'Game'} tournament`,
             tournamentId: updatedTournament.id,

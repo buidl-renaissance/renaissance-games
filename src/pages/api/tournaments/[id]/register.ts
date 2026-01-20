@@ -13,6 +13,7 @@ import {
   getTeamMembers,
   updateTeamComplete,
   getUserTeamInTournament,
+  withdrawTeamMember,
 } from '@/db/tournament';
 
 /**
@@ -259,7 +260,39 @@ async function handleDelete(
       });
     }
 
-    // Find user's participant record
+    // Check game type to determine withdrawal method
+    const game = await getGameById(tournament.gameId);
+    
+    if (game?.isTeamGame) {
+      // Handle team-based withdrawal
+      const userTeam = await getUserTeamInTournament(tournamentId, user.id);
+      if (!userTeam) {
+        return res.status(404).json({
+          error: 'You are not registered for this tournament',
+        });
+      }
+
+      const result = await withdrawTeamMember(tournamentId, user.id);
+      
+      if (!result.success) {
+        return res.status(400).json({ error: result.message });
+      }
+
+      console.log('✅ Player withdrawn from team:', {
+        tournamentId,
+        teamId: userTeam.id,
+        teamName: userTeam.name,
+        userId: user.id,
+        result: result.message,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    }
+
+    // Handle solo game withdrawal
     const participant = await getUserParticipant(tournamentId, user.id);
     if (!participant) {
       return res.status(404).json({
