@@ -93,6 +93,7 @@ export interface CreateTournamentInput {
   registrationDeadline?: Date;
   startTime?: Date;
   location?: string;
+  imageUrl?: string;
 }
 
 // ============================================
@@ -121,6 +122,7 @@ export async function createTournament(input: CreateTournamentInput): Promise<To
     startTime: input.startTime || null,
     endTime: null,
     location: input.location || null,
+    imageUrl: input.imageUrl || null,
     createdAt: now,
     updatedAt: now,
   };

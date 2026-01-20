@@ -9,6 +9,7 @@ export interface GameConfig {
   type: GameType;
   name: string;
   description: string | null;
+  imageUrl: string | null;
   isTeamGame: boolean;
   playersPerTeam: number;
   minPlayers: number;
@@ -30,6 +31,7 @@ export const DEFAULT_GAMES: Omit<GameConfig, 'id' | 'createdAt'>[] = [
     type: 'euchre',
     name: 'Euchre',
     description: 'Classic 4-player trick-taking card game played in 2v2 teams',
+    imageUrl: null,
     isTeamGame: true,
     playersPerTeam: 2,
     minPlayers: 8, // 4 teams minimum
@@ -42,6 +44,7 @@ export const DEFAULT_GAMES: Omit<GameConfig, 'id' | 'createdAt'>[] = [
     type: 'pool',
     name: 'Pool',
     description: '1v1 billiards tournament (8-ball, 9-ball, or custom)',
+    imageUrl: null,
     isTeamGame: false,
     playersPerTeam: 1,
     minPlayers: 8,
@@ -54,6 +57,7 @@ export const DEFAULT_GAMES: Omit<GameConfig, 'id' | 'createdAt'>[] = [
     type: 'chess',
     name: 'Chess',
     description: '1v1 chess matches with configurable time controls',
+    imageUrl: null,
     isTeamGame: false,
     playersPerTeam: 1,
     minPlayers: 4,
@@ -104,6 +108,7 @@ export async function seedDefaultGames(): Promise<void> {
         type: gameConfig.type,
         name: gameConfig.name,
         description: gameConfig.description,
+        imageUrl: gameConfig.imageUrl,
         isTeamGame: gameConfig.isTeamGame,
         playersPerTeam: gameConfig.playersPerTeam,
         minPlayers: gameConfig.minPlayers,
@@ -178,6 +183,7 @@ function parseGameRow(row: typeof games.$inferSelect): GameConfig {
     type: row.type,
     name: row.name,
     description: row.description,
+    imageUrl: row.imageUrl,
     isTeamGame: row.isTeamGame,
     playersPerTeam: row.playersPerTeam,
     minPlayers: row.minPlayers,

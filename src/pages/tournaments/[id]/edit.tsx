@@ -1005,6 +1005,50 @@ export default function EditTournamentPage() {
     }
   };
 
+  // Resize image to max width of 1200px
+  const resizeImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Only resize if wider than maxWidth
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to create blob'));
+            }
+          },
+          file.type,
+          0.9 // Quality for JPEG/WebP
+        );
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !id) return;
@@ -1016,7 +1060,7 @@ export default function EditTournamentPage() {
       return;
     }
 
-    // Validate file size (5MB max)
+    // Validate file size (5MB max before resize)
     if (file.size > 5 * 1024 * 1024) {
       setMessage({ type: 'error', text: 'File too large. Maximum size is 5MB.' });
       return;
@@ -1026,13 +1070,16 @@ export default function EditTournamentPage() {
     setMessage(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('tournamentId', id as string);
+      // Resize the image to max 1200px width
+      const resizedBlob = await resizeImage(file, 1200);
+
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', resizedBlob, file.name);
+      formDataUpload.append('tournamentId', id as string);
 
       const res = await fetch('/api/tournaments/upload-image', {
         method: 'POST',
-        body: formData,
+        body: formDataUpload,
       });
 
       const data = await res.json();
@@ -1094,6 +1141,20 @@ export default function EditTournamentPage() {
     setMessage(null);
 
     try {
+      const startDateTime = combineDateAndTime(formData.startDate, formData.startTime);
+      const regDateTime = combineDateAndTime(formData.registrationDate, formData.registrationTime);
+
+      // Validate that start time is at or after registration deadline
+      if (startDateTime && regDateTime) {
+        const startDate = new Date(startDateTime);
+        const regDate = new Date(regDateTime);
+        if (startDate < regDate) {
+          setMessage({ type: 'error', text: 'Tournament start time must be at or after the registration deadline' });
+          setIsSaving(false);
+          return;
+        }
+      }
+
       const body: Record<string, unknown> = {
         name: formData.name,
         description: formData.description || null,
@@ -1104,9 +1165,6 @@ export default function EditTournamentPage() {
         bestOf: parseInt(formData.bestOf, 10),
         location: formData.location || null,
       };
-
-      const startDateTime = combineDateAndTime(formData.startDate, formData.startTime);
-      const regDateTime = combineDateAndTime(formData.registrationDate, formData.registrationTime);
       
       if (startDateTime) {
         body.startTime = estInputToUtc(startDateTime).toISOString();

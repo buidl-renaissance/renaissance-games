@@ -52,6 +52,7 @@ export const games = sqliteTable('games', {
   type: text('type').$type<GameType>().notNull().unique(),
   name: text('name').notNull(),
   description: text('description'),
+  imageUrl: text('imageUrl'), // Game image/icon
   // Format configuration
   isTeamGame: integer('isTeamGame', { mode: 'boolean' }).default(false).notNull(),
   playersPerTeam: integer('playersPerTeam').default(1).notNull(),

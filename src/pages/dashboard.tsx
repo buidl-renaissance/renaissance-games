@@ -536,21 +536,15 @@ const DashboardPage: React.FC = () => {
             <GameType $isRegistered={tournament.isRegistered}>
               {game?.name || 'Tournament'}
             </GameType>
-            {((tournament.entryFee && tournament.entryFee > 0) || (tournament.prizePool && tournament.prizePool > 0)) && (
-              <EntryPayout>
-                {tournament.entryFee && tournament.entryFee > 0 ? (
-                  <EntryFee>{formatCurrency(tournament.entryFee)}</EntryFee>
-                ) : (
-                  <EntryFee>Free</EntryFee>
-                )}
-                <span style={{ color: 'inherit', opacity: 0.5 }}>→</span>
-                <PayoutAmount>
-                  {tournament.prizePool && tournament.prizePool > 0 
-                    ? formatCurrency(tournament.prizePool) 
-                    : '$0'}
-                </PayoutAmount>
-              </EntryPayout>
-            )}
+            <EntryPayout>
+              <EntryFee>{tournament.entryFee ? `${formatCurrency(tournament.entryFee)} ENTRY` : 'FREE ENTRY'}</EntryFee>
+              {(tournament.prizePool ?? 0) > 0 ? (
+                <>
+                  <span style={{ color: 'inherit', opacity: 0.5 }}>→</span>
+                  <PayoutAmount>{formatCurrency(tournament.prizePool)} PRIZE</PayoutAmount>
+                </>
+              ) : null}
+            </EntryPayout>
           </TournamentHeader>
           <TournamentTitle>{tournament.name}</TournamentTitle>
           <TournamentMeta>

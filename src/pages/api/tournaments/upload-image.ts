@@ -23,7 +23,7 @@ async function parseFormData(req: NextApiRequest): Promise<{
   buffer: Buffer; 
   contentType: string; 
   filename: string;
-  tournamentId: string;
+  tournamentId: string | null;
 } | null> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -105,7 +105,7 @@ async function parseFormData(req: NextApiRequest): Promise<{
             }
           }
 
-          if (fileData && tournamentId) {
+          if (fileData) {
             resolve({
               ...fileData,
               tournamentId,
@@ -174,16 +174,10 @@ export default async function handler(
     const fileData = await parseFormData(req);
     
     if (!fileData) {
-      return res.status(400).json({ error: 'No file or tournamentId provided' });
+      return res.status(400).json({ error: 'No file provided' });
     }
 
     const { buffer, contentType, filename, tournamentId } = fileData;
-
-    // Verify tournament exists
-    const existingTournament = await getTournamentById(tournamentId);
-    if (!existingTournament) {
-      return res.status(404).json({ error: 'Tournament not found' });
-    }
 
     // Validate content type
     if (!ALLOWED_TYPES.includes(contentType)) {
@@ -197,36 +191,50 @@ export default async function handler(
       return res.status(400).json({ error: 'File too large. Maximum size is 5MB' });
     }
 
-    // Delete old tournament image if it exists and is from our storage
-    if (existingTournament.imageUrl) {
-      const oldKey = extractKeyFromUrl(existingTournament.imageUrl);
-      if (oldKey && oldKey.startsWith('tournament-images/')) {
-        try {
-          await deleteFile(oldKey);
-        } catch (err) {
-          console.warn('Failed to delete old tournament image:', err);
-          // Continue anyway
+    // If tournamentId is provided, verify tournament exists and handle old image
+    let existingTournament = null;
+    if (tournamentId) {
+      existingTournament = await getTournamentById(tournamentId);
+      if (!existingTournament) {
+        return res.status(404).json({ error: 'Tournament not found' });
+      }
+
+      // Delete old tournament image if it exists and is from our storage
+      if (existingTournament.imageUrl) {
+        const oldKey = extractKeyFromUrl(existingTournament.imageUrl);
+        if (oldKey && oldKey.startsWith('tournament-images/')) {
+          try {
+            await deleteFile(oldKey);
+          } catch (err) {
+            console.warn('Failed to delete old tournament image:', err);
+            // Continue anyway
+          }
         }
       }
     }
 
     // Generate unique key for the file
+    // Use tournamentId if available, otherwise generate a temp ID
     const extension = getExtension(contentType);
-    const key = generateTournamentImageKey(tournamentId, extension);
+    const imageId = tournamentId || `temp-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const key = generateTournamentImageKey(imageId, extension);
     
-    console.log(`📁 Uploading tournament image - tournamentId: ${tournamentId}, key: ${key}, contentType: ${contentType}`);
+    console.log(`📁 Uploading tournament image - tournamentId: ${tournamentId || 'new'}, key: ${key}, contentType: ${contentType}`);
 
     // Upload to DigitalOcean Spaces
     const uploadResult = await uploadFile(buffer, key, contentType);
     
     console.log(`📁 Upload result - url: ${uploadResult.url}`);
 
-    // Update tournament with new image URL
-    await updateTournament(tournamentId, {
-      imageUrl: uploadResult.url,
-    });
-
-    console.log(`✅ Tournament image uploaded for tournament ${tournamentId}: ${filename} -> ${uploadResult.url}`);
+    // Update tournament with new image URL only if we have a tournament ID
+    if (tournamentId && existingTournament) {
+      await updateTournament(tournamentId, {
+        imageUrl: uploadResult.url,
+      });
+      console.log(`✅ Tournament image uploaded for tournament ${tournamentId}: ${filename} -> ${uploadResult.url}`);
+    } else {
+      console.log(`✅ Tournament image uploaded (pre-creation): ${filename} -> ${uploadResult.url}`);
+    }
 
     return res.status(200).json({
       imageUrl: uploadResult.url,

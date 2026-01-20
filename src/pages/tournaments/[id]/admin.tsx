@@ -121,25 +121,71 @@ const TitleRow = styled.div`
   flex-wrap: wrap;
 `;
 
-const TitleGroup = styled.div``;
+const TitleGroup = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const EventMeta = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+`;
+
+const MetaItem = styled.span`
+  font-size: 0.8rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const GameType = styled.span`
+  display: inline-block;
+  width: fit-content;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.accent};
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.15rem 0.4rem;
+  background: ${({ theme }) => theme.accentMuted};
+  border-radius: 3px;
+`;
+
+const EntryPayout = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+`;
+
+const EntryFee = styled.span`
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const PayoutAmount = styled.span`
+  color: rgb(34, 197, 94);
+`;
+
+const RegistrationCount = styled.span`
+  font-size: 0.75rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
 
 const PageTitle = styled.h1`
   font-size: 1.5rem;
   font-weight: 600;
   color: ${({ theme }) => theme.text};
-  margin: 0 0 0.25rem 0;
-`;
-
-const PageSubtitle = styled.p`
-  font-size: 0.85rem;
-  color: ${({ theme }) => theme.textMuted};
-  margin: 0;
+  margin: 0.25rem 0 0 0;
 `;
 
 const HeaderActions = styled.div`
   display: flex;
   gap: 0.75rem;
   align-items: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
 `;
 
 const StatusBadge = styled.span<{ $status: string }>`
@@ -225,12 +271,13 @@ const TabContent = styled.div`
 // Stats Grid
 const StatsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
   
-  @media (max-width: 600px) {
-    grid-template-columns: repeat(2, 1fr);
+  @media (max-width: 500px) {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
   }
 `;
 
@@ -238,23 +285,31 @@ const StatCard = styled.div`
   background: ${({ theme }) => theme.surface};
   border: 1px solid ${({ theme }) => theme.border};
   border-radius: 8px;
-  padding: 1.25rem;
+  padding: 1rem 0.75rem;
   text-align: center;
 `;
 
 const StatValue = styled.div`
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: ${({ theme }) => theme.text};
+  
+  @media (max-width: 500px) {
+    font-size: 1.25rem;
+  }
 `;
 
 const StatLabel = styled.div`
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: ${({ theme }) => theme.textMuted};
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
   margin-top: 0.25rem;
+  
+  @media (max-width: 500px) {
+    font-size: 0.6rem;
+  }
 `;
 
 // Cards
@@ -782,7 +837,7 @@ export default function TournamentAdminPage() {
   };
 
   const formatCurrency = (cents: number | null) => {
-    if (!cents) return '$0';
+    if (!cents) return null;
     return `$${(cents / 100).toFixed(0)}`;
   };
 
@@ -836,20 +891,58 @@ export default function TournamentAdminPage() {
         <PageHeader>
           <TitleRow>
             <TitleGroup>
-              <PageTitle>{tournament.name}</PageTitle>
-              <PageSubtitle>
-                {GAME_NAMES[game?.type || ''] || game?.name || 'Tournament'}
-              </PageSubtitle>
+              <GameType>{GAME_NAMES[game?.type || ''] || game?.name || 'Tournament'}</GameType>
+              <PageTitle>
+                {tournament.name}
+                <StatusBadge $status={tournament.status} style={{ marginLeft: '0.75rem', verticalAlign: 'middle' }}>
+                  {STATUS_LABELS[tournament.status]}
+                </StatusBadge>
+              </PageTitle>
+              <EventMeta>
+                {tournament.startTime && (
+                  <MetaItem>{formatDate(tournament.startTime)}</MetaItem>
+                )}
+                {tournament.startTime && tournament.location && (
+                  <MetaItem>•</MetaItem>
+                )}
+                {tournament.location && (
+                  <MetaItem>{tournament.location}</MetaItem>
+                )}
+                {(tournament.startTime || tournament.location) && (
+                  <MetaItem>•</MetaItem>
+                )}
+                <RegistrationCount>
+                  {participantCount}/{tournament.maxParticipants} registered
+                </RegistrationCount>
+                {(tournament.prizePool ?? 0) > 0 ? (
+                  <>
+                    <MetaItem>•</MetaItem>
+                    <EntryPayout>
+                      <EntryFee>{tournament.entryFee ? formatCurrency(tournament.entryFee) : 'Free'}</EntryFee>
+                      <span style={{ color: 'inherit', opacity: 0.5 }}>→</span>
+                      <PayoutAmount>{formatCurrency(tournament.prizePool)}</PayoutAmount>
+                    </EntryPayout>
+                  </>
+                ) : null}
+              </EventMeta>
             </TitleGroup>
-            <HeaderActions>
-              <StatusBadge $status={tournament.status}>
-                {STATUS_LABELS[tournament.status]}
-              </StatusBadge>
-              {!isLocked && (
-                <EditButton href={`/tournaments/${id}/edit`}>Edit</EditButton>
-              )}
-            </HeaderActions>
           </TitleRow>
+          <HeaderActions>
+            {canOpenRegistration && (
+              <ActionButton $variant="primary" onClick={() => updateStatus('registration')} disabled={actionLoading}>
+                Open Registration
+              </ActionButton>
+            )}
+            {tournament.status === 'registration' && (
+              <ActionButton onClick={() => updateStatus('draft')} disabled={actionLoading}>
+                Close Registration
+              </ActionButton>
+            )}
+            <LinkButton href={`/tournaments/${id}`}>Public Page</LinkButton>
+            {!isLocked && (
+              <EditButton href={`/tournaments/${id}/edit`}>Edit</EditButton>
+            )}
+          </HeaderActions>
         </PageHeader>
 
         {message && (
@@ -884,10 +977,12 @@ export default function TournamentAdminPage() {
                   <StatValue>{waitlist.length}</StatValue>
                   <StatLabel>Waitlist</StatLabel>
                 </StatCard>
-                <StatCard>
-                  <StatValue>{formatCurrency(tournament.prizePool)}</StatValue>
-                  <StatLabel>Prize</StatLabel>
-                </StatCard>
+                {(tournament.prizePool ?? 0) > 0 ? (
+                  <StatCard>
+                    <StatValue>{formatCurrency(tournament.prizePool)}</StatValue>
+                    <StatLabel>Prize</StatLabel>
+                  </StatCard>
+                ) : null}
               </StatsGrid>
 
               <Card>
@@ -909,7 +1004,7 @@ export default function TournamentAdminPage() {
                     </DetailItem>
                     <DetailItem>
                       <DetailLabel>Entry</DetailLabel>
-                      <DetailValue>{formatCurrency(tournament.entryFee)}</DetailValue>
+                      <DetailValue>{formatCurrency(tournament.entryFee) || 'Free'}</DetailValue>
                     </DetailItem>
                     <DetailItem>
                       <DetailLabel>Location</DetailLabel>
@@ -927,46 +1022,6 @@ export default function TournamentAdminPage() {
                 </CardBody>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardBody>
-                  <ActionButtons>
-                    {canOpenRegistration && (
-                      <ActionButton $variant="primary" onClick={() => updateStatus('registration')} disabled={actionLoading}>
-                        Open Registration
-                      </ActionButton>
-                    )}
-                    {canGenerateBracket && (
-                      <ActionButton $variant="primary" onClick={generateBracket} disabled={actionLoading}>
-                        Generate Bracket
-                      </ActionButton>
-                    )}
-                    {canStartTournament && (
-                      <ActionButton $variant="success" onClick={() => updateStatus('in_progress')} disabled={actionLoading}>
-                        Begin Tournament
-                      </ActionButton>
-                    )}
-                    {(tournament.status === 'ready' || tournament.status === 'in_progress') && (
-                      <LinkButton href={`/tournaments/${id}/bracket`}>View Bracket</LinkButton>
-                    )}
-                    <LinkButton href={`/tournaments/${id}`}>Public Page</LinkButton>
-                  </ActionButtons>
-
-                  {tournament.status === 'draft' && (
-                    <InfoBox style={{ marginTop: '1rem' }}>
-                      Open registration to allow players to enter.
-                    </InfoBox>
-                  )}
-
-                  {tournament.status === 'registration' && participantCount < tournament.minParticipants && (
-                    <InfoBox $type="warning" style={{ marginTop: '1rem' }}>
-                      Need {tournament.minParticipants - participantCount} more participants to generate bracket.
-                    </InfoBox>
-                  )}
-                </CardBody>
-              </Card>
             </>
           )}
 

@@ -145,6 +145,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       registrationDeadline,
       startTime,
       location,
+      imageUrl,
     } = req.body as {
       gameId: string;
       name: string;
@@ -158,6 +159,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       registrationDeadline?: string;
       startTime?: string;
       location?: string;
+      imageUrl?: string;
     };
 
     // Validate required fields
@@ -192,6 +194,17 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       });
     }
 
+    // Validate that start time is at or after registration deadline
+    if (startTime && registrationDeadline) {
+      const startDate = parseDateTime(startTime);
+      const regDate = parseDateTime(registrationDeadline);
+      if (startDate < regDate) {
+        return res.status(400).json({
+          error: 'Tournament start time must be at or after the registration deadline',
+        });
+      }
+    }
+
     const input: CreateTournamentInput = {
       gameId,
       organizerId: user.id,
@@ -206,6 +219,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       registrationDeadline: registrationDeadline ? parseDateTime(registrationDeadline) : undefined,
       startTime: startTime ? parseDateTime(startTime) : undefined,
       location,
+      imageUrl,
     };
 
     const tournament = await createTournament(input);

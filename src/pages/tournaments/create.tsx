@@ -147,7 +147,10 @@ const Label = styled.label`
 
 const Input = styled.input`
   width: 100%;
-  padding: 0.75rem 1rem;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.75rem 0.75rem;
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   border: 1px solid ${({ theme }) => theme.border};
@@ -189,7 +192,10 @@ const TextArea = styled.textarea`
 
 const Select = styled.select`
   width: 100%;
-  padding: 0.75rem 1rem;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.75rem 0.5rem;
   font-family: 'Inter', sans-serif;
   font-size: 16px;
   border: 1px solid ${({ theme }) => theme.border};
@@ -197,6 +203,12 @@ const Select = styled.select`
   background: ${({ theme }) => theme.background};
   color: ${({ theme }) => theme.text};
   cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  text-align-last: center;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   
   &:focus {
     outline: none;
@@ -212,6 +224,22 @@ const InputRow = styled.div`
   
   @media (max-width: 500px) {
     grid-template-columns: 1fr;
+  }
+`;
+
+const DateTimeRow = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+  
+  & > input[type="date"] {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  & > select {
+    flex: 1;
+    min-width: 0;
   }
 `;
 
@@ -297,6 +325,99 @@ const AccessText = styled.p`
   color: ${({ theme }) => theme.textMuted};
 `;
 
+// Image upload styles
+const ImageUploadContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const ImagePreview = styled.div`
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: ${({ theme }) => theme.backgroundAlt};
+  border: 1px solid ${({ theme }) => theme.border};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const PreviewImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
+const PlaceholderText = styled.span`
+  font-size: 0.85rem;
+  color: ${({ theme }) => theme.textMuted};
+`;
+
+const ImageActions = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+`;
+
+const UploadButton = styled.label`
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.625rem 1rem;
+  background: ${({ theme }) => theme.accent};
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.accentHover};
+  }
+  
+  input {
+    display: none;
+  }
+`;
+
+const RemoveImageButton = styled.button`
+  font-size: 0.85rem;
+  padding: 0.625rem 1rem;
+  background: transparent;
+  color: ${({ theme }) => theme.danger};
+  border: 1px solid ${({ theme }) => theme.danger};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+  }
+`;
+
+const UploadingOverlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+`;
+
+const ImagePreviewWrapper = styled.div`
+  position: relative;
+  width: fit-content;
+`;
+
 const getGameIcon = (gameType: string): string => {
   switch (gameType) {
     case 'pool': return '🎱';
@@ -314,6 +435,10 @@ export default function CreateTournamentPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Image upload state
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -388,6 +513,100 @@ export default function CreateTournamentPage() {
     }
   };
 
+  // Resize image to max width of 1200px
+  const resizeImage = (file: File, maxWidth: number = 1200): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      img.onload = () => {
+        let { width, height } = img;
+
+        // Only resize if wider than maxWidth
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to create blob'));
+            }
+          },
+          file.type,
+          0.9 // Quality for JPEG/WebP
+        );
+      };
+
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Invalid file type. Please upload a JPG, PNG, GIF, or WebP image.');
+      return;
+    }
+
+    // Validate file size (5MB max before resize)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File too large. Maximum size is 5MB.');
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setError(null);
+
+    try {
+      // Resize the image to max 1200px width
+      const resizedBlob = await resizeImage(file, 1200);
+      
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', resizedBlob, file.name);
+
+      const res = await fetch('/api/tournaments/upload-image', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to upload image');
+      }
+
+      setImageUrl(data.imageUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload image');
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -396,6 +615,17 @@ export default function CreateTournamentPage() {
     try {
       const startDateTime = combineDateAndTime(formData.startDate, formData.startTime);
       const regDateTime = combineDateAndTime(formData.registrationDate, formData.registrationTime);
+
+      // Validate that start time is at or after registration deadline
+      if (startDateTime && regDateTime) {
+        const startDate = new Date(startDateTime);
+        const regDate = new Date(regDateTime);
+        if (startDate < regDate) {
+          setError('Tournament start time must be at or after the registration deadline');
+          setIsSubmitting(false);
+          return;
+        }
+      }
 
       const body: Record<string, unknown> = {
         gameId: formData.gameId,
@@ -407,6 +637,7 @@ export default function CreateTournamentPage() {
         prizePool: formData.prizePool ? parseInt(formData.prizePool, 10) * 100 : undefined,
         bestOf: parseInt(formData.bestOf, 10),
         location: formData.location || undefined,
+        imageUrl: imageUrl || undefined,
       };
 
       // Convert EST times to UTC for storage
@@ -544,6 +775,113 @@ export default function CreateTournamentPage() {
                 placeholder="Describe the tournament, rules, and what to expect..."
               />
             </FormGroup>
+
+            <FormGroup>
+              <Label>Event Flyer</Label>
+              <ImageUploadContainer>
+                <ImagePreviewWrapper>
+                  <ImagePreview>
+                    {imageUrl ? (
+                      <PreviewImage src={imageUrl} alt="Tournament flyer" />
+                    ) : (
+                      <PlaceholderText>No image uploaded</PlaceholderText>
+                    )}
+                  </ImagePreview>
+                  {isUploadingImage && (
+                    <UploadingOverlay>Uploading...</UploadingOverlay>
+                  )}
+                </ImagePreviewWrapper>
+                <ImageActions>
+                  <UploadButton>
+                    {imageUrl ? 'Change Image' : 'Upload Image'}
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handleImageUpload}
+                      disabled={isUploadingImage}
+                    />
+                  </UploadButton>
+                  {imageUrl && (
+                    <RemoveImageButton
+                      type="button"
+                      onClick={handleRemoveImage}
+                      disabled={isUploadingImage}
+                    >
+                      Remove
+                    </RemoveImageButton>
+                  )}
+                </ImageActions>
+              </ImageUploadContainer>
+              <HelpText>Upload a flyer or promotional image (max 5MB, JPG/PNG/GIF/WebP)</HelpText>
+            </FormGroup>
+          </FormSection>
+
+          <FormSection>
+            <SectionHeader>
+              <SectionIcon>◈</SectionIcon>
+              <SectionTitle>Location & Schedule</SectionTitle>
+            </SectionHeader>
+            
+            <FormGroup>
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                name="location"
+                type="text"
+                value={formData.location}
+                onChange={handleChange}
+                placeholder="e.g., The Renaissance Center, Detroit"
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Registration Deadline</Label>
+              <DateTimeRow>
+                <Input
+                  id="registrationDate"
+                  name="registrationDate"
+                  type="date"
+                  value={formData.registrationDate}
+                  onChange={handleChange}
+                />
+                <Select
+                  id="registrationTime"
+                  name="registrationTime"
+                  value={formData.registrationTime}
+                  onChange={handleChange}
+                >
+                  <option value="">Select time...</option>
+                  {timeOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </Select>
+              </DateTimeRow>
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Start Date & Time</Label>
+              <DateTimeRow>
+                <Input
+                  id="startDate"
+                  name="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={handleChange}
+                />
+                <Select
+                  id="startTime"
+                  name="startTime"
+                  value={formData.startTime}
+                  onChange={handleChange}
+                >
+                  <option value="">Select time...</option>
+                  {timeOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </Select>
+              </DateTimeRow>
+            </FormGroup>
+            <HelpText>All times are in Eastern Time (EST/EDT)</HelpText>
           </FormSection>
 
           <FormSection>
@@ -647,74 +985,6 @@ export default function CreateTournamentPage() {
             <HelpText>
               Payment features coming soon. Amounts shown for informational purposes.
             </HelpText>
-          </FormSection>
-
-          <FormSection>
-            <SectionHeader>
-              <SectionIcon>◈</SectionIcon>
-              <SectionTitle>Location & Schedule</SectionTitle>
-            </SectionHeader>
-            
-            <FormGroup>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                name="location"
-                type="text"
-                value={formData.location}
-                onChange={handleChange}
-                placeholder="e.g., The Renaissance Center, Detroit"
-              />
-            </FormGroup>
-
-            <FormGroup>
-              <Label>Registration Deadline</Label>
-              <InputRow>
-                <Input
-                  id="registrationDate"
-                  name="registrationDate"
-                  type="date"
-                  value={formData.registrationDate}
-                  onChange={handleChange}
-                />
-                <Select
-                  id="registrationTime"
-                  name="registrationTime"
-                  value={formData.registrationTime}
-                  onChange={handleChange}
-                >
-                  <option value="">Select time...</option>
-                  {timeOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </Select>
-              </InputRow>
-            </FormGroup>
-
-            <FormGroup>
-              <Label>Start Date & Time</Label>
-              <InputRow>
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={handleChange}
-                />
-                <Select
-                  id="startTime"
-                  name="startTime"
-                  value={formData.startTime}
-                  onChange={handleChange}
-                >
-                  <option value="">Select time...</option>
-                  {timeOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </Select>
-              </InputRow>
-            </FormGroup>
-            <HelpText>All times are in Eastern Time (EST/EDT)</HelpText>
           </FormSection>
 
           <SubmitButton type="submit" disabled={isSubmitting}>

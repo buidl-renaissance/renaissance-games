@@ -207,6 +207,15 @@ async function handlePatch(
     }
     if (location !== undefined) updates.location = location;
 
+    // Validate that start time is at or after registration deadline
+    const effectiveStartTime = updates.startTime as Date | undefined || tournament.startTime;
+    const effectiveRegDeadline = updates.registrationDeadline as Date | undefined || tournament.registrationDeadline;
+    if (effectiveStartTime && effectiveRegDeadline && effectiveStartTime < effectiveRegDeadline) {
+      return res.status(400).json({
+        error: 'Tournament start time must be at or after the registration deadline',
+      });
+    }
+
     const updatedTournament = await updateTournament(tournamentId, updates);
 
     console.log('✅ Tournament updated:', {

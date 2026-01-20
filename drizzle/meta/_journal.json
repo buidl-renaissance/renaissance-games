@@ -57,6 +57,13 @@
       "when": 1768868998673,
       "tag": "0007_cheerful_dragon_man",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1768872679427,
+      "tag": "0008_pretty_calypso",
+      "breakpoints": true
     }
   ]
 }

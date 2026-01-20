@@ -877,12 +877,12 @@ export default function TournamentDetailPage() {
               </HeroMetaValue>
             </HeroMetaItem>
             <HeroMetaItem>
-              <HeroMetaLabel>Entry / Prize</HeroMetaLabel>
+              <HeroMetaLabel>{(tournament.prizePool ?? 0) > 0 ? 'Entry / Prize' : 'Entry'}</HeroMetaLabel>
               <HeroMetaValue>
-                {formatCurrency(tournament.entryFee)}
-                {tournament.prizePool && tournament.prizePool > 0 && (
+                {(tournament.entryFee ?? 0) > 0 ? formatCurrency(tournament.entryFee) : 'Free'}
+                {(tournament.prizePool ?? 0) > 0 ? (
                   <> / {formatCurrency(tournament.prizePool)}</>
-                )}
+                ) : null}
               </HeroMetaValue>
             </HeroMetaItem>
           </HeroMeta>
