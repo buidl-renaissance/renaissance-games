@@ -172,6 +172,7 @@ async function handlePatch(
       prizeDistribution,
       bestOf,
       registrationDeadline,
+      doorsOpenTime,
       startTime,
       location,
     } = req.body as {
@@ -184,6 +185,7 @@ async function handlePatch(
       prizeDistribution?: Record<string, number>;
       bestOf?: number;
       registrationDeadline?: string;
+      doorsOpenTime?: string;
       startTime?: string;
       location?: string;
     };
@@ -201,6 +203,9 @@ async function handlePatch(
     if (bestOf !== undefined) updates.bestOf = bestOf;
     if (registrationDeadline !== undefined) {
       updates.registrationDeadline = new Date(registrationDeadline);
+    }
+    if (doorsOpenTime !== undefined) {
+      updates.doorsOpenTime = new Date(doorsOpenTime);
     }
     if (startTime !== undefined) {
       updates.startTime = new Date(startTime);

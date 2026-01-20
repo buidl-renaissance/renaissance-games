@@ -91,6 +91,7 @@ export const tournaments = sqliteTable('tournaments', {
   bestOf: integer('bestOf').default(1).notNull(), // best of X games per match
   // Scheduling
   registrationDeadline: integer('registrationDeadline', { mode: 'timestamp' }),
+  doorsOpenTime: integer('doorsOpenTime', { mode: 'timestamp' }),
   startTime: integer('startTime', { mode: 'timestamp' }),
   endTime: integer('endTime', { mode: 'timestamp' }),
   // Location (in-person events)

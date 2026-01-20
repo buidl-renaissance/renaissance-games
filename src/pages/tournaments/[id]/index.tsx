@@ -6,6 +6,7 @@ import styled, { keyframes } from 'styled-components';
 import { useUser } from '@/contexts/UserContext';
 import { Loading } from '@/components/Loading';
 import { UserHeader } from '@/components/UserHeader';
+import { RegistrationModal } from '@/components/tournament/RegistrationModal';
 import { utcToEstDisplay } from '@/lib/timezone';
 
 interface Tournament {
@@ -23,8 +24,10 @@ interface Tournament {
   prizeDistribution: Record<string, number> | null;
   bestOf: number;
   location: string | null;
+  doorsOpenTime: string | null;
   startTime: string | null;
   registrationDeadline: string | null;
+  imageUrl: string | null;
 }
 
 interface Game {
@@ -91,6 +94,14 @@ const HeroSection = styled.div<{ $isLive?: boolean }>`
   `}
 `;
 
+const TournamentImage = styled.img`
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+`;
+
 const Title = styled.h1`
   font-size: 2rem;
   font-weight: 600;
@@ -112,6 +123,29 @@ const StartTime = styled.div`
   font-size: 0.85rem;
   color: ${({ theme }) => theme.textSecondary};
   margin-top: 0.25rem;
+`;
+
+const EventDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+`;
+
+const EventDetailRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+`;
+
+const EventDetailLabel = styled.span`
+  color: ${({ theme }) => theme.textMuted};
+  min-width: 80px;
+`;
+
+const EventDetailValue = styled.span`
+  color: ${({ theme }) => theme.textSecondary};
 `;
 
 const Description = styled.p`
@@ -628,6 +662,9 @@ export default function TournamentDetailPage() {
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   
+  // Registration modal state (for non-logged-in users)
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?';
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -847,6 +884,10 @@ export default function TournamentDetailPage() {
 
       <Main>
         <HeroSection $isLive={isLive}>
+          {tournament.imageUrl && (
+            <TournamentImage src={tournament.imageUrl} alt={tournament.name} />
+          )}
+          
           <GameChip>{game?.name || 'Tournament'}</GameChip>
           
           <Title>{tournament.name}</Title>
@@ -855,13 +896,26 @@ export default function TournamentDetailPage() {
             <RegDeadline>Registration closes {formatDate(tournament.registrationDeadline)}</RegDeadline>
           )}
           
-          {tournament.startTime && (
-            <StartTime>{formatDate(tournament.startTime)}</StartTime>
-          )}
-
-          {tournament.location && (
-            <StartTime>{tournament.location}</StartTime>
-          )}
+          <EventDetails>
+            {tournament.doorsOpenTime && (
+              <EventDetailRow>
+                <EventDetailLabel>Doors Open</EventDetailLabel>
+                <EventDetailValue>{formatDate(tournament.doorsOpenTime)}</EventDetailValue>
+              </EventDetailRow>
+            )}
+            {tournament.startTime && (
+              <EventDetailRow>
+                <EventDetailLabel>Start Time</EventDetailLabel>
+                <EventDetailValue>{formatDate(tournament.startTime)}</EventDetailValue>
+              </EventDetailRow>
+            )}
+            {tournament.location && (
+              <EventDetailRow>
+                <EventDetailLabel>Location</EventDetailLabel>
+                <EventDetailValue>{tournament.location}</EventDetailValue>
+              </EventDetailRow>
+            )}
+          </EventDetails>
           
           {tournament.description && (
             <Description>{tournament.description}</Description>
@@ -1001,7 +1055,13 @@ export default function TournamentDetailPage() {
                 {success && <Message $type="success">{success}</Message>}
                 
                 {!user ? (
-                  <EmptyText style={{ padding: 0 }}>Sign in to enter</EmptyText>
+                  canRegister ? (
+                    <EnterButton onClick={() => setShowRegistrationModal(true)}>
+                      Register Now
+                    </EnterButton>
+                  ) : (
+                    <EmptyText style={{ padding: 0 }}>Registration closed</EmptyText>
+                  )
                 ) : isRegistered ? (
                   <>
                     <RegisteredBadge>
@@ -1113,6 +1173,18 @@ export default function TournamentDetailPage() {
           </Sidebar>
         </ContentGrid>
       </Main>
+
+      {/* Registration Modal for non-logged-in users */}
+      {tournament && (
+        <RegistrationModal
+          isOpen={showRegistrationModal}
+          onClose={() => setShowRegistrationModal(false)}
+          tournament={tournament}
+          game={game}
+          participantCount={participantCount}
+          onSuccess={fetchTournament}
+        />
+      )}
     </Container>
   );
 }

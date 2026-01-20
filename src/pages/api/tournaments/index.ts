@@ -143,6 +143,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       prizeDistribution,
       bestOf,
       registrationDeadline,
+      doorsOpenTime,
       startTime,
       location,
       imageUrl,
@@ -157,6 +158,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       prizeDistribution?: Record<string, number>;
       bestOf?: number;
       registrationDeadline?: string;
+      doorsOpenTime?: string;
       startTime?: string;
       location?: string;
       imageUrl?: string;
@@ -217,6 +219,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       prizeDistribution,
       bestOf,
       registrationDeadline: registrationDeadline ? parseDateTime(registrationDeadline) : undefined,
+      doorsOpenTime: doorsOpenTime ? parseDateTime(doorsOpenTime) : undefined,
       startTime: startTime ? parseDateTime(startTime) : undefined,
       location,
       imageUrl,

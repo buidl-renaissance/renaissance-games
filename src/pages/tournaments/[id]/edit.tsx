@@ -23,6 +23,7 @@ interface Tournament {
   bestOf: number;
   location: string | null;
   imageUrl: string | null;
+  doorsOpenTime: string | null;
   startTime: string | null;
   registrationDeadline: string | null;
 }
@@ -776,6 +777,8 @@ export default function EditTournamentPage() {
     prizePool: '',
     bestOf: '1',
     location: '',
+    doorsOpenDate: '',
+    doorsOpenTime: '',
     startDate: '',
     startTime: '',
     registrationDate: '',
@@ -905,6 +908,7 @@ export default function EditTournamentPage() {
 
         // Populate form with tournament data
         const t = data.tournament;
+        const doorsOpenDateTime = t.doorsOpenTime ? splitDateTimeLocal(formatDateTimeLocal(t.doorsOpenTime)) : { date: '', time: '' };
         const startDateTime = t.startTime ? splitDateTimeLocal(formatDateTimeLocal(t.startTime)) : { date: '', time: '' };
         const regDateTime = t.registrationDeadline ? splitDateTimeLocal(formatDateTimeLocal(t.registrationDeadline)) : { date: '', time: '' };
         
@@ -917,6 +921,8 @@ export default function EditTournamentPage() {
           prizePool: t.prizePool ? String(t.prizePool / 100) : '',
           bestOf: String(t.bestOf || 1),
           location: t.location || '',
+          doorsOpenDate: doorsOpenDateTime.date,
+          doorsOpenTime: doorsOpenDateTime.time,
           startDate: startDateTime.date,
           startTime: startDateTime.time,
           registrationDate: regDateTime.date,
@@ -1141,6 +1147,7 @@ export default function EditTournamentPage() {
     setMessage(null);
 
     try {
+      const doorsOpenDateTime = combineDateAndTime(formData.doorsOpenDate, formData.doorsOpenTime);
       const startDateTime = combineDateAndTime(formData.startDate, formData.startTime);
       const regDateTime = combineDateAndTime(formData.registrationDate, formData.registrationTime);
 
@@ -1166,6 +1173,9 @@ export default function EditTournamentPage() {
         location: formData.location || null,
       };
       
+      if (doorsOpenDateTime) {
+        body.doorsOpenTime = estInputToUtc(doorsOpenDateTime).toISOString();
+      }
       if (startDateTime) {
         body.startTime = estInputToUtc(startDateTime).toISOString();
       }
@@ -1459,6 +1469,30 @@ export default function EditTournamentPage() {
               </FormGroup>
 
               <FormGroup>
+                <Label>Doors Open</Label>
+                <DateTimeRow>
+                  <Input
+                    id="doorsOpenDate"
+                    name="doorsOpenDate"
+                    type="date"
+                    value={formData.doorsOpenDate}
+                    onChange={handleChange}
+                  />
+                  <Select
+                    id="doorsOpenTime"
+                    name="doorsOpenTime"
+                    value={formData.doorsOpenTime}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select time...</option>
+                    {timeOptions.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </Select>
+                </DateTimeRow>
+              </FormGroup>
+
+              <FormGroup>
                 <Label>Registration Deadline</Label>
                 <DateTimeRow>
                   <Input
@@ -1483,7 +1517,7 @@ export default function EditTournamentPage() {
               </FormGroup>
 
               <FormGroup>
-                <Label>Start Date & Time</Label>
+                <Label>Start Time</Label>
                 <DateTimeRow>
                   <Input
                     id="startDate"

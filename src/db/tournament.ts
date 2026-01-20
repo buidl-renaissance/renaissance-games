@@ -37,6 +37,7 @@ export interface Tournament {
   prizeDistribution: PrizeDistribution | null;
   bestOf: number;
   registrationDeadline: Date | null;
+  doorsOpenTime: Date | null;
   startTime: Date | null;
   endTime: Date | null;
   location: string | null;
@@ -91,6 +92,7 @@ export interface CreateTournamentInput {
   prizeDistribution?: PrizeDistribution;
   bestOf?: number;
   registrationDeadline?: Date;
+  doorsOpenTime?: Date;
   startTime?: Date;
   location?: string;
   imageUrl?: string;
@@ -119,6 +121,7 @@ export async function createTournament(input: CreateTournamentInput): Promise<To
     prizeDistribution: input.prizeDistribution ? JSON.stringify(input.prizeDistribution) : null,
     bestOf: input.bestOf || 1,
     registrationDeadline: input.registrationDeadline || null,
+    doorsOpenTime: input.doorsOpenTime || null,
     startTime: input.startTime || null,
     endTime: null,
     location: input.location || null,
@@ -211,6 +214,7 @@ export async function updateTournament(
   }
   if (updates.bestOf !== undefined) updateData.bestOf = updates.bestOf;
   if (updates.registrationDeadline !== undefined) updateData.registrationDeadline = updates.registrationDeadline;
+  if (updates.doorsOpenTime !== undefined) updateData.doorsOpenTime = updates.doorsOpenTime;
   if (updates.startTime !== undefined) updateData.startTime = updates.startTime;
   if (updates.endTime !== undefined) updateData.endTime = updates.endTime;
   if (updates.location !== undefined) updateData.location = updates.location;
@@ -780,6 +784,7 @@ function parseTournamentRow(row: typeof tournaments.$inferSelect | Record<string
       : null,
     bestOf: row.bestOf as number,
     registrationDeadline: row.registrationDeadline as Date | null,
+    doorsOpenTime: row.doorsOpenTime as Date | null,
     startTime: row.startTime as Date | null,
     endTime: row.endTime as Date | null,
     location: row.location as string | null,

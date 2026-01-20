@@ -451,6 +451,8 @@ export default function CreateTournamentPage() {
     prizePool: '',
     bestOf: '1',
     location: '',
+    doorsOpenDate: '',
+    doorsOpenTime: '',
     startDate: '',
     startTime: '',
     registrationDate: '',
@@ -613,6 +615,7 @@ export default function CreateTournamentPage() {
     setIsSubmitting(true);
 
     try {
+      const doorsOpenDateTime = combineDateAndTime(formData.doorsOpenDate, formData.doorsOpenTime);
       const startDateTime = combineDateAndTime(formData.startDate, formData.startTime);
       const regDateTime = combineDateAndTime(formData.registrationDate, formData.registrationTime);
 
@@ -641,6 +644,9 @@ export default function CreateTournamentPage() {
       };
 
       // Convert EST times to UTC for storage
+      if (doorsOpenDateTime) {
+        body.doorsOpenTime = estInputToUtc(doorsOpenDateTime).toISOString();
+      }
       if (startDateTime) {
         body.startTime = estInputToUtc(startDateTime).toISOString();
       }
@@ -835,6 +841,30 @@ export default function CreateTournamentPage() {
             </FormGroup>
 
             <FormGroup>
+              <Label>Doors Open</Label>
+              <DateTimeRow>
+                <Input
+                  id="doorsOpenDate"
+                  name="doorsOpenDate"
+                  type="date"
+                  value={formData.doorsOpenDate}
+                  onChange={handleChange}
+                />
+                <Select
+                  id="doorsOpenTime"
+                  name="doorsOpenTime"
+                  value={formData.doorsOpenTime}
+                  onChange={handleChange}
+                >
+                  <option value="">Select time...</option>
+                  {timeOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </Select>
+              </DateTimeRow>
+            </FormGroup>
+
+            <FormGroup>
               <Label>Registration Deadline</Label>
               <DateTimeRow>
                 <Input
@@ -859,7 +889,7 @@ export default function CreateTournamentPage() {
             </FormGroup>
 
             <FormGroup>
-              <Label>Start Date & Time</Label>
+              <Label>Start Time</Label>
               <DateTimeRow>
                 <Input
                   id="startDate"
