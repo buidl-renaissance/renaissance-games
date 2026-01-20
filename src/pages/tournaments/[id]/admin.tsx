@@ -1026,6 +1026,23 @@ export default function TournamentAdminPage() {
             {!isLocked && (
               <EditButton href={`/tournaments/${id}/edit`}>Edit</EditButton>
             )}
+            {!tournament.publishedEventId ? (
+              <ActionButton 
+                $variant="primary"
+                onClick={publishToRenaissanceEvents} 
+                disabled={actionLoading}
+              >
+                Promote
+              </ActionButton>
+            ) : (
+              <ActionButton 
+                onClick={publishToRenaissanceEvents} 
+                disabled={actionLoading}
+                title="Already published - click to sync changes"
+              >
+                Sync Event
+              </ActionButton>
+            )}
           </HeaderActions>
         </PageHeader>
 
