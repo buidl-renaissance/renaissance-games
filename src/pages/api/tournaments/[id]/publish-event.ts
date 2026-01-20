@@ -4,6 +4,7 @@ import { getTournamentById, updateTournament, isUserTournamentOrganizer } from '
 import { getGameById } from '@/db/game';
 
 const RENAISSANCE_EVENTS_API_URL = process.env.RENAISSANCE_EVENTS_API_URL || 'http://localhost:3002';
+const RENAISSANCE_GAMES_PUBLIC_URL = process.env.RENAISSANCE_GAMES_PUBLIC_URL || process.env.NEXT_PUBLIC_BASE_URL || '';
 
 /**
  * POST /api/tournaments/[id]/publish-event
@@ -71,6 +72,7 @@ export default async function handler(
       eventType: 'renaissance',
       source: 'renaissance-games',
       sourceId: tournament.id,
+      sourceUrl: RENAISSANCE_GAMES_PUBLIC_URL ? `${RENAISSANCE_GAMES_PUBLIC_URL}/tournaments/${tournament.id}` : undefined,
     };
 
     let publishedEventId: number;
