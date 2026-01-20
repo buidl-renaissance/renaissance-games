@@ -217,11 +217,13 @@ const EditLink = styled(Link)`
   color: ${({ theme }) => theme.textMuted};
   padding: 0.4rem 0.75rem;
   border-radius: 4px;
+  border: 1px solid ${({ theme }) => theme.border};
   transition: all 0.15s ease;
   
   &:hover {
     color: ${({ theme }) => theme.text};
     background: ${({ theme }) => theme.backgroundAlt};
+    border-color: ${({ theme }) => theme.textMuted};
   }
 `;
 
@@ -650,6 +652,45 @@ const NoTeamsText = styled.p`
   font-style: italic;
 `;
 
+// Partner selection components
+const PartnerToggleGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+`;
+
+const PartnerToggleButton = styled.button<{ $active: boolean }>`
+  flex: 1;
+  padding: 0.625rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: ${({ theme, $active }) => $active ? theme.accentMuted : 'transparent'};
+  color: ${({ theme, $active }) => $active ? theme.accent : theme.textSecondary};
+  border: 1px solid ${({ theme, $active }) => $active ? theme.accent : theme.border};
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  
+  &:hover {
+    background: ${({ theme }) => theme.surfaceHover};
+  }
+`;
+
+const PartnerAvatar = styled.div<{ $url?: string | null }>`
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: ${({ theme, $url }) => $url ? `url(${$url}) center/cover` : theme.accentMuted};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: ${({ theme }) => theme.accent};
+  flex-shrink: 0;
+  margin-right: 0.75rem;
+`;
+
 // Team Registration Modal
 const ModalOverlay = styled.div`
   position: fixed;
@@ -803,9 +844,28 @@ export default function TournamentDetailPage() {
   
   // Team registration state
   const [showTeamModal, setShowTeamModal] = useState(false);
-  const [teamMode, setTeamMode] = useState<'select' | 'create' | 'join'>('select');
+  const [teamMode, setTeamMode] = useState<'select' | 'create' | 'join' | 'partner'>('select');
   const [newTeamName, setNewTeamName] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  
+  // Partner selection state
+  const [partnerMode, setPartnerMode] = useState<'search' | 'create'>('search');
+  const [partnerSearchQuery, setPartnerSearchQuery] = useState('');
+  const [partnerSearchResults, setPartnerSearchResults] = useState<Array<{
+    id: string;
+    username: string | null;
+    displayName: string | null;
+    pfpUrl: string | null;
+  }>>([]);
+  const [selectedPartner, setSelectedPartner] = useState<{
+    id: string;
+    username: string | null;
+    displayName: string | null;
+    pfpUrl: string | null;
+  } | null>(null);
+  const [partnerPhone, setPartnerPhone] = useState('');
+  const [partnerName, setPartnerName] = useState('');
+  const [searchingPartners, setSearchingPartners] = useState(false);
   
   // Registration modal state (for non-logged-in users)
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
@@ -813,6 +873,87 @@ export default function TournamentDetailPage() {
   const getInitials = (name: string | null | undefined) => {
     if (!name) return '?';
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  // Format phone number helper
+  const formatPhoneNumber = (value: string): string => {
+    const hasPlus = value.startsWith('+');
+    const digits = value.replace(/\D/g, '');
+    
+    if (!digits) return hasPlus ? '+' : '';
+    
+    let formatted = '';
+    let digitIndex = 0;
+    
+    if (hasPlus || digits.startsWith('1')) {
+      if (digits.startsWith('1')) {
+        formatted = '+1 ';
+        digitIndex = 1;
+      } else {
+        formatted = '+';
+      }
+    }
+    
+    const remaining = digits.slice(digitIndex);
+    
+    if (remaining.length === 0) return formatted.trim();
+    
+    if (remaining.length <= 3) {
+      formatted += `(${remaining}`;
+    } else if (remaining.length <= 6) {
+      formatted += `(${remaining.slice(0, 3)}) ${remaining.slice(3)}`;
+    } else {
+      formatted += `(${remaining.slice(0, 3)}) ${remaining.slice(3, 6)}-${remaining.slice(6, 10)}`;
+    }
+    
+    return formatted;
+  };
+
+  // Search for partners
+  const searchPartners = useCallback(async (query: string) => {
+    if (query.length < 2) {
+      setPartnerSearchResults([]);
+      return;
+    }
+    
+    setSearchingPartners(true);
+    try {
+      const res = await fetch(`/api/user/search?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        // Filter out the current user
+        const filtered = (data.users || []).filter((u: { id: string }) => u.id !== user?.id);
+        setPartnerSearchResults(filtered);
+      }
+    } catch (err) {
+      console.error('Partner search error:', err);
+    } finally {
+      setSearchingPartners(false);
+    }
+  }, [user?.id]);
+
+  // Debounced partner search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (partnerMode === 'search' && partnerSearchQuery) {
+        searchPartners(partnerSearchQuery);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [partnerSearchQuery, partnerMode, searchPartners]);
+
+  // Reset partner state when modal closes
+  const resetTeamModalState = () => {
+    setShowTeamModal(false);
+    setTeamMode('select');
+    setNewTeamName('');
+    setSelectedTeamId(null);
+    setPartnerMode('search');
+    setPartnerSearchQuery('');
+    setPartnerSearchResults([]);
+    setSelectedPartner(null);
+    setPartnerPhone('');
+    setPartnerName('');
   };
 
   // Organizer state
@@ -883,6 +1024,76 @@ export default function TournamentDetailPage() {
     fetchOrganizers();
   }, [id]);
 
+  // Proceed from team name step to partner step
+  const handleProceedToPartner = () => {
+    if (!newTeamName.trim()) {
+      setError('Please enter a team name');
+      return;
+    }
+    setError(null);
+    setTeamMode('partner');
+  };
+
+  // Register with partner (or skip partner)
+  const handleRegisterWithPartner = async (skipPartner: boolean = false) => {
+    if (!user || !tournament) return;
+    
+    setActionLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      if (skipPartner) {
+        // Create team without partner
+        const res = await fetch(`/api/tournaments/${id}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ teamName: newTeamName.trim() }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to create team');
+
+        setSuccess(`Team "${newTeamName}" created! Waiting for a partner to join.`);
+      } else {
+        // Register with partner
+        const body: {
+          teamName: string;
+          partnerId?: string;
+          partnerPhone?: string;
+          partnerName?: string;
+        } = {
+          teamName: newTeamName.trim(),
+        };
+
+        if (partnerMode === 'search' && selectedPartner) {
+          body.partnerId = selectedPartner.id;
+        } else if (partnerMode === 'create') {
+          body.partnerPhone = partnerPhone.replace(/[\s\-\(\)]/g, '');
+          body.partnerName = partnerName.trim();
+        }
+
+        const res = await fetch(`/api/tournaments/${id}/register-with-partner`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to register team');
+
+        setSuccess(data.message || `Team "${newTeamName}" registered!`);
+      }
+
+      resetTeamModalState();
+      fetchTournament();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to register');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleRegister = async () => {
     if (!user || !tournament) return;
     
@@ -895,12 +1106,7 @@ export default function TournamentDetailPage() {
       let body: { teamName?: string; teamId?: string } = {};
       
       if (game?.isTeamGame) {
-        if (teamMode === 'create') {
-          if (!newTeamName.trim()) {
-            throw new Error('Please enter a team name');
-          }
-          body = { teamName: newTeamName.trim() };
-        } else if (teamMode === 'join') {
+        if (teamMode === 'join') {
           if (!selectedTeamId) {
             throw new Error('Please select a team to join');
           }
@@ -920,16 +1126,10 @@ export default function TournamentDetailPage() {
 
       // Handle different success scenarios
       if (game?.isTeamGame) {
-        if (teamMode === 'create') {
-          setSuccess(`Team "${newTeamName}" created! Waiting for a partner to join.`);
-          setNewTeamName('');
-        } else {
-          setSuccess(data.message || 'Joined team successfully!');
-          setSelectedTeamId(null);
-        }
+        setSuccess(data.message || 'Joined team successfully!');
+        setSelectedTeamId(null);
         // Close modal and reset state
-        setShowTeamModal(false);
-        setTeamMode('select');
+        resetTeamModalState();
       } else {
         setSuccess(data.isWaitlisted 
           ? 'Added to waitlist. Awaiting confirmation.'
@@ -1049,7 +1249,10 @@ export default function TournamentDetailPage() {
                 </svg>
               </ShareIconButton>
               {isOrganizer && (
-                <EditLink href={`/tournaments/${id}/edit`}>Edit</EditLink>
+                <>
+                  <EditLink href={`/tournaments/${id}/admin`}>Manage</EditLink>
+                  <EditLink href={`/tournaments/${id}/edit`}>Edit</EditLink>
+                </>
               )}
             </HeroHeaderRight>
           </HeroHeader>
@@ -1269,31 +1472,20 @@ export default function TournamentDetailPage() {
             </Card>
 
           </MainColumn>
-
-          {isOrganizer && (
-            <Sidebar>
-              <ActionCard>
-                <CardBody>
-                  <AdminButton href={`/tournaments/${id}/admin`}>
-                    Manage Tournament
-                  </AdminButton>
-                </CardBody>
-              </ActionCard>
-            </Sidebar>
-          )}
         </ContentGrid>
       </Main>
 
       {/* Team Registration Modal */}
       {showTeamModal && game?.isTeamGame && (
-        <ModalOverlay onClick={() => { setShowTeamModal(false); setTeamMode('select'); }}>
+        <ModalOverlay onClick={resetTeamModalState}>
           <Modal onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>
                 {teamMode === 'select' ? 'Register for Tournament' : 
-                 teamMode === 'create' ? 'Create a Team' : 'Join a Team'}
+                 teamMode === 'create' ? 'Create a Team' : 
+                 teamMode === 'partner' ? 'Add Your Partner' : 'Join a Team'}
               </ModalTitle>
-              <ModalClose onClick={() => { setShowTeamModal(false); setTeamMode('select'); }}>×</ModalClose>
+              <ModalClose onClick={resetTeamModalState}>×</ModalClose>
             </ModalHeader>
             <ModalBody>
               {error && <Message $type="error">{error}</Message>}
@@ -1322,12 +1514,109 @@ export default function TournamentDetailPage() {
                   </TeamSection>
                   <ModalButton 
                     $variant="primary" 
-                    onClick={handleRegister}
-                    disabled={actionLoading || !newTeamName.trim()}
+                    onClick={handleProceedToPartner}
+                    disabled={!newTeamName.trim()}
                   >
-                    {actionLoading ? 'Creating...' : 'Create Team'}
+                    Continue
                   </ModalButton>
                   <ModalButton onClick={() => setTeamMode('select')}>
+                    Back
+                  </ModalButton>
+                </>
+              ) : teamMode === 'partner' ? (
+                <>
+                  <TeamSection>
+                    <PartnerToggleGroup>
+                      <PartnerToggleButton 
+                        $active={partnerMode === 'search'}
+                        onClick={() => { setPartnerMode('search'); setError(null); }}
+                        type="button"
+                      >
+                        Find Existing
+                      </PartnerToggleButton>
+                      <PartnerToggleButton 
+                        $active={partnerMode === 'create'}
+                        onClick={() => { setPartnerMode('create'); setError(null); }}
+                        type="button"
+                      >
+                        Add New
+                      </PartnerToggleButton>
+                    </PartnerToggleGroup>
+
+                    {partnerMode === 'search' ? (
+                      <>
+                        <TeamLabel>Search by name or username</TeamLabel>
+                        <TeamInput
+                          type="text"
+                          value={partnerSearchQuery}
+                          onChange={(e) => setPartnerSearchQuery(e.target.value)}
+                          placeholder="Search..."
+                          autoFocus
+                        />
+                        
+                        {searchingPartners && <NoTeamsText>Searching...</NoTeamsText>}
+                        
+                        {!searchingPartners && partnerSearchQuery.length >= 2 && partnerSearchResults.length === 0 && (
+                          <NoTeamsText>No users found</NoTeamsText>
+                        )}
+                        
+                        {partnerSearchResults.length > 0 && (
+                          <OpenTeamList>
+                            {partnerSearchResults.map((u) => (
+                              <OpenTeamItem
+                                key={u.id}
+                                $selected={selectedPartner?.id === u.id}
+                                onClick={() => setSelectedPartner(
+                                  selectedPartner?.id === u.id ? null : u
+                                )}
+                              >
+                                <PartnerAvatar $url={u.pfpUrl}>
+                                  {!u.pfpUrl && getInitials(u.displayName || u.username)}
+                                </PartnerAvatar>
+                                <TeamInfo>
+                                  <TeamName>{u.displayName || u.username}</TeamName>
+                                  {u.username && <TeamMembers>@{u.username}</TeamMembers>}
+                                </TeamInfo>
+                              </OpenTeamItem>
+                            ))}
+                          </OpenTeamList>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <TeamLabel>Partner&apos;s Phone Number</TeamLabel>
+                        <TeamInput
+                          type="tel"
+                          value={partnerPhone}
+                          onChange={(e) => setPartnerPhone(formatPhoneNumber(e.target.value))}
+                          placeholder="+1 (555) 123-4567"
+                          autoFocus
+                        />
+                        <TeamLabel style={{ marginTop: '0.75rem' }}>Partner&apos;s Name</TeamLabel>
+                        <TeamInput
+                          type="text"
+                          value={partnerName}
+                          onChange={(e) => setPartnerName(e.target.value)}
+                          placeholder="Their name"
+                        />
+                      </>
+                    )}
+                  </TeamSection>
+                  
+                  <ModalButton 
+                    $variant="primary" 
+                    onClick={() => handleRegisterWithPartner(false)}
+                    disabled={actionLoading || (partnerMode === 'search' ? !selectedPartner : (partnerPhone.length < 10 || !partnerName.trim()))}
+                  >
+                    {actionLoading ? 'Registering...' : 'Complete Registration'}
+                  </ModalButton>
+                  <ModalButton 
+                    onClick={() => handleRegisterWithPartner(true)}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? 'Creating...' : 'Skip - Find a partner later'}
+                  </ModalButton>
+                  <ModalButton onClick={() => setTeamMode('create')}>
                     Back
                   </ModalButton>
                 </>

@@ -337,7 +337,23 @@ export async function getUserTeamInTournament(
   tournamentId: string,
   userId: string
 ): Promise<Team | null> {
-  // Find team member entry for this user
+  // First check if user is a captain of a team in this tournament
+  const captainResults = await db
+    .select()
+    .from(teams)
+    .where(
+      and(
+        eq(teams.tournamentId, tournamentId),
+        eq(teams.captainId, userId)
+      )
+    )
+    .limit(1);
+  
+  if (captainResults.length > 0) {
+    return parseTeamRow(captainResults[0]);
+  }
+  
+  // Then check team member entries for this user
   const memberResults = await db.select().from(teamMembers);
   
   for (const member of memberResults) {
@@ -393,21 +409,15 @@ export async function withdrawTeamMember(
   // This handles the case where the captain registered their partner -
   // the partner didn't explicitly join, so they should be withdrawn too
   if (isCaptain) {
-    // Find and withdraw any participant record for this team
-    const participantResults = await db
-      .select()
-      .from(tournamentParticipants)
+    // Delete any participant record for this team (must delete, not withdraw, to avoid FK constraint)
+    await db
+      .delete(tournamentParticipants)
       .where(
         and(
           eq(tournamentParticipants.tournamentId, tournamentId),
           eq(tournamentParticipants.teamId, team.id)
         )
-      )
-      .limit(1);
-    
-    if (participantResults.length > 0) {
-      await withdrawParticipant(participantResults[0].id);
-    }
+      );
     
     // Delete all team members
     await db
@@ -435,21 +445,15 @@ export async function withdrawTeamMember(
 
   // If no members remain, delete the team entirely
   if (remainingMembers.length === 0) {
-    // Find and withdraw any participant record for this team
-    const participantResults = await db
-      .select()
-      .from(tournamentParticipants)
+    // Delete any participant record for this team (must delete, not withdraw, to avoid FK constraint)
+    await db
+      .delete(tournamentParticipants)
       .where(
         and(
           eq(tournamentParticipants.tournamentId, tournamentId),
           eq(tournamentParticipants.teamId, team.id)
         )
-      )
-      .limit(1);
-    
-    if (participantResults.length > 0) {
-      await withdrawParticipant(participantResults[0].id);
-    }
+      );
     
     // Delete the team
     await db.delete(teams).where(eq(teams.id, team.id));
@@ -498,21 +502,15 @@ export async function deleteTeamAndRegistration(
     return { success: false, message: 'Team is not in this tournament' };
   }
 
-  // Find and withdraw any participant record for this team
-  const participantResults = await db
-    .select()
-    .from(tournamentParticipants)
+  // Delete any participant record for this team (must delete, not withdraw, to avoid FK constraint)
+  await db
+    .delete(tournamentParticipants)
     .where(
       and(
         eq(tournamentParticipants.tournamentId, tournamentId),
         eq(tournamentParticipants.teamId, teamId)
       )
-    )
-    .limit(1);
-  
-  if (participantResults.length > 0) {
-    await withdrawParticipant(participantResults[0].id);
-  }
+    );
   
   // Delete all team members
   await db
