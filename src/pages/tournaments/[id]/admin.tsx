@@ -269,14 +269,17 @@ const TabContent = styled.div`
 `;
 
 // Stats Grid
-const StatsGrid = styled.div`
+interface StatsGridProps {
+  $columns?: number;
+}
+
+const StatsGrid = styled.div.attrs<StatsGridProps>(() => ({}))<StatsGridProps>`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(${({ $columns }) => $columns || 3}, 1fr);
   gap: 0.75rem;
   margin-bottom: 1.5rem;
   
   @media (max-width: 500px) {
-    grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
   }
 `;
@@ -964,25 +967,21 @@ export default function TournamentAdminPage() {
         <TabContent>
           {activeTab === 'overview' && (
             <>
-              <StatsGrid>
+              <StatsGrid $columns={game?.isTeamGame ? 3 : 2}>
                 <StatCard>
                   <StatValue>{participantCount}/{tournament.maxParticipants}</StatValue>
                   <StatLabel>Registered</StatLabel>
                 </StatCard>
-                <StatCard>
-                  <StatValue>{teams.length || '—'}</StatValue>
-                  <StatLabel>Teams</StatLabel>
-                </StatCard>
+                {game?.isTeamGame && (
+                  <StatCard>
+                    <StatValue>{teams.length || '—'}</StatValue>
+                    <StatLabel>Teams</StatLabel>
+                  </StatCard>
+                )}
                 <StatCard>
                   <StatValue>{waitlist.length}</StatValue>
                   <StatLabel>Waitlist</StatLabel>
                 </StatCard>
-                {(tournament.prizePool ?? 0) > 0 ? (
-                  <StatCard>
-                    <StatValue>{formatCurrency(tournament.prizePool)}</StatValue>
-                    <StatLabel>Prize</StatLabel>
-                  </StatCard>
-                ) : null}
               </StatsGrid>
 
               <Card>
@@ -1189,27 +1188,44 @@ export default function TournamentAdminPage() {
                 </CardBody>
               </Card>
 
-              {tournament.publishedEventId && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Renaissance Events</CardTitle>
-                  </CardHeader>
-                  <CardBody>
-                    <InfoBox>
-                      This tournament is published to Renaissance Events (ID: {tournament.publishedEventId}).
-                      Events are automatically published when registration opens.
-                    </InfoBox>
-                    <ActionButtons>
-                      <ActionButton 
-                        onClick={publishToRenaissanceEvents} 
-                        disabled={actionLoading}
-                      >
-                        Sync Changes to Renaissance Events
-                      </ActionButton>
-                    </ActionButtons>
-                  </CardBody>
-                </Card>
-              )}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Renaissance Events</CardTitle>
+                </CardHeader>
+                <CardBody>
+                  {tournament.publishedEventId ? (
+                    <>
+                      <InfoBox $type="success">
+                        Published to Renaissance Events (ID: {tournament.publishedEventId}).
+                        Changes are automatically synced when you edit the tournament.
+                      </InfoBox>
+                      <ActionButtons>
+                        <ActionButton 
+                          onClick={publishToRenaissanceEvents} 
+                          disabled={actionLoading}
+                        >
+                          Manually Sync Now
+                        </ActionButton>
+                      </ActionButtons>
+                    </>
+                  ) : (
+                    <>
+                      <InfoBox>
+                        Promote this tournament to Renaissance Events to reach a wider audience.
+                      </InfoBox>
+                      <ActionButtons>
+                        <ActionButton 
+                          $variant="primary"
+                          onClick={publishToRenaissanceEvents} 
+                          disabled={actionLoading}
+                        >
+                          Promote to Renaissance Events
+                        </ActionButton>
+                      </ActionButtons>
+                    </>
+                  )}
+                </CardBody>
+              </Card>
 
               <Card>
                 <CardHeader>

@@ -223,9 +223,8 @@ async function handlePatch(
       updates: Object.keys(updates),
     });
 
-    // Sync changes to Renaissance Events if tournament is published and open/live
-    const liveStatuses = ['registration', 'ready', 'in_progress'];
-    if (updatedTournament?.publishedEventId && liveStatuses.includes(updatedTournament.status)) {
+    // Sync changes to Renaissance Events if tournament is published
+    if (updatedTournament?.publishedEventId) {
       try {
         const game = await getGameById(updatedTournament.gameId);
         
