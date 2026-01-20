@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
+import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import styled, { keyframes } from 'styled-components';
 
@@ -341,10 +341,11 @@ export default function RegisterPage() {
 
   return (
     <>
-      <Head>
-        <title>Complete Sign Up | Renaissance Games</title>
-        <meta name="description" content="Complete your Renaissance Games account" />
-      </Head>
+      <NextSeo
+        title="Complete Sign Up"
+        description="Complete your Renaissance Games account"
+        noindex
+      />
       <Container>
         <FormCard>
           <Title>Almost There!</Title>

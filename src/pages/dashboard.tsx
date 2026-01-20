@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Head from "next/head";
+import { NextSeo } from 'next-seo';
 import Link from "next/link";
 import styled, { keyframes } from "styled-components";
 import { useRouter } from "next/router";
@@ -578,12 +578,14 @@ const DashboardPage: React.FC = () => {
 
   return (
     <Container>
-      <Head>
-        <title>{APP_NAME}</title>
-        <meta name="description" content="Enter the void. Compete in tournaments." />
-        <link rel="icon" href="/favicon.ico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </Head>
+      <NextSeo
+        title={APP_NAME}
+        description="Browse and register for in-person tournaments. Pool, Chess, Euchre, and more."
+        openGraph={{
+          title: `${APP_NAME} | Renaissance City`,
+          description: "Browse and register for in-person tournaments. Pool, Chess, Euchre, and more.",
+        }}
+      />
 
       <Main>
         <DashboardHeader>

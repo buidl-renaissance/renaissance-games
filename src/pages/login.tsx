@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
+import { NextSeo } from 'next-seo';
 import styled, { keyframes } from 'styled-components';
 
 const pulseGlow = keyframes`
@@ -456,10 +456,7 @@ export default function LoginPage() {
   if (step === 'locked') {
     return (
       <>
-        <Head>
-          <title>Account Locked | Renaissance Games</title>
-          <meta name="description" content="Account locked" />
-        </Head>
+        <NextSeo title="Account Locked" noindex />
         <Container>
           <FormCard>
             <Title>Account Locked</Title>
@@ -482,10 +479,7 @@ export default function LoginPage() {
   if (step === 'setPin') {
     return (
       <>
-        <Head>
-          <title>Set PIN | Renaissance Games</title>
-          <meta name="description" content="Set your PIN to secure your account" />
-        </Head>
+        <NextSeo title="Set PIN" noindex />
         <Container>
           <FormCard>
             <Title>Set Your PIN</Title>
@@ -552,10 +546,7 @@ export default function LoginPage() {
   if (step === 'pin') {
     return (
       <>
-        <Head>
-          <title>Enter PIN | Renaissance Games</title>
-          <meta name="description" content="Enter your PIN to sign in" />
-        </Head>
+        <NextSeo title="Enter PIN" noindex />
         <Container>
           <FormCard>
             <Title>Enter PIN</Title>
@@ -600,10 +591,10 @@ export default function LoginPage() {
   // Phone entry step (default)
   return (
     <>
-      <Head>
-        <title>Sign In | Renaissance Games</title>
-        <meta name="description" content="Sign in to your Renaissance Games account" />
-      </Head>
+      <NextSeo
+        title="Sign In"
+        description="Sign in to your Renaissance Games account"
+      />
       <Container>
         <FormCard>
           <Title>Sign In</Title>

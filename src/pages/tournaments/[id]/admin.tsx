@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import Head from 'next/head';
+import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styled, { keyframes } from 'styled-components';
@@ -965,9 +965,10 @@ export default function TournamentAdminPage() {
 
   return (
     <Container>
-      <Head>
-        <title>Manage {tournament.name} | Renaissance City</title>
-      </Head>
+      <NextSeo
+        title={`Manage ${tournament.name}`}
+        noindex
+      />
 
       <UserHeader showBack backHref={`/tournaments/${id}`} />
 

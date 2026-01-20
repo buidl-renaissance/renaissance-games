@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import Head from 'next/head';
+import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styled, { keyframes, css } from 'styled-components';
@@ -1248,9 +1248,10 @@ export default function EditTournamentPage() {
 
   return (
     <Container>
-      <Head>
-        <title>Edit {tournament.name} | Into the Void</title>
-      </Head>
+      <NextSeo
+        title={`Edit ${tournament.name}`}
+        noindex
+      />
 
       <UserHeader showBack backHref={`/tournaments/${id}/admin`} />
 

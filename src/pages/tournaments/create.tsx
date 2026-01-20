@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import Head from 'next/head';
+import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styled, { keyframes } from 'styled-components';
@@ -690,9 +690,7 @@ export default function CreateTournamentPage() {
   if (!canCreate) {
     return (
       <Container>
-        <Head>
-          <title>Create Tournament | Into the Void</title>
-        </Head>
+        <NextSeo title="Create Tournament" noindex />
         <UserHeader showBack backHref="/dashboard" />
         <Main>
           <AccessDenied>
@@ -708,9 +706,11 @@ export default function CreateTournamentPage() {
 
   return (
     <Container>
-      <Head>
-        <title>Create Tournament | Into the Void</title>
-      </Head>
+      <NextSeo
+        title="Create Tournament"
+        description="Create a new tournament for Pool, Chess, Euchre, and more."
+        noindex
+      />
 
       <UserHeader showBack backHref="/dashboard" />
 

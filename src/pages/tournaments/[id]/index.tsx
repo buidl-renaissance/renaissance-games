@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import Head from 'next/head';
+import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import styled, { keyframes } from 'styled-components';
@@ -1288,12 +1288,34 @@ export default function TournamentDetailPage() {
   const registeredParticipants = participants.filter(p => p.status === 'registered');
   const fillPercent = Math.min((participantCount / tournament.maxParticipants) * 100, 100);
 
+  // Build SEO description
+  const seoDescription = tournament.description 
+    || `${game?.name || 'Tournament'} at ${tournament.location || 'TBD'}. ${
+      tournament.entryFee ? `$${(tournament.entryFee / 100).toFixed(0)} entry` : 'Free entry'
+    }${tournament.prizePool ? ` · $${(tournament.prizePool / 100).toFixed(0)} prize pool` : ''}.`;
+
   return (
     <Container>
-      <Head>
-        <title>{tournament.name} | Renaissance City</title>
-        <meta name="description" content={tournament.description || `${tournament.name} tournament`} />
-      </Head>
+      <NextSeo
+        title={tournament.name}
+        description={seoDescription}
+        openGraph={{
+          title: `${tournament.name} | ${game?.name || 'Tournament'}`,
+          description: seoDescription,
+          type: 'website',
+          images: tournament.imageUrl ? [
+            {
+              url: tournament.imageUrl,
+              width: 1200,
+              height: 630,
+              alt: tournament.name,
+            },
+          ] : undefined,
+        }}
+        twitter={{
+          cardType: tournament.imageUrl ? 'summary_large_image' : 'summary',
+        }}
+      />
 
       <UserHeader showBack backHref="/dashboard" />
 
